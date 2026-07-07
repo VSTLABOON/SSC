@@ -1,0 +1,770 @@
+/* ============================================================
+   ClasesPantalla.css
+   Conversión literal de HTML + Tailwind (CDN) a CSS puro.
+
+   El bloque del MENÚ BASE OFICIAL (variables, reset, overlay,
+   sidebar, topbar) es una copia exacta de InicioMaestro.css,
+   sin alteraciones, para garantizar que el menú se vea y se
+   comporte idéntico en todas las pantallas del módulo del maestro.
+
+   Debajo del menú se agregan únicamente los estilos propios del
+   contenido de "Mis Grupos" (header de sección, grid de tarjetas,
+   footer de estadísticas), conservando la paleta oficial:
+   --chambray (#204785) y --mystic (#DDE4E5).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+/* ---------------------------------------------------------------------
+   Reset mínimo (equivalente al comportamiento base de Tailwind/preflight
+   que el HTML original heredaba del CDN)
+   --------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------------
+   Variables — Design tokens (idénticos al tailwind.config del HTML)
+   --------------------------------------------------------------------- */
+
+.im-body {
+  --chambray: #204785;
+  --mystic: #DDE4E5;
+  --surface-bright: #DDE4E5;
+  --error-container: #ffdad6;
+  --outline-variant: #bec9c0;
+  --on-error-container: #93000a;
+  --on-primary: #ffffff;
+  --surface-variant: #DDE4E5;
+  --error: #ba1a1a;
+  --tertiary: #6d2928;
+  --primary-container: #204785;
+  --inverse-on-surface: #eef2ec;
+  --tertiary-fixed: #ffdad7;
+  --inverse-surface: #2d312e;
+  --secondary-container: #dee0e2;
+  --secondary: #5c5f60;
+  --background: #DDE4E5;
+  --surface-container: #DDE4E5;
+  --on-tertiary-container: #ffbbb7;
+  --on-surface-variant: #3f4942;
+  --on-background: #181d1a;
+  --tertiary-fixed-dim: #ffb3af;
+  --surface-container-highest: #dee0e2;
+  --secondary-fixed-dim: #c5c6c8;
+  --tertiary-container: #8a3f3d;
+  --on-primary-fixed: #002113;
+  --on-secondary: #ffffff;
+  --surface-container-high: #e5e9e4;
+  --on-primary-container: #DDE4E5;
+  --primary-fixed-dim: #86d7ac;
+  --primary-fixed: #a2f4c7;
+  --on-tertiary: #ffffff;
+  --on-secondary-fixed: #191c1e;
+  --outline: #6f7a72;
+  --surface-container-low: #f1f5ef;
+  --on-secondary-fixed-variant: #444749;
+  --primary: #204785;
+  --surface-tint: #204785;
+  --on-primary-fixed-variant: #005235;
+  --surface-dim: #d7dbd6;
+  --secondary-fixed: #e1e2e4;
+  --inverse-primary: #86d7ac;
+  --on-tertiary-fixed: #3d0508;
+  --on-error: #ffffff;
+  --surface: #DDE4E5;
+  --on-tertiary-fixed-variant: #77302f;
+  --on-secondary-container: #606365;
+  --surface-container-lowest: #ffffff;
+  --on-surface: #181d1a;
+
+  /* borderRadius */
+  --radius: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* spacing */
+  --space-container-max: 1280px;
+  --space-base: 4px;
+  --space-lg: 24px;
+  --space-gutter: 24px;
+  --space-xs: 8px;
+  --space-xl: 32px;
+  --space-sm: 12px;
+  --space-md: 16px;
+
+  /* Equivalente a: bg-mystic text-on-background min-h-screen overflow-x-hidden */
+  background-color: var(--mystic);
+  color: var(--on-background);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ============================================================
+   MENÚ BASE OFICIAL — copia exacta de InicioMaestro.css
+   (overlay, sidebar, topbar). No modificar.
+   ============================================================ */
+
+/* OVERLAY */
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.sidebar-overlay--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
+/* SIDEBAR */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: 288px; /* w-72 */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(190, 201, 192, 0.3); /* border-outline-variant/30 */
+  background-color: var(--chambray);
+  transition: transform 0.3s ease-in-out;
+}
+
+@media (max-width: 767px) {
+  .sidebar--mobile-hidden {
+    transform: translateX(-100%);
+  }
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    box-shadow: none;
+    transform: none; /* md:transform-none */
+  }
+}
+
+.sidebar-top {
+  padding: var(--space-lg);
+  margin-bottom: 24px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.sidebar-brand-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.sidebar-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sidebar-brand-name {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.teacher-card {
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.teacher-card-greeting {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--secondary);
+}
+
+.teacher-card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(32, 71, 133, 0.1); /* border-chambray/10 */
+}
+
+.teacher-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teacher-card-name {
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.teacher-card-role {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background-color: transparent;
+  color: rgba(221, 228, 229, 0.9); /* text-mystic/90 */
+  font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.nav-item--active {
+  background-color: var(--mystic);
+  color: var(--chambray);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item--active:hover {
+  background-color: var(--mystic);
+  color: var(--chambray);
+}
+
+.nav-item-label {
+  font-size: 14px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item--logout {
+  background-color: var(--mystic);
+  color: var(--chambray);
+  border: 1px solid transparent;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.nav-item--logout:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(32, 71, 133, 0.2);
+}
+
+/* MAIN */
+
+.main-content {
+  min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    margin-left: 288px; /* md:ml-72 */
+  }
+}
+
+/* TOPBAR */
+
+.topbar {
+  background-color: var(--mystic);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-lg);
+  border-bottom: 1px solid rgba(32, 71, 133, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin-left: -8px;
+  color: var(--chambray);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: background-color 0.2s ease;
+}
+
+.menu-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+@media (min-width: 768px) {
+  .menu-toggle {
+    display: none;
+  }
+}
+
+.topbar-title {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--chambray);
+  margin: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.topbar-icon-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-button {
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.topbar-divider {
+  display: none;
+  width: 1px;
+  height: 32px;
+  background-color: rgba(32, 71, 133, 0.2);
+}
+
+@media (min-width: 640px) {
+  .topbar-divider {
+    display: block;
+  }
+}
+
+.topbar-institution {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-institution-label {
+  display: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+}
+
+@media (min-width: 640px) {
+  .topbar-institution-label {
+    display: inline;
+  }
+}
+
+.topbar-institution-logo {
+  height: 32px;
+  filter: grayscale(1);
+  opacity: 0.7;
+  cursor: pointer;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.topbar-institution-logo:hover {
+  filter: grayscale(0);
+  opacity: 1;
+}
+
+/* ============================================================
+   CONTENT CANVAS — contenedor general del contenido
+   (equivalente a: p-xl max-w-container-max mx-auto)
+   ============================================================ */
+
+.content-canvas {
+  padding: var(--space-xl);
+  max-width: var(--space-container-max);
+  margin: 0 auto;
+}
+
+/* ============================================================
+   PROPIO DE ClasesPantalla — Header de sección "Mis Grupos"
+   equivalente a: flex justify-between items-end mb-xl
+   ============================================================ */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: var(--space-xl);
+}
+
+.section-title {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--chambray);
+  margin: 0;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: var(--secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.section-subtitle-icon {
+  font-size: 16px;
+}
+
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Botón "Asignar Grupo" — equivalente a:
+   bg-primary-container text-on-primary hover:bg-primary
+   active:scale-95 px-lg py-sm rounded-lg flex items-center gap-xs
+   shadow-sm */
+
+.btn-asignar-grupo {
+  background-color: var(--chambray);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+.btn-asignar-grupo:hover {
+  opacity: 0.92;
+}
+
+.btn-asignar-grupo:active {
+  transform: scale(0.95);
+}
+
+/* ============================================================
+   GRID DE TARJETAS DE GRUPO — equivalente a:
+   grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2
+   gap-lg mb-xl
+   ============================================================ */
+
+.groups-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+@media (min-width: 768px) {
+  .groups-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tarjeta de grupo — equivalente a:
+   bg-surface-container-lowest p-lg rounded-xl
+   shadow-[0px_4px_12px_rgba(0,0,0,0.05)]
+   border border-outline-variant/20 hover:shadow-lg
+   transition-shadow group */
+
+.group-card {
+  background-color: #ffffff;
+  padding: var(--space-lg);
+  border-radius: var(--radius-xl);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(190, 201, 192, 0.2);
+  transition: box-shadow 0.2s ease;
+}
+
+.group-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: var(--space-md);
+}
+
+/* Chip de código de grupo — equivalente a:
+   font-label-md text-label-md text-primary bg-primary-fixed/30
+   px-sm py-1 rounded-full mb-xs inline-block
+   (color sólido oficial: background #DDE4E5, color #204785) */
+
+.group-code-chip {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--chambray);
+  background-color: var(--mystic);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.group-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+/* Chip de estado ACTIVO — equivalente a:
+   bg-primary/10 text-primary text-[10px] font-bold px-sm py-1
+   rounded-full tracking-widest flex items-center gap-1 */
+
+.group-status-chip {
+  background-color: rgba(32, 71, 133, 0.1);
+  color: var(--chambray);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.group-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--chambray);
+  animation: group-status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes group-status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Estadísticas de la tarjeta — equivalente a:
+   flex items-center gap-xl mb-lg */
+
+.group-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: var(--space-lg);
+}
+
+.group-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--secondary);
+}
+
+.group-stat-icon {
+  font-size: 18px;
+}
+
+.group-stat-text {
+  font-size: 16px;
+}
+
+/* Footer de la tarjeta — equivalente a: flex justify-end */
+
+.group-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Enlace "Gestionar" — equivalente a:
+   text-primary font-bold font-label-md text-label-md flex
+   items-center gap-xs group-hover:gap-md transition-all */
+
+.link-gestionar {
+  color: var(--chambray);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: gap 0.2s ease;
+}
+
+.group-card:hover .link-gestionar {
+  gap: 16px;
+}
+
+.link-gestionar-icon {
+  transition: transform 0.2s ease;
+}
+
+.group-card:hover .link-gestionar-icon {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   PANEL DE RESUMEN INFERIOR — equivalente a:
+   bg-surface-container-high rounded-xl p-lg grid grid-cols-1
+   sm:grid-cols-3 gap-xl border border-outline-variant/10
+   ============================================================ */
+
+.summary-footer {
+  background-color: var(--mystic);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xl);
+  border: 1px solid rgba(190, 201, 192, 0.1);
+}
+
+@media (min-width: 640px) {
+  .summary-footer {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* equivalente a: border-x border-outline-variant px-xl (columna central) */
+.summary-item--bordered {
+  border-left: 1px solid var(--outline-variant);
+  border-right: 1px solid var(--outline-variant);
+  padding: 0 32px;
+}
+
+@media (max-width: 639px) {
+  .summary-item--bordered {
+    border-left: none;
+    border-right: none;
+    padding: 0;
+  }
+}
+
+.summary-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: var(--chambray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.summary-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--chambray);
+  margin: 0;
+}

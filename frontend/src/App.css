@@ -1,0 +1,431 @@
+/* ===========================================================================
+   Login.css
+   Estilos del módulo de Login del Sistema Conductual (CONALEP).
+   Colores institucionales:
+     --color-brand        #006341
+     --color-brand-dark   #004d33
+     --color-brand-light  #007a50
+   =========================================================================== */
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+  color: #111827;
+  font-family: 'Inter', sans-serif;
+}
+
+@media (min-width: 768px) {
+  .login-page {
+    flex-direction: row;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Panel izquierdo: identidad institucional
+   --------------------------------------------------------------------- */
+
+.login-intro-panel {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem 1.5rem;
+  background: linear-gradient(135deg, #004d33 0%, #006341 100%);
+}
+
+.login-intro-panel::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .login-intro-panel {
+    width: 50%;
+    padding: 3rem;
+  }
+}
+
+.login-intro-content {
+  position: relative;
+  z-index: 10;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.login-glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  padding: 2.5rem;
+  max-width: 32rem;
+}
+
+.login-glass-card h1 {
+  color: #ffffff;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 1.5rem 0;
+}
+
+@media (min-width: 1024px) {
+  .login-glass-card h1 {
+    font-size: 3rem;
+  }
+}
+
+.login-glass-card p {
+  color: #f3f4f6;
+  font-size: 1.125rem;
+  margin: 0 0 2.5rem 0;
+  opacity: 0.9;
+}
+
+.login-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.login-feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #ffffff;
+}
+
+.login-feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+.login-feature-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.login-feature-list li span:last-child {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.login-intro-footer {
+  position: relative;
+  z-index: 10;
+  margin-top: 3rem;
+}
+
+.login-intro-footer p {
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------
+   Panel derecho: formulario de acceso
+   --------------------------------------------------------------------- */
+
+.login-form-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #ffffff;
+  padding: 3rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .login-form-panel {
+    width: 50%;
+    padding: 3rem 6rem;
+  }
+}
+
+.login-form-wrapper {
+  max-width: 28rem;
+  width: 100%;
+  margin: 0 auto;
+  padding-top: 3rem;
+}
+
+.login-branding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.login-logo {
+  height: 56px;
+  object-fit: contain;
+}
+
+.login-logo-secondary {
+  height: 40px;
+}
+
+.login-divider {
+  width: 1px;
+  height: 48px;
+  background-color: #e5e7eb;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.login-header h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.login-header p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.login-field label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.login-input-wrapper {
+  position: relative;
+}
+
+.login-input-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.login-input-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.login-input-wrapper input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  color: #374151;
+  font-size: 1rem;
+  font-family: inherit;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-input-wrapper input:focus {
+  outline: none;
+  border-color: #006341;
+  box-shadow: 0 0 0 3px rgba(0, 99, 65, 0.15);
+}
+
+.login-input-wrapper input#password {
+  padding-right: 3rem;
+}
+
+.login-toggle-password {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-right: 1rem;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.login-toggle-password:hover {
+  color: #4b5563;
+}
+
+.login-toggle-password svg {
+  width: 20px;
+  height: 20px;
+}
+
+.login-captcha {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.login-captcha-check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.login-captcha-check input {
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: #006341;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.login-captcha-check label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+.login-captcha-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.5;
+}
+
+.login-captcha-badge img {
+  height: 32px;
+  filter: grayscale(1);
+}
+
+.login-submit-btn {
+  width: 100%;
+  background-color: #006341;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.login-submit-btn:hover {
+  background-color: #004d33;
+}
+
+.login-submit-btn:active {
+  transform: scale(0.98);
+}
+
+.login-footer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: auto;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .login-footer {
+    flex-direction: row;
+  }
+}
+
+.login-footer-brand {
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .login-footer-brand {
+    margin-bottom: 0;
+  }
+}
+
+.login-footer-brand span:first-child {
+  font-weight: 700;
+  color: #6b7280;
+  margin-right: 0.5rem;
+}
+
+.login-footer-brand span:last-child {
+  text-transform: uppercase;
+}
+
+.login-footer-links {
+  display: flex;
+  gap: 1rem;
+  font-weight: 500;
+}
+
+.login-footer-links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.login-footer-links a:hover {
+  color: #006341;
+}
+
+/* ---------------------------------------------------------------------
+   Ajustes adicionales para tablet
+   --------------------------------------------------------------------- */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .login-form-panel {
+    padding: 3rem 2.5rem;
+  }
+}

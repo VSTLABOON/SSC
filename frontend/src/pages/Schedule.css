@@ -1,0 +1,779 @@
+/* Schedule.css
+
+   NOTA DE INTEGRACIÓN DEL MENÚ:
+   Las clases .sidebar*, .sidebar-overlay*, .mobile-menu-btn y
+   .material-symbols-outlined fueron reemplazadas por las
+   definiciones EXACTAS del Menú Base Oficial extraído de
+   Home.css. No se modificaron valores, nombres, animaciones,
+   colores ni breakpoints respecto al original de Home (el
+   menú usa el breakpoint de 768px de Home, no el de 1024px
+   que tenía Schedule originalmente).
+   Las antiguas clases del sidebar de Schedule fueron eliminadas
+   porque pertenecían a la implementación anterior del menú, ya
+   sustituida: .sidebar__header, .sidebar__brand, .sidebar__brand-sub,
+   .sidebar__close-btn, .sidebar__nav, .nav-item, .nav-item--active,
+   .sidebar__footer, .btn-logout (antigua), .btn-menu-toggle,
+   .sidebar--hidden, .sidebar-overlay.hidden/.block.
+   Todo lo demás (page-header, schedule-grid, class-card, stats-grid,
+   notes-section, animaciones fadeIn, glass-panel, variables propias
+   de la pantalla) se conserva sin cambios. */
+
+/* =========================================================
+   VARIABLES CSS — Design Tokens CONALEP
+   (se conservan íntegras; el menú reutiliza estas mismas
+   variables, no se duplican)
+   ========================================================= */
+:root {
+  --color-primary:                  #00492f;
+  --color-primary-container:        #006341;
+  --color-on-primary-container:     #ffffff;
+  --color-secondary:                #486459;
+  --color-secondary-container:      #c8e7d8;
+  --color-error:                    #ba1a1a;
+  --color-error-container:          #ffdad6;
+  --color-surface:                  #f7faf8;
+  --color-surface-container:        #ebefed;
+  --color-surface-container-low:    #f1f4f2;
+  --color-surface-container-high:   #e6e9e7;
+  --color-surface-container-highest:#e0e3e1;
+  --color-surface-container-lowest: #ffffff;
+  --color-outline:                  #6f7a72;
+  --color-outline-variant:          #bec9c0;
+  --color-on-surface:               #181c1b;
+  --color-on-surface-variant:       #3f4942;
+  --color-background:               #f7faf8;
+
+  --font-family-base:       'Inter', sans-serif;
+  --spacing-unit:           8px;
+  --spacing-gutter:         24px;
+  --spacing-margin-mobile:  16px;
+  --spacing-margin-desktop: 40px;
+  --container-max-width:    1280px;
+  --sidebar-width:          288px; /* idéntico al ancho del sidebar de Home (288px) */
+
+  --radius-sm:   2px;
+  --radius-lg:   4px;
+  --radius-xl:   8px;
+  --radius-full: 12px;
+}
+
+/* =========================================================
+   RESET / BASE (propio de Schedule, sin cambios)
+   ========================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+a    { text-decoration: none; color: inherit; }
+button { font-family: var(--font-family-base); cursor: pointer; border: none; background: none; }
+img  { display: block; max-width: 100%; }
+
+/* ────────────────────────────────────────
+   ÍCONOS MATERIAL SYMBOLS
+   (idéntico a Home.css; el menú depende de esta clase)
+   ──────────────────────────────────────── */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* =========================================================
+   ANIMACIÓN FADE IN (propio de Schedule, sin cambios)
+   ========================================================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* =========================================================
+   GLASS PANEL — Panel con efecto cristal (propio de Schedule)
+   ========================================================= */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* =========================================================
+   LAYOUT RAÍZ
+   ========================================================= */
+.app-root {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Evita el scroll del body cuando el sidebar móvil está abierto
+   (clase aplicada por la lógica del Menú Base Oficial) */
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* ============================================================
+   MENÚ BASE OFICIAL (extraído literalmente de Home.css)
+   Sidebar, overlay y botón de menú — sin alteraciones de
+   valores, nombres de clase, colores, radios ni animaciones.
+   ============================================================ */
+
+/* ---------------------------------------------------------------------
+   Overlay (sidebar móvil)
+   --------------------------------------------------------------------- */
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Sidebar
+   --------------------------------------------------------------------- */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 288px;
+  max-width: 85vw;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  z-index: 50;
+  background-color: var(--color-surface-container-low);
+  border-right: 1px solid var(--color-outline-variant);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar--open {
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(190, 201, 192, 0.3);
+}
+
+.sidebar-brand-icon {
+  color: var(--color-primary);
+  font-size: 30px;
+}
+
+.sidebar-brand-name {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
+  border-radius: var(--radius-lg);
+  color: var(--color-on-surface-variant);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(162, 244, 199, 0.3);
+  color: var(--color-primary);
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-link--active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.sidebar-link--active:hover {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transform: none;
+  box-shadow: none;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(190, 201, 192, 0.3);
+  padding-top: 16px;
+}
+
+.sidebar-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
+  border-radius: var(--radius-lg);
+  color: var(--color-error);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar-logout:hover {
+  background-color: rgba(255, 218, 214, 0.3);
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------------------------------------------------------------------
+   Botón de menú hamburguesa (solo móvil) — clase del Menú Base Oficial
+   --------------------------------------------------------------------- */
+
+.mobile-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-full);
+  color: var(--color-on-surface);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-menu-btn:hover {
+  background-color: var(--color-surface-container-high);
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-btn {
+    display: none;
+  }
+}
+
+/* =========================================================
+   MAIN — Contenido principal (propio de Schedule)
+   Breakpoint de margin-left ajustado a 768px para coincidir
+   con el punto en que el sidebar del Menú Base Oficial pasa
+   a estar siempre visible (antes era 1024px).
+   ========================================================= */
+.main-content {
+  min-height: 100vh;
+  padding: var(--spacing-margin-mobile);
+  background-color: var(--color-surface);
+  transition: all 300ms ease;
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    margin-left: var(--sidebar-width);
+    padding: var(--spacing-margin-desktop);
+  }
+}
+
+/* =========================================================
+   BARRA SUPERIOR MÓVIL
+   Se mantiene oculta a partir de 768px (antes 1024px), ya
+   que coincide con el punto en que el sidebar del Menú Base
+   Oficial queda fijo y visible.
+   ========================================================= */
+.mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 768px) {
+  .mobile-header { display: none; }
+}
+
+.mobile-header__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Marca CONALEP en móvil (propio de Schedule, sin cambios) */
+.mobile-header__brand {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* Versión larga: oculta en pantallas muy pequeñas */
+.mobile-header__brand--full  { display: none; }
+.mobile-header__brand--short { display: block; }
+
+@media (min-width: 640px) {
+  .mobile-header__brand--full  { display: block; }
+  .mobile-header__brand--short { display: none; }
+}
+
+/* =========================================================
+   PAGE HEADER — Encabezado de la sección (sin cambios)
+   ========================================================= */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: var(--spacing-gutter);
+}
+
+@media (min-width: 768px) {
+  .page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.page-header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-header__icon-box {
+  padding: 12px;
+  background-color: rgba(0, 99, 65, 0.1);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-header__icon {
+  color: var(--color-primary);
+  font-size: 30px !important;
+}
+
+.page-header__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .page-header__title { font-size: 30px; }
+}
+
+.page-header__period {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.page-header__period-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+}
+
+.page-header__period-badge {
+  padding: 2px 8px;
+  background-color: var(--color-surface-container-highest);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .page-header__actions { gap: 12px; }
+}
+
+/* ── Botón Imprimir ── */
+.btn-print {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-xl);
+  color: var(--color-on-surface-variant);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 200ms ease;
+}
+
+.btn-print:hover {
+  background-color: var(--color-surface-container-high);
+}
+
+/* Texto oculto en móvil */
+.btn-print__label { display: none; }
+
+@media (min-width: 640px) {
+  .btn-print__label { display: inline; }
+  .btn-print { padding: 10px 20px; }
+}
+
+/* ── Botón Descargar PDF ── */
+.btn-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: var(--color-primary-container);
+  color: #ffffff;
+  border-radius: var(--radius-xl);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: background-color 200ms ease;
+}
+
+.btn-download:hover {
+  background-color: var(--color-primary);
+}
+
+/* Estado de carga (añadido por JS) */
+.btn-download--loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+  .btn-download { padding: 10px 20px; }
+}
+
+/* =========================================================
+   CONTENEDOR DEL HORARIO (sin cambios)
+   ========================================================= */
+.schedule-wrapper {
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  border: 1px solid var(--color-outline-variant);
+  overflow: hidden;
+  margin-bottom: var(--spacing-gutter);
+}
+
+.schedule-scroll {
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+
+.schedule-scroll::-webkit-scrollbar       { height: 6px; }
+.schedule-scroll::-webkit-scrollbar-track { background: transparent; }
+.schedule-scroll::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 10px; }
+
+/* =========================================================
+   GRILLA DEL HORARIO (sin cambios)
+   ========================================================= */
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 100px repeat(5, 1fr);
+  border-top:  1px solid var(--color-surface-container-highest);
+  border-left: 1px solid var(--color-surface-container-highest);
+  min-width: 900px;
+}
+
+/* ── Celdas de encabezado ── */
+.header-cell {
+  background-color: var(--color-surface-container-low);
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--color-on-surface-variant);
+  border-right:  1px solid var(--color-surface-container-highest);
+  border-bottom: 1px solid var(--color-surface-container-highest);
+}
+
+/* ── Celdas de contenido ── */
+.schedule-cell {
+  border-right:  1px solid var(--color-surface-container-highest);
+  border-bottom: 1px solid var(--color-surface-container-highest);
+  min-height: 100px;
+  padding: 4px;
+  background-color: #ffffff;
+}
+
+/* Celda de hora (columna izquierda) */
+.schedule-cell--time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-on-surface-variant);
+}
+
+/* ── Fila de receso ── */
+.receso-row {
+  background-color: var(--color-surface-container-low);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: span 6;
+  border-right:  1px solid var(--color-surface-container-highest);
+  border-bottom: 1px solid var(--color-surface-container-highest);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--color-outline);
+  font-size: 12px;
+}
+
+/* =========================================================
+   TARJETA DE CLASE (sin cambios)
+   ========================================================= */
+.class-card {
+  height: 100%;
+  background-color: var(--color-surface);
+  border-left: 4px solid;  /* color aplicado inline desde props */
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.class-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
+}
+
+.class-card__subject {
+  font-weight: 700;
+  font-size: 13px;
+  /* color aplicado inline desde props */
+}
+
+.class-card__professor {
+  font-size: 11px;
+  color: var(--color-on-surface-variant);
+  margin-top: 2px;
+}
+
+.class-card__room {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-on-surface-variant);
+  opacity: 0.6;
+}
+
+.class-card__room .material-symbols-outlined {
+  font-size: 14px !important;
+}
+
+/* =========================================================
+   TARJETAS DE ESTADÍSTICAS (sin cambios)
+   ========================================================= */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-unit);
+  margin-bottom: var(--spacing-gutter);
+}
+
+@media (min-width: 640px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: box-shadow 200ms ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card__icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-xl);
+  background-color: rgba(0, 99, 65, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.stat-card__label {
+  font-size: 10px;
+  color: var(--color-on-surface-variant);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.stat-card__value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+/* =========================================================
+   NOTAS DEL PERIODO — Sección footer (sin cambios)
+   ========================================================= */
+.notes-section {
+  padding: var(--spacing-gutter);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .notes-section {
+    flex-direction: row;
+  }
+}
+
+.notes-section__content {
+  flex: 1;
+}
+
+.notes-section__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.notes-section__title .material-symbols-outlined {
+  font-size: 20px !important;
+}
+
+.notes-section__text {
+  font-size: 14px;
+  color: var(--color-on-surface-variant);
+  line-height: 1.6;
+}
+
+.notes-section__action {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .notes-section__action { width: auto; }
+}
+
+/* ── Botón Reportar Incidencia ── */
+.btn-report {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: var(--color-surface-container-highest);
+  color: var(--color-on-surface);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  transition: background-color 200ms ease;
+  white-space: nowrap;
+}
+
+.btn-report:hover {
+  background-color: var(--color-surface-container-high);
+}
+
+@media (min-width: 768px) {
+  .btn-report { width: auto; }
+}

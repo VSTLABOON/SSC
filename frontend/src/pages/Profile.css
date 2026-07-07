@@ -1,0 +1,862 @@
+/* ============================================================
+   Profile.css — Estilos completos sin Tailwind
+   CONALEP Gestión Conductual
+   Compatible con React + JavaScript/TypeScript
+
+   NOTA DE INTEGRACIÓN DEL MENÚ:
+   Las clases .sidebar*, .sidebar-overlay*, .mobile-menu-btn y
+   .material-symbols-outlined fueron reemplazadas por las
+   definiciones EXACTAS del Menú Base Oficial extraído de
+   Home.css. No se modificaron valores, nombres, animaciones,
+   colores ni breakpoints respecto al original de Home.
+   Las antiguas clases del sidebar de Profile (.sidebar__header,
+   .sidebar__logo-circle, .sidebar__title, .sidebar__subtitle,
+   .sidebar__nav, .nav-item, .nav-item--active, .sidebar__footer,
+   .btn-logout, .btn-menu-toggle, .sidebar--hidden) fueron
+   eliminadas porque pertenecían a la implementación anterior
+   del menú, ya sustituida.
+   Todo lo demás (hero card, info-grid, footer, topbar scroll,
+   variables de color/tipografía propias de la pantalla) se
+   conserva sin cambios.
+   ============================================================ */
+
+/* ────────────────────────────────────────
+   VARIABLES CSS — Design Tokens CONALEP
+   Equivalentes al theme de Tailwind config
+   (se conservan íntegras; el menú reutiliza estas mismas
+   variables, no se duplican)
+   ──────────────────────────────────────── */
+:root {
+  /* Colores primarios */
+  --color-primary:                  #00492f;
+  --color-on-primary:               #ffffff;
+  --color-primary-container:        #006341;
+  --color-on-primary-container:     #8cdcb1;
+  --color-primary-fixed:            #a2f4c7;
+  --color-primary-fixed-dim:        #86d7ac;
+  --color-on-primary-fixed:         #002113;
+  --color-on-primary-fixed-variant: #005235;
+  --color-inverse-primary:          #86d7ac;
+
+  /* Colores secundarios */
+  --color-secondary:                    #486459;
+  --color-on-secondary:                 #ffffff;
+  --color-secondary-container:          #c8e7d8;
+  --color-on-secondary-container:       #4d685d;
+  --color-secondary-fixed:              #cbe9db;
+  --color-secondary-fixed-dim:          #afcdbf;
+  --color-on-secondary-fixed:           #042017;
+  --color-on-secondary-fixed-variant:   #314c42;
+
+  /* Colores terciarios */
+  --color-tertiary:                   #3d3f3f;
+  --color-on-tertiary:                #ffffff;
+  --color-tertiary-container:         #545657;
+  --color-on-tertiary-container:      #cbcbcc;
+  --color-tertiary-fixed:             #e2e2e2;
+  --color-tertiary-fixed-dim:         #c6c6c7;
+  --color-on-tertiary-fixed:          #1a1c1c;
+  --color-on-tertiary-fixed-variant:  #454747;
+
+  /* Colores de error */
+  --color-error:              #ba1a1a;
+  --color-on-error:           #ffffff;
+  --color-error-container:    #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Superficies */
+  --color-surface:                    #f7faf8;
+  --color-surface-bright:             #f7faf8;
+  --color-surface-dim:                #d7dbd9;
+  --color-surface-variant:            #e0e3e1;
+  --color-surface-container-lowest:   #ffffff;
+  --color-surface-container-low:      #f1f4f2;
+  --color-surface-container:          #ebefed;
+  --color-surface-container-high:     #e6e9e7;
+  --color-surface-container-highest:  #e0e3e1;
+  --color-surface-tint:               #136c49;
+
+  /* On-surface */
+  --color-on-surface:         #181c1b;
+  --color-on-surface-variant: #3f4942;
+  --color-inverse-surface:    #2d3130;
+  --color-inverse-on-surface: #eef1ef;
+  --color-background:         #f7faf8;
+  --color-on-background:      #181c1b;
+
+  /* Bordes */
+  --color-outline:         #6f7a72;
+  --color-outline-variant: #bec9c0;
+
+  /* Tipografía */
+  --font-family-base: 'Inter', sans-serif;
+
+  /* Espaciado */
+  --spacing-unit:           8px;
+  --spacing-gutter:         24px;
+  --spacing-margin-mobile:  16px;
+  --spacing-margin-desktop: 40px;
+  --container-max-width:    1280px;
+
+  /* Radios (design tokens propios de Profile, usados por el contenido) */
+  --radius-sm:   2px;
+  --radius-lg:   4px;
+  --radius-xl:   8px;
+  --radius-full: 12px;
+
+  /* Sidebar */
+  --sidebar-width: 288px; /* idéntico al ancho del sidebar de Home (288px) */
+}
+
+/* ────────────────────────────────────────
+   RESET / BASE (propio de Profile, sin cambios)
+   ──────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--color-on-surface);
+  background-color: var(--color-surface-container-low);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: var(--font-family-base);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ────────────────────────────────────────
+   ÍCONOS MATERIAL SYMBOLS
+   (idéntico a Home.css; el menú depende de esta clase)
+   ──────────────────────────────────────── */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Variante relleno (FILL=1), usada en íconos específicos del
+   contenido de Profile (no es parte del menú) */
+.material-symbols-outlined.icon-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ────────────────────────────────────────
+   LAYOUT RAÍZ — Wrapper del componente
+   ──────────────────────────────────────── */
+.profile-root {
+  background-color: var(--color-surface-container-low);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Evita el scroll del body cuando el sidebar móvil está abierto
+   (clase aplicada por la lógica del Menú Base Oficial) */
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* ============================================================
+   MENÚ BASE OFICIAL (extraído literalmente de Home.css)
+   Sidebar, overlay y botón de menú — sin alteraciones de
+   valores, nombres de clase, colores, radios ni animaciones.
+   ============================================================ */
+
+/* ---------------------------------------------------------------------
+   Overlay (sidebar móvil)
+   --------------------------------------------------------------------- */
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Sidebar
+   --------------------------------------------------------------------- */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 288px;
+  max-width: 85vw;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  z-index: 50;
+  background-color: var(--color-surface-container-low);
+  border-right: 1px solid var(--color-outline-variant);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar--open {
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(190, 201, 192, 0.3);
+}
+
+.sidebar-brand-icon {
+  color: var(--color-primary);
+  font-size: 30px;
+}
+
+.sidebar-brand-name {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
+  border-radius: var(--radius-lg);
+  color: var(--color-on-surface-variant);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(162, 244, 199, 0.3);
+  color: var(--color-primary);
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-link--active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.sidebar-link--active:hover {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transform: none;
+  box-shadow: none;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(190, 201, 192, 0.3);
+  padding-top: 16px;
+}
+
+.sidebar-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
+  border-radius: var(--radius-lg);
+  color: var(--color-error);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar-logout:hover {
+  background-color: rgba(255, 218, 214, 0.3);
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------------------------------------------------------------------
+   Botón de menú hamburguesa (solo móvil) — clase del Menú Base Oficial
+   --------------------------------------------------------------------- */
+
+.mobile-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-full);
+  color: var(--color-on-surface);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-menu-btn:hover {
+  background-color: var(--color-surface-container-high);
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-btn {
+    display: none;
+  }
+}
+
+/* ============================================================
+   MAIN — Área de contenido principal (propio de Profile)
+   ============================================================ */
+.main-content {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface-container-low);
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+/* ============================================================
+   HEADER — TopAppBar (propio de Profile, sin cambios)
+   ============================================================ */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 24px;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: rgba(247, 250, 248, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-outline-variant);
+  transition: all 200ms ease;
+}
+
+@media (min-width: 768px) {
+  .topbar {
+    padding: 0 var(--spacing-margin-desktop);
+  }
+}
+
+/* Estado scrolled: fondo sólido + sombra (añadido vía JS) */
+.topbar--scrolled {
+  background-color: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Breadcrumb móvil */
+.topbar__breadcrumb {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .topbar__breadcrumb {
+    display: none;
+  }
+}
+
+/* Navegación breadcrumb desktop (vacía en el diseño original) */
+.topbar__nav-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .topbar__nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+/* ============================================================
+   ÁREA DE CONTENIDO (propio de Profile, sin cambios)
+   ============================================================ */
+.page-content {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .page-content {
+    padding: var(--spacing-margin-desktop);
+  }
+}
+
+/* ============================================================
+   PATRÓN DE PUNTOS — Hero Card
+   ============================================================ */
+.hero-dot-pattern {
+  background-image: radial-gradient(var(--color-outline) 0.5px, transparent 0.5px);
+  background-size: 16px 16px;
+}
+
+/* ============================================================
+   HERO CARD — Resumen del perfil
+   ============================================================ */
+.hero-card {
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  border: 1px solid var(--color-outline-variant);
+  overflow: hidden;
+}
+
+.hero-card__inner {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+@media (min-width: 768px) {
+  .hero-card__inner {
+    padding: 32px;
+    flex-direction: row;
+  }
+}
+
+/* ── Avatar ── */
+.hero-card__avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.hero-card__avatar-ring {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 4px solid var(--color-primary);
+  padding: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 73, 47, 0.2);
+}
+
+@media (min-width: 768px) {
+  .hero-card__avatar-ring {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+.hero-card__avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.hero-card__verified-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-card__verified-badge .material-symbols-outlined {
+  font-size: 18px;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── Info del alumno ── */
+.hero-card__info {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .hero-card__info {
+    text-align: left;
+  }
+}
+
+.hero-card__name-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .hero-card__name-row {
+    justify-content: flex-start;
+  }
+}
+
+.hero-card__name {
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+@media (max-width: 767px) {
+  .hero-card__name {
+    font-size: 28px;
+    line-height: 36px;
+  }
+}
+
+.hero-card__badge {
+  background-color: rgba(0, 99, 65, 0.1);
+  color: var(--color-primary-container);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hero-card__details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero-card__detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--color-on-surface-variant);
+}
+
+@media (min-width: 768px) {
+  .hero-card__detail-row {
+    justify-content: flex-start;
+  }
+}
+
+.hero-card__detail-row .material-symbols-outlined {
+  color: var(--color-primary);
+}
+
+.hero-card__detail-text {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+/* ── Acciones ── */
+.hero-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .hero-card__actions {
+    width: auto;
+  }
+}
+
+.btn-edit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+  background-color: transparent;
+  transition: all 200ms ease;
+}
+
+.btn-edit:hover {
+  background-color: rgba(0, 73, 47, 0.05);
+}
+
+/* ============================================================
+   GRILLA DE INFORMACIÓN — 3 tarjetas
+   ============================================================ */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  .info-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Card genérica de información ── */
+.info-card {
+  background-color: #ffffff;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  border: 1px solid var(--color-outline-variant);
+  display: flex;
+  flex-direction: column;
+}
+
+.info-card__header {
+  margin-bottom: 24px;
+}
+
+.info-card__icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-container-high);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  margin-bottom: 16px;
+}
+
+/* Variante de icono para tarjeta médica */
+.info-card__icon-box--error {
+  background-color: rgba(255, 218, 214, 0.2);
+  color: var(--color-error);
+}
+
+.info-card__title {
+  font-weight: 700;
+  color: var(--color-on-surface);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.info-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Campos de la tarjeta ── */
+.info-field {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(190, 201, 192, 0.3);
+}
+
+.info-field:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.info-field__label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.info-field__value {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--color-on-surface);
+}
+
+/* Truncar texto largo (correo institucional) */
+.info-field__value--truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Valor en color error (alergias, tipo sangre) */
+.info-field__value--error {
+  color: var(--color-error);
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Texto secundario pequeño (teléfono tutor) */
+.info-field__sub {
+  font-size: 10px;
+  color: var(--color-on-surface-variant);
+  margin-top: 2px;
+}
+
+/* ── Chip de tipo de sangre ── */
+.blood-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(255, 218, 214, 0.3);
+  color: var(--color-error);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(186, 26, 26, 0.2);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.blood-type-chip .material-symbols-outlined {
+  font-size: 14px;
+}
+
+/* Fila de campo con layout horizontal para chip */
+.info-field--row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.page-footer {
+  padding: 24px;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-outline-variant);
+  margin-top: 48px;
+}
+
+@media (min-width: 768px) {
+  .page-footer {
+    padding: 24px var(--spacing-margin-desktop);
+  }
+}
+
+.page-footer__inner {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .page-footer__inner {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.page-footer__copy {
+  color: var(--color-on-surface-variant);
+  font-size: 12px;
+}
+
+.page-footer__links {
+  display: flex;
+  gap: 24px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+}
+
+.page-footer__links a:hover {
+  color: var(--color-primary);
+  transition: color 200ms ease;
+}

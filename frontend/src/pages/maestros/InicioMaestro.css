@@ -1,0 +1,1053 @@
+/* ============================================================
+   InicioMaestro.css
+   Conversión literal de HTML + Tailwind (CDN) a CSS puro.
+   Conserva el diseño visual, colores, espaciados, sombras y
+   comportamiento responsive exactos del HTML original.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+/* ---------------------------------------------------------------------
+   Reset mínimo (equivalente al comportamiento base de Tailwind/preflight
+   que el HTML original heredaba del CDN)
+   --------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------------
+   Variables — Design tokens (idénticos al tailwind.config del HTML)
+   --------------------------------------------------------------------- */
+
+.im-body {
+  --chambray: #204785;
+  --mystic: #DDE4E5;
+  --surface-bright: #DDE4E5;
+  --error-container: #ffdad6;
+  --outline-variant: #bec9c0;
+  --on-error-container: #93000a;
+  --on-primary: #ffffff;
+  --surface-variant: #DDE4E5;
+  --error: #ba1a1a;
+  --tertiary: #6d2928;
+  --primary-container: #204785;
+  --inverse-on-surface: #eef2ec;
+  --tertiary-fixed: #ffdad7;
+  --inverse-surface: #2d312e;
+  --secondary-container: #dee0e2;
+  --secondary: #5c5f60;
+  --background: #DDE4E5;
+  --surface-container: #DDE4E5;
+  --on-tertiary-container: #ffbbb7;
+  --on-surface-variant: #3f4942;
+  --on-background: #181d1a;
+  --tertiary-fixed-dim: #ffb3af;
+  --surface-container-highest: #dee0e2;
+  --secondary-fixed-dim: #c5c6c8;
+  --tertiary-container: #8a3f3d;
+  --on-primary-fixed: #002113;
+  --on-secondary: #ffffff;
+  --surface-container-high: #e5e9e4;
+  --on-primary-container: #DDE4E5;
+  --primary-fixed-dim: #86d7ac;
+  --primary-fixed: #a2f4c7;
+  --on-tertiary: #ffffff;
+  --on-secondary-fixed: #191c1e;
+  --outline: #6f7a72;
+  --surface-container-low: #f1f5ef;
+  --on-secondary-fixed-variant: #444749;
+  --primary: #204785;
+  --surface-tint: #204785;
+  --on-primary-fixed-variant: #005235;
+  --surface-dim: #d7dbd6;
+  --secondary-fixed: #e1e2e4;
+  --inverse-primary: #86d7ac;
+  --on-tertiary-fixed: #3d0508;
+  --on-error: #ffffff;
+  --surface: #DDE4E5;
+  --on-tertiary-fixed-variant: #77302f;
+  --on-secondary-container: #606365;
+  --surface-container-lowest: #ffffff;
+  --on-surface: #181d1a;
+
+  /* borderRadius */
+  --radius: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* spacing */
+  --space-container-max: 1280px;
+  --space-base: 4px;
+  --space-lg: 24px;
+  --space-gutter: 24px;
+  --space-xs: 8px;
+  --space-xl: 32px;
+  --space-sm: 12px;
+  --space-md: 16px;
+
+  /* Equivalente a: bg-mystic text-on-background min-h-screen overflow-x-hidden */
+  background-color: var(--mystic);
+  color: var(--on-background);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ============================================================
+   OVERLAY — equivalente a:
+   fixed inset-0 bg-black/50 z-40 md:hidden + #sidebar-overlay / .active
+   ============================================================ */
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.sidebar-overlay--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
+/* ============================================================
+   SIDEBAR — equivalente a:
+   fixed left-0 top-0 h-full z-50 flex flex-col w-72 shadow-xl
+   md:shadow-none border-r border-outline-variant/30 mobile-hidden
+   md:transform-none bg-chambray + #sidebar { transition: transform }
+   ============================================================ */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: 288px; /* w-72 */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(190, 201, 192, 0.3); /* border-outline-variant/30 */
+  background-color: var(--chambray);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* .mobile-hidden — en el HTML original esta clase solo tiene efecto
+   dentro del media query (max-width: 767px); en desktop el sidebar
+   permanece visible sin importar si la clase está presente. */
+@media (max-width: 767px) {
+  .sidebar--mobile-hidden {
+    transform: translateX(-100%);
+  }
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    box-shadow: none;
+    transform: none; /* md:transform-none */
+  }
+}
+
+/* ── Encabezado del sidebar (logo + marca + tarjeta docente) ──
+   equivalente a: p-lg mb-6 */
+
+.sidebar-top {
+  padding: var(--space-lg);
+  margin-bottom: 24px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.sidebar-brand-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.sidebar-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sidebar-brand-name {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+/* ── Teacher Profile Card — equivalente a:
+   bg-white rounded-xl p-4 shadow-md flex flex-col items-center
+   text-center gap-2 */
+
+.teacher-card {
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.teacher-card-greeting {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--secondary);
+}
+
+.teacher-card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(32, 71, 133, 0.1); /* border-chambray/10 */
+}
+
+.teacher-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teacher-card-name {
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.teacher-card-role {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+/* ── Navegación — equivalente a:
+   flex-1 flex flex-col gap-2 px-4 + .nav-item ... */
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background-color: transparent;
+  color: rgba(221, 228, 229, 0.9); /* text-mystic/90 */
+  font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Ítem activo — equivalente a:
+   bg-mystic text-chambray shadow-lg */
+.nav-item--active {
+  background-color: var(--mystic);
+  color: var(--chambray);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item--active:hover {
+  background-color: var(--mystic);
+  color: var(--chambray);
+}
+
+.nav-item-label {
+  font-size: 14px;
+}
+
+/* ── Footer (Cerrar Sesión) — equivalente a:
+   mt-auto p-lg flex flex-col gap-2 + bg-mystic text-chambray
+   hover:bg-white/50 border border-transparent hover:border-chambray/20 */
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item--logout {
+  background-color: var(--mystic);
+  color: var(--chambray);
+  border: 1px solid transparent;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.nav-item--logout:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(32, 71, 133, 0.2);
+}
+
+/* ============================================================
+   MAIN — equivalente a: md:ml-72 flex-1 min-h-screen
+   ============================================================ */
+
+.main-content {
+  min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    margin-left: 288px; /* md:ml-72 */
+  }
+}
+
+/* ============================================================
+   TOPBAR — equivalente a:
+   bg-mystic h-16 flex items-center justify-between px-lg
+   border-b border-chambray/20 sticky top-0 z-40
+   ============================================================ */
+
+.topbar {
+  background-color: var(--mystic);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-lg);
+  border-bottom: 1px solid rgba(32, 71, 133, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Botón de menú — equivalente a:
+   p-2 -ml-2 text-chambray cursor-pointer hover:bg-white/50
+   rounded-lg transition-colors md:hidden */
+
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin-left: -8px;
+  color: var(--chambray);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: background-color 0.2s ease;
+}
+
+.menu-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+@media (min-width: 768px) {
+  .menu-toggle {
+    display: none;
+  }
+}
+
+/* Título — equivalente a:
+   font-headline-sm text-headline-sm font-extrabold text-chambray */
+
+.topbar-title {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--chambray);
+  margin: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.topbar-icon-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botón vacío de notificaciones — equivalente a:
+   p-2 rounded-full hover:bg-white/50 transition-colors */
+
+.icon-button {
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Divisor — equivalente a:
+   hidden sm:block h-8 w-[1px] bg-chambray/20 */
+
+.topbar-divider {
+  display: none;
+  width: 1px;
+  height: 32px;
+  background-color: rgba(32, 71, 133, 0.2);
+}
+
+@media (min-width: 640px) {
+  .topbar-divider {
+    display: block;
+  }
+}
+
+.topbar-institution {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Etiqueta de plantel — equivalente a:
+   hidden sm:inline font-label-md text-label-md text-on-surface-variant */
+
+.topbar-institution-label {
+  display: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+}
+
+@media (min-width: 640px) {
+  .topbar-institution-label {
+    display: inline;
+  }
+}
+
+/* Logo institucional — equivalente a:
+   h-8 grayscale opacity-70 hover:grayscale-0 transition-all cursor-pointer */
+
+.topbar-institution-logo {
+  height: 32px;
+  filter: grayscale(1);
+  opacity: 0.7;
+  cursor: pointer;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.topbar-institution-logo:hover {
+  filter: grayscale(0);
+  opacity: 1;
+}
+
+/* ============================================================
+   CONTENT CANVAS — equivalente a: p-xl max-w-container-max mx-auto
+   ============================================================ */
+
+.content-canvas {
+  padding: var(--space-xl);
+  max-width: var(--space-container-max);
+  margin: 0 auto;
+}
+
+/* ============================================================
+   BÚSQUEDA GLOBAL — equivalente a: mb-xl + relative group
+   ============================================================ */
+
+.search-section {
+  margin-bottom: var(--space-xl);
+}
+
+.search-wrapper {
+  position: relative;
+}
+
+/* Dropdown de autocompletado — equivalente a:
+   absolute top-full left-0 right-0 mt-2 bg-white rounded-xl
+   shadow-xl border border-chambray/10 z-30 overflow-hidden hidden */
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(32, 71, 133, 0.1);
+  z-index: 30;
+  overflow: hidden;
+}
+
+/* En el HTML original el dropdown lleva la clase "hidden" de Tailwind
+   y no existe lógica JS que la quite; permanece oculto siempre. */
+.search-dropdown--hidden {
+  display: none;
+}
+
+.search-dropdown-header {
+  padding: 16px;
+  background-color: var(--mystic);
+  border-bottom: 1px solid rgba(32, 71, 133, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-dropdown-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--secondary);
+}
+
+.search-dropdown-hint {
+  font-size: 12px;
+  color: rgba(92, 95, 96, 0.6);
+}
+
+.search-dropdown-body {
+  padding: 8px;
+}
+
+/* Resultado de búsqueda — equivalente a:
+   w-full flex items-center justify-between p-4 hover:bg-chambray/5
+   rounded-lg transition-colors group/item */
+
+.search-result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.search-result:hover {
+  background-color: rgba(32, 71, 133, 0.05);
+}
+
+.search-result-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-result-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(32, 71, 133, 0.1);
+  color: var(--chambray);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-result-text {
+  text-align: left;
+}
+
+.search-result-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.search-result-meta {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 0;
+}
+
+/* Flecha — equivalente a:
+   text-chambray opacity-0 group-hover/item:opacity-100 transition-opacity */
+
+.search-result-arrow {
+  color: var(--chambray);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.search-result:hover .search-result-arrow {
+  opacity: 1;
+}
+
+/* ============================================================
+   BENTO GRID — equivalente a: grid grid-cols-12 gap-gutter
+   ============================================================ */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--space-gutter);
+}
+
+/* Horario de Hoy Card — equivalente a:
+   col-span-12 lg:col-span-8 bg-white rounded-xl shadow-md p-lg
+   overflow-hidden relative */
+
+.card--schedule {
+  grid-column: span 12;
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  padding: var(--space-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .card--schedule {
+    grid-column: span 8;
+  }
+}
+
+/* card-stack — contenedor de Avisos, equivalente a:
+   col-span-12 lg:col-span-4 space-y-gutter */
+
+.card-stack {
+  grid-column: span 12;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-gutter);
+}
+
+@media (min-width: 1024px) {
+  .card-stack {
+    grid-column: span 4;
+  }
+}
+
+/* Header de tarjeta — equivalente a: flex items-center justify-between mb-lg */
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.card-header--no-margin {
+  margin-bottom: 24px; /* mb-6 en el original */
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background-color: rgba(32, 71, 133, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-icon {
+  color: var(--chambray);
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--chambray);
+  margin: 0;
+}
+
+.date-chip {
+  background-color: var(--mystic);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--chambray);
+}
+
+/* ── Lista de horario — equivalente a: space-y-4 ── */
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Class Item — equivalente a:
+   flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 p-4
+   border border-chambray/10 rounded-xl hover:border-chambray/30
+   transition-all group */
+
+.schedule-item {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid rgba(32, 71, 133, 0.1);
+  border-radius: var(--radius-xl);
+  transition: border-color 0.2s ease;
+}
+
+.schedule-item:hover {
+  border-color: rgba(32, 71, 133, 0.3);
+}
+
+@media (min-width: 640px) {
+  .schedule-item {
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
+}
+
+/* Class Item (Receso) — equivalente a:
+   flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 p-4
+   border border-chambray/5 rounded-xl bg-mystic/20 */
+
+.schedule-item--break {
+  border-color: rgba(32, 71, 133, 0.05);
+  background-color: rgba(221, 228, 229, 0.2);
+}
+
+.schedule-time {
+  text-align: left;
+  width: 80px;
+}
+
+@media (min-width: 640px) {
+  .schedule-time {
+    text-align: center;
+  }
+}
+
+.schedule-time-start {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--chambray);
+  margin: 0;
+}
+
+.schedule-time-start--muted {
+  color: var(--secondary);
+}
+
+.schedule-time-end {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 0;
+}
+
+/* Divisor vertical — equivalente a: hidden sm:block w-[2px] h-10 bg-chambray/10 */
+
+.schedule-divider {
+  display: none;
+  width: 2px;
+  height: 40px;
+  background-color: rgba(32, 71, 133, 0.1);
+}
+
+.schedule-divider--muted {
+  background-color: rgba(32, 71, 133, 0.05);
+}
+
+@media (min-width: 640px) {
+  .schedule-divider {
+    display: block;
+  }
+}
+
+.schedule-info {
+  flex: 1;
+}
+
+.schedule-info--break {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-subject {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.schedule-group {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 0;
+}
+
+.schedule-break-icon {
+  color: var(--secondary);
+}
+
+.schedule-break-text {
+  font-style: italic;
+  color: var(--secondary);
+  margin: 0;
+}
+
+/* Botón Pasar Lista — equivalente a:
+   bg-chambray text-white px-4 py-2 rounded-lg font-label-md
+   text-label-md sm:opacity-0 sm:group-hover:opacity-100
+   transition-all w-fit */
+
+.btn-pasar-lista {
+  background-color: var(--chambray);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 500;
+  width: fit-content;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .btn-pasar-lista {
+    opacity: 0;
+  }
+
+  .schedule-item:hover .btn-pasar-lista {
+    opacity: 1;
+  }
+}
+
+/* ── Avisos de Dirección ──
+   equivalente a: bg-white rounded-xl shadow-md p-lg border-t-4 border-chambray */
+
+.card--announcements {
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  padding: var(--space-lg);
+  border-top: 4px solid var(--chambray);
+}
+
+/* Lista de avisos — equivalente a: space-y-6 */
+
+.announcements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Aviso — equivalente a:
+   relative pl-6 before:absolute before:left-0 before:top-0
+   before:bottom-0 before:w-1 before:bg-chambray before:rounded-full */
+
+.announcement {
+  position: relative;
+  padding-left: 24px;
+}
+
+.announcement::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--radius-full);
+  background-color: var(--chambray);
+}
+
+/* Aviso con antes:bg-chambray/30 (segundo aviso) */
+.announcement--low::before {
+  background-color: rgba(32, 71, 133, 0.3);
+}
+
+.announcement-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 4px;
+}
+
+.announcement-description {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.announcement-time {
+  font-size: 12px;
+  color: rgba(92, 95, 96, 0.6);
+  margin: 8px 0 0;
+}
+
+/* Botón Ver todos los avisos — equivalente a:
+   w-full mt-8 py-3 bg-mystic text-chambray font-label-md
+   text-label-md rounded-lg hover:bg-chambray/10 transition-colors
+   flex items-center justify-center gap-2 */
+
+.btn-ver-avisos {
+  width: 100%;
+  margin-top: var(--space-xl);
+  padding: 12px 0;
+  background-color: var(--mystic);
+  color: var(--chambray);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-ver-avisos:hover {
+  background-color: rgba(32, 71, 133, 0.1);
+}
+
+.btn-ver-avisos-icon {
+  font-size: 18px;
+}
+
+/* ============================================================
+   BOTTOM CONTEXTUAL SECTION — equivalente a:
+   mt-gutter grid grid-cols-1 md:grid-cols-3 gap-gutter
+   ============================================================ */
+
+.bottom-grid {
+  margin-top: var(--space-gutter);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-gutter);
+}
+
+@media (min-width: 768px) {
+  .bottom-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tarjeta contextual — equivalente a:
+   bg-white p-lg rounded-xl shadow-sm flex items-center gap-4
+   hover:shadow-md transition-all cursor-pointer */
+
+.context-card {
+  background-color: #ffffff;
+  padding: var(--space-lg);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+.context-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.context-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* equivalente a: bg-error-container + text-error */
+.context-icon-circle--error {
+  background-color: var(--error-container);
+}
+
+.context-icon-circle--error .context-icon {
+  color: var(--error);
+}
+
+/* equivalente a: bg-chambray/10 + text-chambray */
+.context-icon-circle--primary {
+  background-color: rgba(32, 71, 133, 0.1);
+}
+
+.context-icon-circle--primary .context-icon {
+  color: var(--chambray);
+}
+
+.context-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.context-subtitle {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 0;
+}
