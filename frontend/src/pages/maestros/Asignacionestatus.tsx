@@ -5,7 +5,7 @@ import { getAlumnosDeGrupo } from '../../services/alumnos';
 import { getPeriodoActivo } from '../../services/periodos';
 import { getCategoriasIncidencia } from '../../services/incidencias';
 import { supabase } from '../../lib/supabaseClient';
-import './AsignacionEstatus.css';
+import './Asignacionestatus.css';
 
 interface StatusOption {
   color: string;

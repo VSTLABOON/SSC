@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getIncidenciasPorPlantel } from '../../services/incidencias';
-import './HistorialReporteDA.css';
+import './Historialreporteda.css';
 
 interface IncidentFromDB {
   id: string;

@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getGruposDeDocente } from '../../services/grupos';
 import type { ClassDocente } from '../../services/grupos';
 import { useNavigate } from 'react-router-dom';
-import './ClasesPantalla.css';
+import './Clasespantalla.css';
 
 export default function ClasesPantalla() {
   const { session } = useAuth();
