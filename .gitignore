@@ -1,0 +1,25 @@
+# === Credenciales y secretos ===
+.env_Sup
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+*.env
+
+# === Dependencias ===
+node_modules/
+frontend/node_modules/
+
+# === Build outputs ===
+frontend/dist/
+frontend/.vite/
+
+# === Supabase local ===
+supabase/.branches/
+supabase/.temp/
+
+# === Sistema ===
+.DS_Store
+Thumbs.db
+*.log

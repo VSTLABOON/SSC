@@ -43,13 +43,13 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. Insertar Cuentas en la tabla pública de usuarios (relación 1:1 con Auth.Users)
-INSERT INTO public.usuarios (id, plantel_id, nombre, apellido, email, rol)
+INSERT INTO public.usuarios (id, plantel_id, nombre, apellido, email, rol, activo, intentos_fallidos)
 VALUES
-  ('d0000000-0000-0000-0000-000000000000', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Prof. Francisco', 'Gómez', 'docente@conalep.edu.mx', 'docente'),
-  ('d1111111-1111-1111-1111-111111111111', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Ing. Roberto', 'Hernández', 'director@conalep.edu.mx', 'directivo'),
-  ('d2222222-2222-2222-2222-222222222222', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Lic. Sofía', 'Ramírez', 'orientador@conalep.edu.mx', 'orientador'),
-  ('a0000000-0000-0000-0000-000000000000', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Alejandro', 'López', 'alumno@conalep.edu.mx', 'alumno'),
-  ('b0000000-0000-0000-0000-000000000000', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Marta', 'López', 'padre@conalep.edu.mx', 'padre')
+  ('d0000000-0000-0000-0000-000000000000', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Prof. Francisco', 'Gómez', 'docente@conalep.edu.mx', 'docente', true, 0),
+  ('d1111111-1111-1111-1111-111111111111', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Ing. Roberto', 'Hernández', 'director@conalep.edu.mx', 'directivo', true, 0),
+  ('d2222222-2222-2222-2222-222222222222', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Lic. Sofía', 'Ramírez', 'orientador@conalep.edu.mx', 'orientador', true, 0),
+  ('a0000000-0000-0000-0000-000000000000', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Alejandro', 'López', 'alumno@conalep.edu.mx', 'alumno', true, 0),
+  ('b0000000-0000-0000-0000-000000000000', 'b5cde2a6-38d5-450f-90db-3367c3bb1b51', 'Marta', 'López', 'padre@conalep.edu.mx', 'padre', true, 0)
 ON CONFLICT (id) DO NOTHING;
 
 -- 8. Insertar Datos de Alumnos (vinculado a usuario_id y con tipo_alumno obligatorio)

@@ -25,12 +25,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function hidratarPerfil(userId: string) {
     const { data, error } = await supabase
       .from('usuarios')
-      .select('rol, nombre, plantel_id')
+      .select('rol, nombre, plantel_id, activo, bloqueado_hasta')
       .eq('id', userId)
       .single();
 
     if (!error && data) {
-      setRol(data.rol);
+      // MEDIO-1: Verificar bloqueado_hasta
+      const ahora = new Date();
+      const bloqueado = data.bloqueado_hasta && new Date(data.bloqueado_hasta) > ahora;
+
+      // Si la cuenta está desactivada o bloqueada por intentos fallidos, tratarla como pendiente
+      setRol(bloqueado || !data.activo ? 'pendiente' : data.rol);
       setNombre(data.nombre);
       setPlantelId(data.plantel_id);
     } else {
@@ -41,12 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) await hidratarPerfil(session.user.id);
-      setLoading(false);
-    });
-
+    // LOW-06: Se recomienda usar únicamente onAuthStateChange para evitar llamadas paralelas
+    // y race conditions con getSession durante el montaje inicial
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session?.user) {
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNombre(null);
         setPlantelId(null);
       }
+      setLoading(false);
     });
 
     return () => listener.subscription.unsubscribe();

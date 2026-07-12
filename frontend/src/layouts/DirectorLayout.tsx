@@ -12,18 +12,26 @@ interface NavItem {
   path: string;
 }
 
-const navItems: NavItem[] = [
-  { id: 'inicio', icon: 'dashboard', label: 'Inicio', path: '/director/inicio' },
-  { id: 'reporte', icon: 'assessment', label: 'Generar Reporte', path: '/director/reporte' },
-  { id: 'historial', icon: 'history', label: 'Historial de Reportes', path: '/director/history' },
-];
+
+
 
 export default function DirectorLayout() {
   const [isSidebarHidden, setIsSidebarHidden] = useState(true);
   const [isOverlayActive, setIsOverlayActive] = useState(false);
-  const { nombre, signOut } = useAuth();
+  const { nombre, rol, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Nav items — usuarios solo visible al directivo
+  const navItems: NavItem[] = [
+    { id: 'inicio',    icon: 'dashboard',      label: 'Inicio',                path: '/director/inicio' },
+    { id: 'reporte',  icon: 'assessment',      label: 'Generar Reporte',       path: '/director/reporte' },
+    { id: 'historial',icon: 'history',         label: 'Historial de Reportes', path: '/director/historial' },
+    ...(rol === 'directivo'
+      ? [{ id: 'usuarios', icon: 'manage_accounts', label: 'Gestión de Usuarios', path: '/director/usuarios' }]
+      : []
+    ),
+  ];
 
   function openSidebar(): void {
     setIsSidebarHidden(false);
@@ -159,7 +167,11 @@ export default function DirectorLayout() {
                 ? 'Inicio'
                 : location.pathname === '/director/reporte'
                 ? 'Generar Reporte'
-                : 'Historial de Reportes'}
+                : location.pathname === '/director/historial'
+                ? 'Historial de Reportes'
+                : location.pathname === '/director/usuarios'
+                ? 'Gestión de Usuarios'
+                : 'Panel Directivo'}
             </h1>
           </div>
           <div className="grm-topbar-right">

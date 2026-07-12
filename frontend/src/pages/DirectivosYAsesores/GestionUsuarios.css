@@ -1,0 +1,363 @@
+/* GestionUsuarios.css — Panel de administración de usuarios del plantel */
+
+.gu-page {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+.gu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.gu-header-text h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--c-on-surface);
+  margin-bottom: 4px;
+}
+
+.gu-header-text p {
+  font-size: 14px;
+  color: var(--c-secondary);
+}
+
+.gu-invite-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--c-primary-cont);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background .18s, transform .12s;
+}
+.gu-invite-btn:hover  { background: var(--c-primary); transform: translateY(-1px); }
+.gu-invite-btn:active { transform: translateY(0); }
+
+/* ── Filtros ───────────────────────────────────────────────────────────────── */
+.gu-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gu-filter-btn {
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--c-outline-variant);
+  background: var(--c-white);
+  color: var(--c-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .16s;
+}
+.gu-filter-btn:hover       { border-color: var(--c-primary-cont); color: var(--c-primary-cont); }
+.gu-filter-btn--active     { background: var(--c-primary-cont); color: #fff; border-color: var(--c-primary-cont); }
+
+/* ── Tabla ─────────────────────────────────────────────────────────────────── */
+.gu-card {
+  background: var(--c-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.gu-table-wrap {
+  overflow-x: auto;
+}
+
+.gu-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gu-table thead {
+  background: var(--c-surface-low);
+}
+
+.gu-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--c-secondary);
+  border-bottom: 1px solid var(--c-outline-variant);
+  white-space: nowrap;
+}
+
+.gu-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--c-on-surface);
+  border-bottom: 1px solid var(--c-surface-high);
+  vertical-align: middle;
+}
+
+.gu-table tbody tr:last-child td { border-bottom: none; }
+.gu-table tbody tr:hover { background: var(--c-surface-low); }
+
+/* ── Avatar ────────────────────────────────────────────────────────────────── */
+.gu-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gu-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--c-primary-fixed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-primary-cont);
+  flex-shrink: 0;
+}
+
+.gu-user-name  { font-weight: 600; font-size: 14px; }
+.gu-user-email { font-size: 12px; color: var(--c-secondary); margin-top: 1px; }
+
+/* ── Rol select ────────────────────────────────────────────────────────────── */
+.gu-rol-select {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--c-outline-variant);
+  font-size: 13px;
+  font-family: var(--font);
+  background: var(--c-surface-low);
+  color: var(--c-on-surface);
+  cursor: pointer;
+  transition: border-color .16s;
+}
+.gu-rol-select:focus { outline: none; border-color: var(--c-primary-cont); }
+
+/* ── Estado badge ──────────────────────────────────────────────────────────── */
+.gu-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+}
+.gu-badge--pendiente { background: #fff3cd; color: #856404; }
+.gu-badge--activo    { background: #d1fae5; color: #065f46; }
+.gu-badge--inactivo  { background: var(--c-error-container); color: var(--c-on-error-cont); }
+
+/* ── Acciones ──────────────────────────────────────────────────────────────── */
+.gu-action-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .16s;
+}
+.gu-action-btn--activate   { background: #d1fae5; color: #065f46; }
+.gu-action-btn--activate:hover   { background: #a7f3d0; }
+.gu-action-btn--deactivate { background: var(--c-error-container); color: var(--c-on-error-cont); }
+.gu-action-btn--deactivate:hover { background: #ffb4ab; }
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+.gu-empty {
+  padding: 48px;
+  text-align: center;
+  color: var(--c-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.gu-empty .material-symbols-outlined { font-size: 48px; color: var(--c-outline-variant); }
+
+/* ── Modal ─────────────────────────────────────────────────────────────────── */
+.gu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+  animation: gu-fade-in .15s ease;
+}
+
+@keyframes gu-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.gu-modal {
+  background: var(--c-white);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: var(--shadow-md);
+  animation: gu-slide-up .2s ease;
+}
+
+@keyframes gu-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.gu-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.gu-modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--c-on-surface);
+}
+
+.gu-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--c-secondary);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color .15s, background .15s;
+}
+.gu-modal-close:hover { color: var(--c-on-surface); background: var(--c-surface-high); }
+
+.gu-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.gu-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gu-form-field--full {
+  grid-column: 1 / -1;
+}
+
+.gu-form-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-secondary);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.gu-form-field input,
+.gu-form-field select {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--c-outline-variant);
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--c-on-surface);
+  background: var(--c-surface-low);
+  transition: border-color .16s;
+}
+
+.gu-form-field input:focus,
+.gu-form-field select:focus {
+  outline: none;
+  border-color: var(--c-primary-cont);
+}
+
+.gu-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.gu-btn-cancel {
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--c-outline-variant);
+  background: var(--c-white);
+  color: var(--c-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .16s;
+}
+.gu-btn-cancel:hover { border-color: var(--c-on-surface); color: var(--c-on-surface); }
+
+.gu-btn-submit {
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--c-primary-cont);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background .16s;
+}
+.gu-btn-submit:hover    { background: var(--c-primary); }
+.gu-btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+.gu-form-error {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--c-error);
+  background: var(--c-error-container);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Loading skeleton ──────────────────────────────────────────────────────── */
+.gu-skeleton-row td {
+  padding: 14px 16px;
+}
+
+.gu-skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, var(--c-surface-high) 25%, var(--c-surface-low) 50%, var(--c-surface-high) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  animation: gu-shimmer 1.4s infinite;
+}
+
+@keyframes gu-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .gu-page  { padding: 16px; }
+  .gu-form-grid { grid-template-columns: 1fr; }
+  .gu-header { flex-direction: column; }
+  .gu-table th:nth-child(3),
+  .gu-table td:nth-child(3) { display: none; } /* Ocultar email en móvil */
+}

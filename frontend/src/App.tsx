@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Schedule from './pages/Schedule';
 import History from './pages/History';
+import PendienteActivacion from './pages/PendienteActivacion';
 
 import InicioMaestro from './pages/maestros/InicioMaestro';
 import Clasespantalla from './pages/maestros/Clasespantalla';
@@ -20,6 +21,7 @@ import HistorialReportesM from './pages/maestros/HistorialReportesM';
 import InicioDA from './pages/DirectivosYAsesores/InicioDA';
 import GenerarReporteDA from './pages/DirectivosYAsesores/GenerarReporteDA';
 import Historialreporteda from './pages/DirectivosYAsesores/Historialreporteda';
+import GestionUsuarios from './pages/DirectivosYAsesores/GestionUsuarios';
 
 function LoadingSpinner() {
   return (
@@ -39,6 +41,8 @@ function RequireAuth({ allowedRoles, children }: { allowedRoles: string[]; child
   const { session, rol, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   if (!session) return <Navigate to="/login" replace />;
+  // Usuario autenticado pero pendiente de activación — evitar loop con /login
+  if (rol === 'pendiente') return <Navigate to="/pendiente-activacion" replace />;
   if (!rol || !allowedRoles.includes(rol)) return <Navigate to="/login" replace />;
   return children;
 }
@@ -48,6 +52,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+
+        {/* Ruta pública para cuentas pendientes de activación */}
+        <Route path="/pendiente-activacion" element={<PendienteActivacion />} />
 
         <Route path="/alumno" element={
           <RequireAuth allowedRoles={['alumno', 'padre']}><StudentLayout /></RequireAuth>
@@ -74,6 +81,10 @@ export default function App() {
           <Route path="inicio" element={<InicioDA />} />
           <Route path="reporte" element={<GenerarReporteDA />} />
           <Route path="historial" element={<Historialreporteda />} />
+          {/* Solo directivo — el orientador no tiene acceso a gestión de usuarios */}
+          <Route path="usuarios" element={
+            <RequireAuth allowedRoles={['directivo']}><GestionUsuarios /></RequireAuth>
+          } />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

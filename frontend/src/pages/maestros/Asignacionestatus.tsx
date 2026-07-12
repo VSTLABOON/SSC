@@ -99,8 +99,9 @@ export default function AsignacionEstatus() {
         setPeriodoId(pId);
 
         const cats = await getCategoriasIncidencia(plantelId!);
-        const yellowCat = cats.find(c => c.color_semaforo === 'yellow') || cats[0];
-        setDefaultCatId(yellowCat?.id || null);
+        // 'yellow' no existe en BD — usar categoría verde con impacto negativo (ej: Retardo/Llegada tarde)
+        const defaultCat = cats.find(c => c.color_semaforo === 'verde' && c.impacto_base < 0) || cats[0];
+        setDefaultCatId(defaultCat?.id || null);
       } catch (err) {
         console.error('Error al resolver periodo o categoria por defecto:', err);
       }
@@ -127,6 +128,7 @@ export default function AsignacionEstatus() {
   };
 
   // Guardar datos en la base de datos de Supabase distribuyendo a las 3 tablas
+  // Guardar datos en la base de datos de Supabase distribuyendo a las 3 tablas
   const handleSave = async () => {
     if (materiaId === 'sin-id') {
       alert('Error: No se ha provisto una materia válida para registrar la asistencia.');
@@ -138,86 +140,107 @@ export default function AsignacionEstatus() {
     }
 
     setIsSaving(true);
+    // ALTO-6: Clonar el estado en un snapshot local para evitar race conditions si el docente hace undo
+    const statusesSnapshot = [...statuses];
+
     try {
       const fechaHoy = new Date().toISOString().split('T')[0];
+      const errorsList: string[] = [];
 
       for (let i = 0; i < students.length; i++) {
         const student = students[i];
-        const status = statuses[i];
+        const status = statusesSnapshot[i];
 
         if (status.selectedIndex === null) continue;
 
         const optionTitle = STATUS_OPTIONS[status.selectedIndex].title;
 
-        // A. Guardar en tabla 'asistencias' (con upsert/onConflict por uq_asistencia_dia)
-        let presente = true;
-        let observaciones = '';
+        try {
+          // A. Guardar en tabla 'asistencias' (con upsert/onConflict por uq_asistencia_dia)
+          let presente = true;
+          let observaciones = '';
 
-        if (optionTitle === 'Falta') {
-          presente = false;
-        } else if (optionTitle === 'Retardo') {
-          observaciones = 'Retardo';
-        }
+          if (optionTitle === 'Falta') {
+            presente = false;
+          } else if (optionTitle === 'Retardo') {
+            observaciones = 'Retardo';
+          }
 
-        const { error: asistError } = await supabase
-          .from('asistencias')
-          .upsert({
-            alumno_id: student.id,
-            materia_id: materiaId,
-            fecha: fechaHoy,
-            presente,
-            observaciones,
-            justificada: false,
-          }, { onConflict: 'alumno_id,materia_id,fecha' });
-
-        if (asistError) throw asistError;
-
-        // B. Guardar en tabla 'participaciones' (si aplica)
-        if (optionTitle === 'Participó') {
-          const { error: partError } = await supabase
-            .from('participaciones')
-            .insert({
+          const { error: asistError } = await supabase
+            .from('asistencias')
+            .upsert({
               alumno_id: student.id,
               materia_id: materiaId,
               fecha: fechaHoy,
-              nivel: 'positiva',
-            });
-          if (partError) throw partError;
-        } else if (optionTitle === 'No trabajó') {
-          const { error: partError } = await supabase
-            .from('participaciones')
-            .insert({
-              alumno_id: student.id,
-              materia_id: materiaId,
-              fecha: fechaHoy,
-              nivel: 'nula',
-            });
-          if (partError) throw partError;
-        }
+              presente,
+              observaciones,
+              justificada: false,
+            }, { onConflict: 'alumno_id,materia_id,fecha' });
 
-        // C. Guardar en tabla 'incidencias' (si aplica)
-        if (optionTitle === 'Problema') {
-          const { error: incError } = await supabase
-            .from('incidencias')
-            .insert({
-              alumno_id: student.id,
-              registrado_por: session!.user!.id,
-              categoria_id: defaultCatId,
-              descripcion: 'Problema de conducta reportado en pase de lista.',
-              lugar: 'Aula',
-              impacto_puntos: -5,
-              periodo_id: periodoId,
-            });
-          if (incError) throw incError;
+          if (asistError) throw asistError;
+
+          // B. Guardar en tabla 'participaciones' (si aplica)
+          if (optionTitle === 'Participó') {
+            const { error: partError } = await supabase
+              .from('participaciones')
+              .insert({
+                alumno_id: student.id,
+                materia_id: materiaId,
+                registrado_por: session!.user!.id,
+                periodo_id: periodoId,
+                fecha: fechaHoy,
+                nivel: 'positiva',
+                impacto_puntos: 5,
+              });
+            if (partError) throw partError;
+          } else if (optionTitle === 'No trabajó') {
+            const { error: partError } = await supabase
+              .from('participaciones')
+              .insert({
+                alumno_id: student.id,
+                materia_id: materiaId,
+                registrado_por: session!.user!.id,
+                periodo_id: periodoId,
+                fecha: fechaHoy,
+                nivel: 'nula',
+                impacto_puntos: -3,
+              });
+            if (partError) throw partError;
+          }
+
+          // C. Guardar en tabla 'incidencias' (si aplica)
+          if (optionTitle === 'Problema') {
+            const { error: incError } = await supabase
+              .from('incidencias')
+              .insert({
+                alumno_id: student.id,
+                registrado_por: session!.user!.id,
+                categoria_id: defaultCatId,
+                descripcion: 'Problema de conducta reportado en pase de lista.',
+                lugar: 'Aula',
+                impacto_puntos: -5,
+                periodo_id: periodoId,
+              });
+            if (incError) throw incError;
+          }
+        } catch (studentErr: any) {
+          const user = (Array.isArray(student.usuarios) ? student.usuarios[0] : student.usuarios) as { nombre?: string; apellido?: string } | null;
+          errorsList.push(`${user?.nombre || 'Alumno'}: ${studentErr.message || 'Error desconocido'}`);
         }
       }
 
-      setToastState('visible');
-      setTimeout(() => setToastState('fading'), 2000);
-      setTimeout(() => setToastState('hidden'), 2300);
-    } catch (err) {
-      console.error('Error al guardar registros de asistencia:', err);
-      alert('Ocurrió un error al registrar los datos en Supabase.');
+      if (errorsList.length > 0) {
+        alert(`Se guardaron algunos registros con errores:\n\n${errorsList.join('\n')}`);
+      } else {
+        setToastState('visible');
+        setTimeout(() => setToastState('fading'), 2000);
+        setTimeout(() => setToastState('hidden'), 2300);
+      }
+    } catch (err: any) {
+      if (import.meta.env.DEV) {
+        console.error('Error al guardar asistencia:', err);
+      }
+      alert('Ocurrió un error inesperado al registrar los datos en Supabase.');
     } finally {
       setIsSaving(false);
     }

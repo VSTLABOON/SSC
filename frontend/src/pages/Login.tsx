@@ -104,8 +104,18 @@ const Login = () => {
     setError(null);
     setSubmitting(true);
 
+    // CRIT-3: Verificar captcha visual
+    if (!isHuman) {
+      setError('Por favor, confirme que no es un robot.');
+      setSubmitting(false);
+      return;
+    }
+
+    // MEDIO-4: Normalizar email (trim y minúsculas)
+    const normalizedEmail = username.trim().toLowerCase();
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: username,
+      email: normalizedEmail,
       password,
     });
 
@@ -134,6 +144,8 @@ const Login = () => {
       directivo: '/director/inicio',
       orientador: '/director/inicio',
       padre: '/alumno/inicio',
+      // Usuario invitado aún no activado por el directivo — evitar loop con /login
+      pendiente: '/pendiente-activacion',
     };
 
     navigate(rutas[perfil.rol] ?? '/login');
