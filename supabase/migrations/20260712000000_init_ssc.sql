@@ -1,6 +1,6 @@
 -- DDL para alinear el esquema de Supabase con el frontend de SSC / EduTrack 360
 
--- 1. Tabla de períodos escolares (si no existe)
+-- 1. Tabla de períodos escolares
 CREATE TABLE IF NOT EXISTS public.periodos_escolares (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     plantel_id UUID NOT NULL REFERENCES public.planteles(id),
@@ -16,19 +16,20 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_periodo_activo_plantel
 ON public.periodos_escolares (plantel_id) 
 WHERE (activo = true);
 
--- 2. Tabla de asistencias (si no existe)
+-- 2. Tabla de asistencias
 CREATE TABLE IF NOT EXISTS public.asistencias (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
     materia_id UUID NOT NULL REFERENCES public.materias(id) ON DELETE CASCADE,
     fecha DATE NOT NULL DEFAULT CURRENT_DATE,
     presente BOOLEAN NOT NULL DEFAULT true,
+    justificada BOOLEAN NOT NULL DEFAULT false,
     observaciones TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     CONSTRAINT uq_asistencia_dia UNIQUE (alumno_id, materia_id, fecha)
 );
 
--- 3. Tabla de participaciones (si no existe)
+-- 3. Tabla de participaciones
 CREATE TABLE IF NOT EXISTS public.participaciones (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
@@ -38,12 +39,7 @@ CREATE TABLE IF NOT EXISTS public.participaciones (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 4. Asegurar columnas e integridad referencial en incidencias (si no existen)
+-- 4. Asegurar columnas e integridad referencial en incidencias
 ALTER TABLE public.incidencias 
 ADD COLUMN IF NOT EXISTS periodo_id UUID REFERENCES public.periodos_escolares(id) ON DELETE SET NULL,
 ADD COLUMN IF NOT EXISTS categoria_id UUID REFERENCES public.categorias_incidencia(id) ON DELETE SET NULL;
-
--- 5. Asegurar políticas de seguridad de roles en PostgreSQL
-ALTER ROLE anon NOBYPASSRLS;
-ALTER ROLE authenticated NOBYPASSRLS;
-

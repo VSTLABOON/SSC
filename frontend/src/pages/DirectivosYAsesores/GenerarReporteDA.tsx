@@ -21,7 +21,7 @@ interface CategoriaFromDB {
   id: string;
   nombre: string;
   color_semaforo: string;
-  descripcion: string;
+  impacto_base: number;
 }
 
 const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
@@ -118,7 +118,13 @@ export default function GenerarReporteDA() {
     setSelectedCategoryId('');
   }
 
-  const filteredCategories = categories.filter(c => c.color_semaforo === severity);
+  const filteredCategories = categories.filter(c => {
+    if (severity === 'green') return c.color_semaforo === 'verde' && c.impacto_base >= 0;
+    if (severity === 'yellow') return c.color_semaforo === 'verde' && c.impacto_base < 0;
+    if (severity === 'orange') return c.color_semaforo === 'naranja';
+    if (severity === 'red') return c.color_semaforo === 'rojo';
+    return false;
+  });
 
   async function handleSubmitReport(e: React.FormEvent) {
     e.preventDefault();
@@ -144,7 +150,7 @@ export default function GenerarReporteDA() {
         .from('incidencias')
         .insert({
           alumno_id: selectedStudent.id,
-          docente_id: session!.user!.id,
+          registrado_por: session!.user!.id,
           categoria_id: selectedCategoryId,
           descripcion: comment,
           lugar: locationName,
@@ -347,7 +353,7 @@ export default function GenerarReporteDA() {
                             checked={selectedCategoryId === cat.id}
                             onChange={() => setSelectedCategoryId(cat.id)}
                           />
-                          <span>{cat.nombre} — <small style={{ color: '#5c5f60' }}>{cat.descripcion}</small></span>
+                          <span>{cat.nombre} — <small style={{ color: '#5c5f60' }}>Impacto: {cat.impacto_base} pts</small></span>
                         </label>
                       ))
                     ) : (

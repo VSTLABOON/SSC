@@ -15,7 +15,7 @@ export async function getIncidenciasPorDocente(docenteId: string) {
   const { data, error } = await supabase
     .from('incidencias')
     .select('id, descripcion, lugar, impacto_puntos, created_at, alumno_id, alumnos(matricula, usuarios(nombre, apellido)), categorias_incidencia(nombre, color_semaforo)')
-    .eq('docente_id', docenteId)
+    .eq('registrado_por', docenteId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -36,7 +36,7 @@ export async function getIncidenciasPorPlantel(plantelId: string) {
 export async function getCategoriasIncidencia(plantelId: string) {
   const { data, error } = await supabase
     .from('categorias_incidencia')
-    .select('id, nombre, color_semaforo, descripcion')
+    .select('id, nombre, color_semaforo, impacto_base')
     .eq('plantel_id', plantelId);
 
   if (error) throw error;

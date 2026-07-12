@@ -167,6 +167,7 @@ export default function AsignacionEstatus() {
             fecha: fechaHoy,
             presente,
             observaciones,
+            justificada: false,
           }, { onConflict: 'alumno_id,materia_id,fecha' });
 
         if (asistError) throw asistError;
@@ -200,7 +201,7 @@ export default function AsignacionEstatus() {
             .from('incidencias')
             .insert({
               alumno_id: student.id,
-              docente_id: session!.user!.id,
+              registrado_por: session!.user!.id,
               categoria_id: defaultCatId,
               descripcion: 'Problema de conducta reportado en pase de lista.',
               lugar: 'Aula',

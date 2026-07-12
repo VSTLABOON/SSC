@@ -11,7 +11,7 @@ interface AlumnoProfile {
   puntos_totales: number;
   usuarios: unknown; // Se castea localmente para resolver arrays vs objetos
   grupos: unknown;
-  contactos_emergencia: Array<{
+  contactos_emergency: Array<{
     nombre: string;
     parentesco: string;
     telefono: string;
@@ -46,7 +46,7 @@ export default function Profile() {
 
   const user = (Array.isArray(alumno?.usuarios) ? alumno?.usuarios[0] : alumno?.usuarios) as { nombre?: string; apellido?: string; email?: string } | null;
   const group = (Array.isArray(alumno?.grupos) ? alumno?.grupos[0] : alumno?.grupos) as { nombre?: string } | null;
-  const contactoEmergencia = alumno?.contactos_emergencia?.[0] || null;
+  const contactoEmergencia = alumno?.contactos_emergency?.[0] || null;
 
   return (
     <div className="profile-canvas-only">
