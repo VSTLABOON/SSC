@@ -1,0 +1,44 @@
+import { supabase } from '../lib/supabaseClient';
+
+export async function getIncidenciasDelAlumno(alumnoId: string) {
+  const { data, error } = await supabase
+    .from('incidencias')
+    .select('id, descripcion, lugar, impacto_puntos, created_at, categorias_incidencia(nombre, color_semaforo)')
+    .eq('alumno_id', alumnoId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getIncidenciasPorDocente(docenteId: string) {
+  const { data, error } = await supabase
+    .from('incidencias')
+    .select('id, descripcion, lugar, impacto_puntos, created_at, alumno_id, alumnos(matricula, usuarios(nombre, apellido)), categorias_incidencia(nombre, color_semaforo)')
+    .eq('docente_id', docenteId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getIncidenciasPorPlantel(plantelId: string) {
+  const { data, error } = await supabase
+    .from('incidencias')
+    .select('id, descripcion, lugar, impacto_puntos, created_at, alumno_id, alumnos!inner(matricula, usuarios(nombre, apellido), grupos!inner(plantel_id)), categorias_incidencia(nombre, color_semaforo)')
+    .eq('alumnos.grupos.plantel_id', plantelId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getCategoriasIncidencia(plantelId: string) {
+  const { data, error } = await supabase
+    .from('categorias_incidencia')
+    .select('id, nombre, color_semaforo, descripcion')
+    .eq('plantel_id', plantelId);
+
+  if (error) throw error;
+  return data;
+}

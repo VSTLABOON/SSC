@@ -1,55 +1,28 @@
 import { useEffect, useState } from 'react';
-import type { ActivityCategory, BehaviorLevel } from '../Data/mockData';
-import {
-  attendance,
-  behaviorStatus,
-  complianceHistory,
-  navItems,
-  recentActivity,
-  studentInfo,
-  upcomingNotice,
-} from '../Data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getPerfilAlumno } from '../services/alumnos';
+import { getIncidenciasDelAlumno } from '../services/incidencias';
 import './Home.css';
 
-// ---------------------------------------------------------------------------
-// Tipos e Interfaces Locales para el tipado estricto de bucles
-// ---------------------------------------------------------------------------
-interface NavItem {
+interface IncidentFromDB {
   id: string;
-  icon: string;
-  label: string;
+  descripcion: string;
+  lugar: string;
+  impacto_puntos: number;
+  created_at: string;
+  categorias_incidencia: {
+    nombre: string;
+    color_semaforo: string;
+  } | null;
 }
-
-interface ComplianceItem {
-  month: string;
-  status: 'optimo' | 'riesgo';
-  value: number;
-}
-
-interface ActivityRecord {
-  date: string;
-  category: ActivityCategory;
-  categoryLabel: string;
-  description: string;
-  impact: number;
-}
-
-// ---------------------------------------------------------------------------
-// Ícono (Material Symbols Outlined cargado vía Google Fonts en Home.css).
-// Se usa como ligadura tipográfica, igual que en el diseño original.
-// ---------------------------------------------------------------------------
 
 const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
   <span className={`material-symbols-outlined ${className}`.trim()}>{name}</span>
 );
 
-// ---------------------------------------------------------------------------
-// Temas visuales según el nivel del semáforo conductual.
-// ---------------------------------------------------------------------------
-
 const SEMAPHORE_THEME: Record<
-  BehaviorLevel,
-  { icon: string; panelClass: string; circleClass: string; labelClass: string; sublabelClass: string }
+  string,
+  { icon: string; panelClass: string; circleClass: string; labelClass: string; sublabelClass: string; label: string; desc: string }
 > = {
   green: {
     icon: 'check_circle',
@@ -57,6 +30,8 @@ const SEMAPHORE_THEME: Record<
     circleClass: 'semaphore-circle semaphore-circle--green',
     labelClass: 'semaphore-label semaphore-label--green',
     sublabelClass: 'semaphore-sublabel semaphore-sublabel--green',
+    label: 'Verde',
+    desc: 'Se mantiene en verde mientras tengas buen desempeño conductual y académico.',
   },
   yellow: {
     icon: 'warning',
@@ -64,6 +39,17 @@ const SEMAPHORE_THEME: Record<
     circleClass: 'semaphore-circle semaphore-circle--yellow',
     labelClass: 'semaphore-label semaphore-label--yellow',
     sublabelClass: 'semaphore-sublabel semaphore-sublabel--yellow',
+    label: 'Amarillo',
+    desc: 'Se activa por dificultades académicas menores o de 1 a 3 faltas.',
+  },
+  orange: {
+    icon: 'warning',
+    panelClass: 'semaphore-panel semaphore-panel--yellow', // Reusamos clase amarilla o similar
+    circleClass: 'semaphore-circle semaphore-circle--yellow',
+    labelClass: 'semaphore-label semaphore-label--yellow',
+    sublabelClass: 'semaphore-sublabel semaphore-sublabel--yellow',
+    label: 'Naranja',
+    desc: 'Se activa por incidencias acumuladas o faltas recurrentes.',
   },
   red: {
     icon: 'error',
@@ -71,298 +57,250 @@ const SEMAPHORE_THEME: Record<
     circleClass: 'semaphore-circle semaphore-circle--red',
     labelClass: 'semaphore-label semaphore-label--red',
     sublabelClass: 'semaphore-sublabel semaphore-sublabel--red',
+    label: 'Rojo',
+    desc: 'Se activa por más de 3 faltas o acumulación de reportes conductuales graves.',
   },
 };
 
-// ---------------------------------------------------------------------------
-// Estilos de las insignias y el color de impacto en la tabla de actividad.
-// ---------------------------------------------------------------------------
-
-const ACTIVITY_STYLES: Record<ActivityCategory, { badgeClass: string; impactClass: string }> = {
-  inasistencia: { badgeClass: 'badge badge--error', impactClass: 'impact impact--negative-strong' },
-  participacion: { badgeClass: 'badge badge--secondary', impactClass: 'impact impact--positive' },
-  conducta: { badgeClass: 'badge badge--amber', impactClass: 'impact impact--negative-mild' },
-};
-
-// ---------------------------------------------------------------------------
-// Tipos
-// ---------------------------------------------------------------------------
-
-interface HomeProps {
-  /** id del ítem de navegación activo */
-  activeNavId?: string;
-
-  /** Navegación entre pantallas */
-  onNavigate?: (screen: string) => void;
-
-  onLogout?: () => void;
-  onDownloadReport?: () => void;
+function getStyleForIncidencia(nombre: string, impacto: number) {
+  const lower = nombre.toLowerCase();
+  if (lower.includes('inasistencia') || lower.includes('falta')) {
+    return { badgeClass: 'badge badge--error', impactClass: 'impact impact--negative-strong' };
+  } else if (impacto > 0) {
+    return { badgeClass: 'badge badge--secondary', impactClass: 'impact impact--positive' };
+  } else {
+    return { badgeClass: 'badge badge--amber', impactClass: 'impact impact--negative-mild' };
+  }
 }
 
-// ---------------------------------------------------------------------------
-// Componente
-// ---------------------------------------------------------------------------
+function formatDate(dateStr: string) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
-const Home = ({ activeNavId = 'inicio', onNavigate, onLogout, onDownloadReport,}: HomeProps) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [chartAnimated, setChartAnimated] = useState(false);
+interface AlumnoProfile {
+  id: string;
+  matricula: string;
+  nivel_semaforo: string;
+  puntos_totales: number;
+  usuarios: unknown;
+  grupos: unknown;
+}
 
-  // Animación de entrada de las barras del historial (igual que el script original).
+export default function Home() {
+  const { session } = useAuth();
+  const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
+  const [incidencias, setIncidencias] = useState<IncidentFromDB[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+
   useEffect(() => {
-    const timer = setTimeout(() => setChartAnimated(true), 200);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!session?.user?.id) return;
 
-  // Bloquea el scroll del body mientras el sidebar móvil está abierto.
-  useEffect(() => {
-    document.body.classList.toggle('no-scroll', isSidebarOpen);
-    return () => document.body.classList.remove('no-scroll');
-  }, [isSidebarOpen]);
+    async function loadData() {
+      try {
+        const studentData = await getPerfilAlumno(session!.user!.id);
+        setAlumno(studentData);
 
-  const closeSidebar = () => setIsSidebarOpen(false);
+        const incs = await getIncidenciasDelAlumno(session!.user!.id);
+        setIncidencias(incs as unknown as IncidentFromDB[]);
+      } catch (err) {
+        console.error('Error al cargar datos del alumno:', err);
+      } finally {
+        setLoadingData(false);
+      }
+    }
 
-  const handleDownloadReport = () => {
-    console.log('Mock: descargar reporte PDF');
-    onDownloadReport?.();
-  };
+    loadData();
+  }, [session]);
 
-  const handleLogout = () => {
-    console.log('Mock: cerrar sesión');
-    onLogout?.();
-  };
+  if (loadingData) {
+    return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando información del alumno...</div>;
+  }
 
-  const theme = SEMAPHORE_THEME[behaviorStatus.level as BehaviorLevel];
+  const level = alumno?.nivel_semaforo || 'green';
+  const theme = SEMAPHORE_THEME[level] || SEMAPHORE_THEME.green;
+
+  // Calculamos promedio de asistencia o mock
+  const asistenciaPorcentaje = 94; // Mantener mock por ahora
+
+  const user = (Array.isArray(alumno?.usuarios) ? alumno?.usuarios[0] : alumno?.usuarios) as { nombre?: string; apellido?: string } | null;
+  const group = (Array.isArray(alumno?.grupos) ? alumno?.grupos[0] : alumno?.grupos) as { nombre?: string } | null;
 
   return (
-    <div className="home-page">
-      {/* Overlay del sidebar en móvil */}
-      <div
-        className={`sidebar-overlay ${isSidebarOpen ? 'sidebar-overlay--visible' : ''}`}
-        onClick={closeSidebar}
-        aria-hidden="true"
-      />
-
-      {/* Sidebar */}
-      <nav className={`sidebar ${isSidebarOpen ? 'sidebar--open' : ''}`} aria-label="Navegación principal">
-        <div className="sidebar-brand">
-          <Icon name="school" className="sidebar-brand-icon" />
-          <span className="sidebar-brand-name">CONALEP</span>
+    <div className="home-canvas-only">
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-text">
+          <h2 className="hero-greeting">
+            <span className="hero-greeting-light">¡Bienvenido, </span>
+            <span className="hero-greeting-bold">
+              {user?.nombre} {user?.apellido}!
+            </span>
+          </h2>
+          <p className="hero-subtitle">
+            Matrícula: {alumno?.matricula || 'N/A'} &nbsp;&nbsp; {group?.nombre || 'Sin Grupo'}
+          </p>
         </div>
-
-       <div className="sidebar-nav">
-        {navItems.map((item: NavItem) => (
-         <a
-        key={item.id}
-       href="#"
-       className={`sidebar-link ${
-        activeNavId === item.id ? 'sidebar-link--active' : ''
-      }`}
-      onClick={(event) => {
-        event.preventDefault();
-        onNavigate?.(item.id);
-        closeSidebar();
-      }}
-    >
-      <Icon name={item.icon} />
-      <span>{item.label}</span>
-       </a>
-         ))}
+        <div className="hero-actions">
+          <button type="button" className="btn-download" onClick={() => console.log('Mock: descargar reporte PDF')}>
+            <Icon name="download" />
+            <span className="btn-download-label-full">Descargar Reporte PDF</span>
+            <span className="btn-download-label-short">Reporte</span>
+          </button>
+          <div className="cycle-badge">
+            <Icon name="verified_user" className="cycle-badge-icon" />
+            <span>Ciclo Escolar Activo</span>
+          </div>
+        </div>
       </div>
 
-        <div className="sidebar-footer">
-          <a
-            href="#"
-            className="sidebar-logout"
-            onClick={(event) => {
-              event.preventDefault();
-              handleLogout();
-            }}
-          >
-            <Icon name="logout" />
-            <span>Cerrar Sesión</span>
-          </a>
-        </div>
-      </nav>
-
-      {/* Contenido principal */}
-      <div className="home-content">
-        <header className="topbar">
-          <div className="topbar-left">
-            <button
-              type="button"
-              className="mobile-menu-btn"
-              aria-label="Abrir menú de navegación"
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-            >
-              <Icon name="menu" />
-            </button>
-            <h1 className="topbar-title">CONALEP Gestión Conductual</h1>
+      {/* Bento grid */}
+      <div className="dashboard-grid">
+        {/* 1. Semáforo conductual */}
+        <section className="card card-semaforo">
+          <div className="card-header">
+            <h3 className="card-title">Estado Conductual</h3>
+            <span className="pill pill--neutral">Semáforo Actual</span>
           </div>
-        </header>
-
-        <main className="page-canvas">
-          {/* Hero */}
-          <div className="hero">
-            <div className="hero-text">
-              <h2 className="hero-greeting">
-                <span className="hero-greeting-light">¡Bienvenido,</span>
-                <span className="hero-greeting-bold">{studentInfo.name}!</span>
-              </h2>
-              <p className="hero-subtitle">
-                Matrícula: {studentInfo.enrollment} &nbsp;&nbsp; {studentInfo.group}
-              </p>
+          <div className={theme.panelClass}>
+            <div className={theme.circleClass}>
+              <Icon name={theme.icon} className="semaphore-icon" />
             </div>
-            <div className="hero-actions">
-              <button type="button" className="btn-download" onClick={handleDownloadReport}>
-                <Icon name="download" />
-                <span className="btn-download-label-full">Descargar Reporte PDF</span>
-                <span className="btn-download-label-short">Reporte</span>
-              </button>
-              <div className="cycle-badge">
-                <Icon name="verified_user" className="cycle-badge-icon" />
-                <span>{studentInfo.schoolCycle}</span>
+            <div className="semaphore-text">
+              <span className={theme.labelClass}>{theme.label}</span>
+              <span className={theme.sublabelClass}>({alumno?.puntos_totales ?? 100} pts)</span>
+            </div>
+          </div>
+          <div className="info-box">
+            <Icon name="info" className="info-box-icon" />
+            <p>{theme.desc}</p>
+          </div>
+        </section>
+
+        {/* 2. Historial de cumplimiento (Estático por diseño visual) */}
+        <section className="card card-historial">
+          <div className="card-header card-header--wrap">
+            <h3 className="card-title">Historial de Cumplimiento</h3>
+            <div className="legend">
+              <div className="legend-item">
+                <span className="legend-dot legend-dot--primary" />
+                <span>Óptimo</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-dot legend-dot--amber" />
+                <span>Riesgo</span>
               </div>
             </div>
           </div>
-
-          {/* Bento grid */}
-          <div className="dashboard-grid">
-            {/* 1. Semáforo conductual */}
-            <section className="card card-semaforo">
-              <div className="card-header">
-                <h3 className="card-title">Estado Conductual</h3>
-                <span className="pill pill--neutral">Semáforo Actual</span>
+          <div className="chart">
+            <div className="chart-gridlines" aria-hidden="true">
+              <div className="chart-gridline"><span>100%</span></div>
+              <div className="chart-gridline"><span>50%</span></div>
+              <div className="chart-gridline chart-gridline--last"><span>0%</span></div>
+            </div>
+            <div className="chart-bars">
+              <div className="chart-bar-col">
+                <div className="chart-bar chart-bar--primary" style={{ height: '98%' }} />
+                <span className="chart-bar-label">Feb</span>
               </div>
-              <div className={theme.panelClass}>
-                <div className={theme.circleClass}>
-                  <Icon name={theme.icon} className="semaphore-icon" />
-                </div>
-                <div className="semaphore-text">
-                  <span className={theme.labelClass}>{behaviorStatus.label}</span>
-                  <span className={theme.sublabelClass}>{behaviorStatus.sublabel}</span>
-                </div>
+              <div className="chart-bar-col">
+                <div className="chart-bar chart-bar--primary" style={{ height: '85%' }} />
+                <span className="chart-bar-label">Mar</span>
               </div>
-              <div className="info-box">
-                <Icon name="info" className="info-box-icon" />
-                <p>{behaviorStatus.description}</p>
+              <div className="chart-bar-col">
+                <div className="chart-bar chart-bar--amber" style={{ height: '65%' }} />
+                <span className="chart-bar-label">Abr</span>
               </div>
-            </section>
-
-            {/* 2. Historial de cumplimiento */}
-            <section className="card card-historial">
-              <div className="card-header card-header--wrap">
-                <h3 className="card-title">Historial de Cumplimiento</h3>
-                <div className="legend">
-                  <div className="legend-item">
-                    <span className="legend-dot legend-dot--primary" />
-                    <span>Óptimo</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-dot legend-dot--amber" />
-                    <span>Riesgo</span>
-                  </div>
-                </div>
+              <div className="chart-bar-col">
+                <div className="chart-bar chart-bar--amber" style={{ height: '72%' }} />
+                <span className="chart-bar-label">May</span>
               </div>
-              <div className="chart">
-                <div className="chart-gridlines" aria-hidden="true">
-                  <div className="chart-gridline">
-                    <span>100%</span>
-                  </div>
-                  <div className="chart-gridline">
-                    <span>50%</span>
-                  </div>
-                  <div className="chart-gridline chart-gridline--last">
-                    <span>0%</span>
-                  </div>
-                </div>
-                <div className="chart-bars">
-                  {complianceHistory.map((item: ComplianceItem) => (
-                    <div className="chart-bar-col" key={item.month}>
-                      <div
-                        className={`chart-bar ${
-                          item.status === 'optimo' ? 'chart-bar--primary' : 'chart-bar--amber'
-                        }`}
-                        style={{ height: chartAnimated ? `${item.value}%` : '0%' }}
-                      />
-                      <span className="chart-bar-label">{item.month}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="chart-bar-col">
+                <div className="chart-bar chart-bar--primary" style={{ height: '88%' }} />
+                <span className="chart-bar-label">Jun</span>
               </div>
-            </section>
-
-            {/* 3. Asistencia */}
-            <section className="card card-asistencia">
-              <div className="card-icon-title">
-                <div className="card-icon">
-                  <Icon name="calendar_today" />
-                </div>
-                <h3 className="card-title">Asistencia</h3>
-              </div>
-              <div className="attendance-value">
-                <span className="attendance-percentage">{attendance.percentage}%</span>
-                <span className="attendance-label">Promedio Mensual</span>
-              </div>
-              <div className="progress-track">
-                <div className="progress-fill" style={{ width: `${attendance.percentage}%` }} />
-              </div>
-              <p className="card-note">{attendance.note}</p>
-            </section>
-
-            {/* 4. Aviso próximo */}
-            <section className="card card-aviso">
-              <div>
-                <h3 className="card-title card-title--inverse">{upcomingNotice.title}</h3>
-                <p className="notice-description">{upcomingNotice.description}</p>
-              </div>
-              <div className="notice-date">
-                <Icon name="calendar_month" />
-                <span>{upcomingNotice.date}</span>
-              </div>
-            </section>
-
-            {/* 5. Actividad reciente */}
-            <section className="card card-actividad">
-              <h3 className="card-title">Actividad Reciente</h3>
-              <div className="table-wrapper custom-scrollbar">
-                <table className="activity-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Categoría</th>
-                      <th>Descripción</th>
-                      <th className="text-right">Impacto</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentActivity.map((record: ActivityRecord, index: number) => {
-                      const styles = ACTIVITY_STYLES[record.category];
-                      return (
-                        <tr key={`${record.date}-${index}`}>
-                          <td className="cell-date">{record.date}</td>
-                          <td>
-                            <span className={styles.badgeClass}>{record.categoryLabel}</span>
-                          </td>
-                          <td className="cell-description">{record.description}</td>
-                          <td className={`text-right ${styles.impactClass}`}>
-                            {record.impact > 0 ? `+${record.impact}` : record.impact} pts
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            </div>
           </div>
-        </main>
+        </section>
 
-        <footer className="home-footer">
-          <p>© 2026 CONALEP - Sistema de Gestión de Conducta Estudiantil</p>
-        </footer>
+        {/* 3. Asistencia */}
+        <section className="card card-asistencia">
+          <div className="card-icon-title">
+            <div className="card-icon"><Icon name="calendar_today" /></div>
+            <h3 className="card-title">Asistencia</h3>
+          </div>
+          <div className="attendance-value">
+            <span className="attendance-percentage">{asistenciaPorcentaje}%</span>
+            <span className="attendance-label">Promedio Mensual</span>
+          </div>
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${asistenciaPorcentaje}%` }} />
+          </div>
+          <p className="card-note">Mantienes un buen desempeño, sigue manteniendo este nivel.</p>
+        </section>
+
+        {/* 4. Aviso próximo (Estático/Mock) */}
+        <section className="card card-aviso">
+          <div>
+            <h3 className="card-title card-title--inverse">Reunión de Tutoría</h3>
+            <p className="notice-description">Reunión de tutoría para alumnos en semáforo amarillo y naranja.</p>
+          </div>
+          <div className="notice-date">
+            <Icon name="calendar_month" />
+            <span>Viernes 15 Jul, 10:00 AM</span>
+          </div>
+        </section>
+
+        {/* 5. Actividad reciente */}
+        <section className="card card-actividad">
+          <h3 className="card-title">Actividad Reciente</h3>
+          <div className="table-wrapper custom-scrollbar">
+            <table className="activity-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Descripción</th>
+                  <th className="text-right">Impacto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {incidencias.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '16px' }}>
+                      Sin actividad registrada recientemente.
+                    </td>
+                  </tr>
+                ) : (
+                  incidencias.map((record) => {
+                    const catRaw = record.categorias_incidencia;
+                    const cat = (Array.isArray(catRaw) ? catRaw[0] : catRaw) as { nombre?: string } | null;
+                    const catName = cat?.nombre || 'General';
+                    const styles = getStyleForIncidencia(catName, record.impacto_puntos);
+                    return (
+                      <tr key={record.id}>
+                        <td className="cell-date">{formatDate(record.created_at)}</td>
+                        <td>
+                          <span className={styles.badgeClass}>{catName.toUpperCase()}</span>
+                        </td>
+                        <td className="cell-description">{record.descripcion}</td>
+                        <td className={`text-right ${styles.impactClass}`}>
+                          {record.impacto_puntos > 0 ? `+${record.impacto_puntos}` : record.impacto_puntos} pts
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
+
+      <footer className="home-footer">
+        <p>© 2026 CONALEP - Sistema de Gestión de Conducta Estudiantil</p>
+      </footer>
     </div>
   );
-};
-
-export default Home;
+}

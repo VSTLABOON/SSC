@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 import './Login.css';
 import logoConalep from '../assets/imagenes/CONALEPlogo.png';
 import logoSCTech from '../assets/imagenes/SCTechlogo.png'; // <- Asegúrate de meter este archivo a la carpeta imágenes en tu explorador
@@ -82,35 +84,60 @@ const IconEyeOff = () => (
 // Tipos
 // ---------------------------------------------------------------------------
 
-interface LoginProps {
-  /** onLogin?: (credentials: { username: string; password: string }) => void; */
-  onLoginSuccess?: () => void;
-  /**
-   * Callback opcional invocado al enviar el formulario.
-   * Por ahora solo recibe los datos capturados (mock); la autenticación
-   * real se conectará cuando exista backend.
-   */
-  onLogin?: (credentials: { username: string; password: string }) => void;
-}
+
 
 // ---------------------------------------------------------------------------
 // Componente
 // ---------------------------------------------------------------------------
 
-const Login = ({ onLoginSuccess }: LoginProps) => {
+const Login = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isHuman, setIsHuman] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError(null);
+    setSubmitting(true);
 
-    // TODO: integrar con el servicio de autenticación real cuando exista backend.
-    // Por ahora solo se simula el envío con datos mock.
-    console.log('Mock login attempt:', { username, password, isHuman });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: username,
+      password,
+    });
 
-   onLoginSuccess?.();
+    if (error || !data.user) {
+      setError('Usuario o contraseña incorrectos.');
+      setSubmitting(false);
+      return;
+    }
+
+    const { data: perfil, error: perfilError } = await supabase
+      .from('usuarios')
+      .select('rol')
+      .eq('id', data.user.id)
+      .single();
+
+    if (perfilError || !perfil) {
+      setError('No se pudo verificar el rol del usuario. Contacta a soporte.');
+      await supabase.auth.signOut();
+      setSubmitting(false);
+      return;
+    }
+
+    const rutas: Record<string, string> = {
+      alumno: '/alumno/inicio',
+      docente: '/maestro/inicio',
+      directivo: '/director/inicio',
+      orientador: '/director/inicio',
+      padre: '/alumno/inicio',
+    };
+
+    navigate(rutas[perfil.rol] ?? '/login');
+    setSubmitting(false);
   };
 
   return (
@@ -181,6 +208,11 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
+            {error && (
+              <div className="login-error-message" style={{ color: '#ba1a1a', background: '#ffdad6', padding: '8px 12px', borderRadius: '4px', marginBottom: '16px', fontSize: '14px' }}>
+                {error}
+              </div>
+            )}
             {/* Usuario */}
             <div className="login-field">
               <label htmlFor="username">Usuario</label>
@@ -246,8 +278,8 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
               </div>
             </div>
 
-            <button type="submit" className="login-submit-btn">
-              Iniciar Sesión
+            <button type="submit" className="login-submit-btn" disabled={submitting}>
+              {submitting ? 'Iniciando...' : 'Iniciar Sesión'}
             </button>
           </form>
         </div>

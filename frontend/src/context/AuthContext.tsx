@@ -1,0 +1,79 @@
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import type { Session } from '@supabase/supabase-js';
+
+interface AuthContextValue {
+  session: Session | null;
+  rol: string | null;
+  nombre: string | null;
+  plantelId: string | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [rol, setRol] = useState<string | null>(null);
+  const [nombre, setNombre] = useState<string | null>(null);
+  const [plantelId, setPlantelId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  async function hidratarPerfil(userId: string) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('rol, nombre, plantel_id')
+      .eq('id', userId)
+      .single();
+
+    if (!error && data) {
+      setRol(data.rol);
+      setNombre(data.nombre);
+      setPlantelId(data.plantel_id);
+    } else {
+      setRol(null);
+      setNombre(null);
+      setPlantelId(null);
+    }
+  }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) await hidratarPerfil(session.user.id);
+      setLoading(false);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        await hidratarPerfil(session.user.id);
+      } else {
+        setRol(null);
+        setNombre(null);
+        setPlantelId(null);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+  }
+
+  return (
+    <AuthContext.Provider value={{ session, rol, nombre, plantelId, loading, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
+  return ctx;
+}
