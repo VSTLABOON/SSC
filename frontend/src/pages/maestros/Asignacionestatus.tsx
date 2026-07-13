@@ -283,19 +283,25 @@ export default function AsignacionEstatus() {
   const progressPercent = students.length > 0 ? Math.round((totalAssigned / students.length) * 100) : 0;
 
   return (
-    <div className="status-canvas-only">
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, minHeight: 0 }}>
       {/* Cabecera */}
-      <header className="attendance-header">
-        <button className="btn-back" onClick={() => navigate('/maestro/clases')}>
-          <span className="material-symbols-outlined">arrow_back</span>
-          Regresar a Clases
-        </button>
-        <div className="attendance-title-row">
-          <div>
-            <h2 className="attendance-title">{materiaNombre}</h2>
-            <p className="attendance-subtitle">Grupo: {grupoNombre} • {students.length} Alumnos Inscritos</p>
+      <header className="page-header">
+        <div>
+          <div className="page-breadcrumb">
+            <span>Grupos</span>
+            <span className="material-symbols-outlined page-breadcrumb-separator">chevron_right</span>
+            <span className="page-breadcrumb-current">Pase de Lista</span>
           </div>
-          <button className="btn-save" onClick={handleSave} disabled={isSaving}>
+          <div className="page-title-row">
+            <button className="page-back-btn" onClick={() => navigate('/maestro/clases')} title="Regresar a Clases">
+              <span className="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h2 className="page-title">{materiaNombre}</h2>
+          </div>
+          <p className="page-subtitle">Grupo: {grupoNombre} • {students.length} Alumnos Inscritos</p>
+        </div>
+        <div className="page-header-actions">
+          <button className="btn-guardar" onClick={handleSave} disabled={isSaving}>
             <span className="material-symbols-outlined">save</span>
             {isSaving ? 'Guardando...' : 'Guardar Asistencia'}
           </button>
@@ -303,106 +309,238 @@ export default function AsignacionEstatus() {
       </header>
 
       {/* Progress Bar */}
-      <div className="progress-section">
-        <div className="progress-text-row">
+      <div className="progress-section" style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid rgba(190,201,192,0.2)' }}>
+        <div className="progress-text-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', fontWeight: 500, color: '#5c5f60' }}>
           <span>Progreso de registro diario: {totalAssigned} de {students.length} alumnos</span>
           <span>{progressPercent}% completado</span>
         </div>
-        <div className="progress-bar-container">
-          <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
+        <div className="progress-bar-container" style={{ width: '100%', height: '8px', background: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
+          <div className="progress-bar-fill" style={{ width: `${progressPercent}%`, height: '100%', background: '#204785', borderRadius: '4px', transition: 'width 0.3s ease' }} />
         </div>
       </div>
 
       {/* Filtros y Búsqueda */}
-      <section className="controls-row">
-        <div className="search-box">
-          <span className="material-symbols-outlined search-icon">search</span>
+      <section className="filter-bar">
+        <div className="filter-search">
+          <span className="material-symbols-outlined filter-search-icon">search</span>
           <input
+            className="filter-search-input"
             type="text"
             placeholder="Buscar alumno por nombre..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="filter-chips">
+        
+        {/* Chips de filtro (Todos, Registrados, Pendientes) */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
-            className={`filter-chip ${activeFilter === 'todos' ? 'filter-chip--active' : ''}`}
+            style={{
+              padding: '6px 16px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              backgroundColor: activeFilter === 'todos' ? '#204785' : 'white',
+              color: activeFilter === 'todos' ? 'white' : '#5c5f60',
+              border: activeFilter === 'todos' ? 'none' : '1px solid #bec9c0',
+              transition: 'all 0.2s ease'
+            }}
             onClick={() => setActiveFilter('todos')}
           >
             Todos ({students.length})
           </button>
           <button
-            className={`filter-chip ${activeFilter === 'guardados' ? 'filter-chip--active' : ''}`}
+            style={{
+              padding: '6px 16px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              backgroundColor: activeFilter === 'guardados' ? '#204785' : 'white',
+              color: activeFilter === 'guardados' ? 'white' : '#5c5f60',
+              border: activeFilter === 'guardados' ? 'none' : '1px solid #bec9c0',
+              transition: 'all 0.2s ease'
+            }}
             onClick={() => setActiveFilter('guardados')}
           >
             Registrados ({totalAssigned})
           </button>
           <button
-            className={`filter-chip ${activeFilter === 'pendientes' ? 'filter-chip--active' : ''}`}
+            style={{
+              padding: '6px 16px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              backgroundColor: activeFilter === 'pendientes' ? '#204785' : 'white',
+              color: activeFilter === 'pendientes' ? 'white' : '#5c5f60',
+              border: activeFilter === 'pendientes' ? 'none' : '1px solid #bec9c0',
+              transition: 'all 0.2s ease'
+            }}
             onClick={() => setActiveFilter('pendientes')}
           >
             Pendientes ({students.length - totalAssigned})
           </button>
         </div>
+
+        {/* Leyenda de estatus */}
+        <div className="filter-legend">
+          <div className="filter-legend-item">
+            <span className="filter-legend-dot filter-legend-dot--participo" />
+            <span>Participó</span>
+          </div>
+          <div className="filter-legend-item">
+            <span className="filter-legend-dot filter-legend-dot--falta" />
+            <span>Falta</span>
+          </div>
+          <div className="filter-legend-item">
+            <span className="filter-legend-dot filter-legend-dot--problema" />
+            <span>Problema</span>
+          </div>
+          <div className="filter-legend-item">
+            <span className="filter-legend-dot filter-legend-dot--retardo" />
+            <span>Retardo</span>
+          </div>
+          <div className="filter-legend-item">
+            <span className="filter-legend-dot filter-legend-dot--no-trabajo" />
+            <span>No trabajó</span>
+          </div>
+        </div>
       </section>
 
-      {/* Tabla de Escritorio */}
-      <div className="table-responsive">
-        <table className="attendance-table">
-          <thead>
-            <tr>
-              <th className="th-num">#</th>
-              <th>Matrícula</th>
-              <th>Nombre Completo del Alumno</th>
-              <th style={{ width: '450px' }}>Estatus de Participación / Asistencia</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredStudents.length === 0 ? (
+      {/* Tarjeta Contenedora de Lista */}
+      <div className="attendance-card">
+        {/* Cabecera de Tabla (Fija en Desktop) */}
+        <div className="attendance-table-header-wrap">
+          <table className="attendance-table">
+            <thead>
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: '32px' }}>
-                  No se encontraron alumnos con los criterios seleccionados.
-                </td>
+                <th className="attendance-th" style={{ width: '60px', textAlign: 'center' }}>#</th>
+                <th className="attendance-th attendance-th--matricula">Matrícula</th>
+                <th className="attendance-th">Nombre Completo del Alumno</th>
+                <th className="attendance-th attendance-th--center" style={{ width: '300px' }}>Estatus de Participación / Asistencia</th>
               </tr>
+            </thead>
+          </table>
+        </div>
+
+        {/* Cuerpo de Tabla con Scroll */}
+        <div className="attendance-scroll custom-scrollbar">
+          <div className="attendance-table-body-wrap">
+            <table className="attendance-table">
+              <tbody>
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td className="attendance-td" colSpan={4} style={{ textAlign: 'center', padding: '32px' }}>
+                      No se encontraron alumnos con los criterios seleccionados.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map(({ student, originalIndex }, idx) => {
+                    const rowStatus = statuses[originalIndex];
+                    const user = (Array.isArray(student.usuarios) ? student.usuarios[0] : student.usuarios) as { nombre?: string; apellido?: string } | null;
+                    const fullName = `${user?.nombre || ''} ${user?.apellido || ''}`;
+                    
+                    return (
+                      <tr className="attendance-row" key={student.id}>
+                        <td className="attendance-td" style={{ width: '60px', textAlign: 'center', fontWeight: 'bold', color: '#5c5f60' }}>{idx + 1}</td>
+                        <td className="attendance-td attendance-td--matricula" style={{ color: '#5c5f60' }}>{student.matricula}</td>
+                        <td className="attendance-td attendance-td--name">{fullName}</td>
+                        <td className="attendance-td attendance-td--status" style={{ width: '300px' }}>
+                          <div className="status-container">
+                            {STATUS_OPTIONS.map((opt, optIdx) => {
+                              const isSelected = rowStatus.selectedIndex === optIdx;
+                              const isAnySelected = rowStatus.selectedIndex !== null;
+                              const btnClass = [
+                                'status-btn',
+                                isSelected ? 'status-active' : '',
+                                (isAnySelected && !isSelected) ? 'status-fade-out' : ''
+                              ].filter(Boolean).join(' ');
+                              
+                              const btnStyle = {
+                                backgroundColor: opt.color,
+                                border: opt.color === 'white' ? '1px solid #bec9c0' : 'none',
+                                cursor: 'pointer',
+                                boxShadow: isSelected ? '0 0 0 3px rgba(32, 71, 133, 0.4)' : 'none'
+                              };
+                              
+                              return (
+                                <button
+                                  key={optIdx}
+                                  className={btnClass}
+                                  style={btnStyle}
+                                  onClick={() => handleSelectStatus(originalIndex, optIdx)}
+                                  title={opt.title}
+                                />
+                              );
+                            })}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Lista Móvil (Tarjetas) */}
+          <div className="attendance-mobile-list">
+            {filteredStudents.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#5c5f60' }}>
+                No se encontraron alumnos con los criterios seleccionados.
+              </div>
             ) : (
               filteredStudents.map(({ student, originalIndex }, idx) => {
                 const rowStatus = statuses[originalIndex];
+                const user = (Array.isArray(student.usuarios) ? student.usuarios[0] : student.usuarios) as { nombre?: string; apellido?: string } | null;
+                const fullName = `${user?.nombre || ''} ${user?.apellido || ''}`;
+                
                 return (
-                  <tr key={student.id}>
-                    <td className="th-num">{idx + 1}</td>
-                    <td style={{ color: '#5c5f60', fontSize: '14px' }}>{student.matricula}</td>
-                    <td className="student-name">
-                      {(() => {
-                        const user = (Array.isArray(student.usuarios) ? student.usuarios[0] : student.usuarios) as { nombre?: string; apellido?: string } | null;
-                        return `${user?.nombre || ''} ${user?.apellido || ''}`;
-                      })()}
-                    </td>
-                    <td>
-                      <div className="status-options-row">
+                  <div className="attendance-mobile-row" key={student.id}>
+                    <div className="attendance-mobile-id-row">
+                      <span className="attendance-mobile-id">{student.matricula}</span>
+                      <span style={{ fontSize: '12px', color: '#5c5f60', fontWeight: 'bold' }}>#{idx + 1}</span>
+                    </div>
+                    <h4 className="attendance-mobile-name">{fullName}</h4>
+                    <div className="attendance-mobile-status-row">
+                      <span className="attendance-mobile-status-label">Asistencia:</span>
+                      <div className="status-container">
                         {STATUS_OPTIONS.map((opt, optIdx) => {
                           const isSelected = rowStatus.selectedIndex === optIdx;
-                          const btnStyle = isSelected
-                            ? { backgroundColor: opt.color, color: opt.color === 'white' ? '#181d1a' : 'white', borderColor: opt.border !== 'none' ? opt.border : 'transparent' }
-                            : {};
+                          const isAnySelected = rowStatus.selectedIndex !== null;
+                          const btnClass = [
+                            'status-btn',
+                            isSelected ? 'status-active' : '',
+                            (isAnySelected && !isSelected) ? 'status-fade-out' : ''
+                          ].filter(Boolean).join(' ');
+                          
+                          const btnStyle = {
+                            backgroundColor: opt.color,
+                            border: opt.color === 'white' ? '1px solid #bec9c0' : 'none',
+                            cursor: 'pointer',
+                            boxShadow: isSelected ? '0 0 0 3px rgba(32, 71, 133, 0.4)' : 'none'
+                          };
+                          
                           return (
                             <button
                               key={optIdx}
-                              className={`btn-option ${isSelected ? 'btn-option--selected' : ''}`}
+                              className={btnClass}
                               style={btnStyle}
                               onClick={() => handleSelectStatus(originalIndex, optIdx)}
-                            >
-                              {opt.title}
-                            </button>
+                              title={opt.title}
+                            />
                           );
                         })}
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
 
       {/* Tarjeta de notificación Flotante (Toast) */}

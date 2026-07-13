@@ -44,22 +44,18 @@ export default function ClasesPantalla() {
   }
 
   return (
-    <div className="groups-canvas-only animate-fade-in">
+    <div className="animate-fade-in">
       {/* Sección Header */}
       <section className="section-header">
-        <div className="section-header-left">
-          <div className="section-header-icon-box">
-            <span className="material-symbols-outlined section-header-icon">groups</span>
-          </div>
-          <div>
-            <h2 className="section-header-title">Mis Clases y Grupos</h2>
-            <p className="section-header-subtitle">
-              Administra la asistencia, participaciones y reportes conductuales de tus alumnos asignados.
-            </p>
-          </div>
+        <div>
+          <h2 className="section-title">Mis Clases y Grupos</h2>
+          <p className="section-subtitle">
+            <span className="material-symbols-outlined section-subtitle-icon" style={{ marginRight: '8px', verticalAlign: 'middle' }}>groups</span>
+            Administra la asistencia, participaciones y reportes conductuales de tus alumnos asignados.
+          </p>
         </div>
-        <button className="btn-add-group" onClick={() => console.log('Asignar Grupo')}>
-          <span className="material-symbols-outlined btn-add-group-icon">add</span>
+        <button className="btn-asignar-grupo" onClick={() => console.log('Asignar Grupo')}>
+          <span className="material-symbols-outlined" style={{ marginRight: '8px' }}>add</span>
           <span>Asignar Grupo</span>
         </button>
       </section>
@@ -75,25 +71,33 @@ export default function ClasesPantalla() {
           clases.map((clase) => (
             <div className="group-card" key={clase.materiaId} onClick={() => handleGestionarGrupo(clase)}>
               <div className="group-card-header">
-                <span className="group-code-badge">{clase.grupoNombre}</span>
-                <span className="group-stats-pill">Activo</span>
+                <span className="group-code-chip">{clase.grupoNombre}</span>
+                <span className="group-status-chip">
+                  <span className="group-status-dot" />
+                  Activo
+                </span>
               </div>
-              <h3 className="group-card-title">{clase.materiaNombre}</h3>
-              <p className="group-card-desc">
-                Semestre: {clase.semestre}º • Turno: {clase.turno}
-                <br />
-                Haz clic para pasar asistencia, registrar participaciones o ver incidencias.
-              </p>
+              <h3 className="group-title" style={{ marginBottom: '12px' }}>{clase.materiaNombre}</h3>
+              <div className="group-card-stats" style={{ marginBottom: '20px' }}>
+                <div className="group-stat">
+                  <span className="material-symbols-outlined group-stat-icon">import_contacts</span>
+                  <span className="group-stat-text">Semestre: {clase.semestre}º</span>
+                </div>
+                <div className="group-stat">
+                  <span className="material-symbols-outlined group-stat-icon">schedule</span>
+                  <span className="group-stat-text">Turno: {clase.turno === 'M' ? 'Matutino' : 'Vespertino'}</span>
+                </div>
+              </div>
               <div className="group-card-footer">
                 <button
-                  className="btn-manage-group"
+                  className="link-gestionar"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleGestionarGrupo(clase);
                   }}
                 >
                   <span>Gestionar Clase</span>
-                  <span className="material-symbols-outlined btn-manage-group-arrow">arrow_forward</span>
+                  <span className="material-symbols-outlined link-gestionar-icon">arrow_forward</span>
                 </button>
               </div>
             </div>
@@ -102,15 +106,33 @@ export default function ClasesPantalla() {
       </div>
 
       {/* Sección Resumen de Estadísticas */}
-      <footer className="stats-footer">
-        <div className="stat-item">
-          <p className="stat-number">{clases.length}</p>
-          <p className="stat-label">Clases Asignadas</p>
+      <footer className="summary-footer">
+        <div className="summary-item">
+          <div className="summary-icon-circle">
+            <span className="material-symbols-outlined">collections_bookmark</span>
+          </div>
+          <div>
+            <p className="summary-value">{clases.length}</p>
+            <p className="summary-label">Clases Asignadas</p>
+          </div>
         </div>
-        <div className="stat-item-divider" />
-        <div className="stat-item">
-          <p className="stat-number">Activas</p>
-          <p className="stat-label">Estado de Carga</p>
+        <div className="summary-item summary-item--bordered">
+          <div className="summary-icon-circle">
+            <span className="material-symbols-outlined">toggle_on</span>
+          </div>
+          <div>
+            <p className="summary-value">Activo</p>
+            <p className="summary-label">Estado de Carga</p>
+          </div>
+        </div>
+        <div className="summary-item">
+          <div className="summary-icon-circle">
+            <span className="material-symbols-outlined">event_available</span>
+          </div>
+          <div>
+            <p className="summary-value">2026</p>
+            <p className="summary-label">Ciclo Escolar</p>
+          </div>
         </div>
       </footer>
     </div>

@@ -62,7 +62,7 @@ export default function GenerarReporteM() {
           // 2. Obtener alumnos de estos grupos
           const { data: alumnosData, error: alumnosErr } = await supabase
             .from('alumnos')
-            .select('id, matricula, nivel_semaforo, puntos_totales, usuarios(nombre, apellido), grupos(nombre)')
+            .select('id, matricula, nivel_semaforo, puntos_totales, usuarios!alumnos_usuario_id_fkey(nombre, apellido), grupos(nombre)')
             .in('grupo_id', groupIds);
 
           if (!alumnosErr && alumnosData) {

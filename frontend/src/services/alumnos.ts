@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 export async function getAlumnosDeGrupo(grupoId: string) {
   const { data, error } = await supabase
     .from('alumnos')
-    .select('id, matricula, nivel_semaforo, puntos_totales, usuarios(nombre, apellido)')
+    .select('id, matricula, nivel_semaforo, puntos_totales, usuarios!alumnos_usuario_id_fkey(nombre, apellido)')
     .eq('grupo_id', grupoId);
 
   if (error) throw error;
@@ -13,7 +13,7 @@ export async function getAlumnosDeGrupo(grupoId: string) {
 export async function getAlumnosDePlantel(plantelId: string) {
   const { data, error } = await supabase
     .from('alumnos')
-    .select('id, matricula, nivel_semaforo, puntos_totales, usuarios(nombre, apellido), grupos!inner(plantel_id)')
+    .select('id, matricula, nivel_semaforo, puntos_totales, usuarios!alumnos_usuario_id_fkey(nombre, apellido), grupos!inner(plantel_id)')
     .eq('grupos.plantel_id', plantelId);
 
   if (error) throw error;
@@ -23,10 +23,11 @@ export async function getAlumnosDePlantel(plantelId: string) {
 export async function getPerfilAlumno(alumnoId: string) {
   const { data, error } = await supabase
     .from('alumnos')
-    .select('id, matricula, nivel_semaforo, puntos_totales, usuarios(nombre, apellido, email), grupos(nombre), contactos_emergency(nombre, parentesco, telefono)')
+    .select('id, matricula, nivel_semaforo, puntos_totales, usuarios!alumnos_usuario_id_fkey(nombre, apellido, email), grupos(nombre), contactos_emergency(nombre, parentesco, telefono)')
     .eq('id', alumnoId)
     .single();
 
   if (error) throw error;
   return data;
 }
+
