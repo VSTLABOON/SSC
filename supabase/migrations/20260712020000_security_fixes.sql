@@ -123,7 +123,8 @@ BEGIN
     '',
     false,
     0
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$;
