@@ -223,9 +223,10 @@ export default function AsignacionEstatus() {
               });
             if (incError) throw incError;
           }
-        } catch (studentErr: any) {
+        } catch (studentErr: unknown) {
           const user = (Array.isArray(student.usuarios) ? student.usuarios[0] : student.usuarios) as { nombre?: string; apellido?: string } | null;
-          errorsList.push(`${user?.nombre || 'Alumno'}: ${studentErr.message || 'Error desconocido'}`);
+          const errorMsg = studentErr instanceof Error ? studentErr.message : 'Error desconocido';
+          errorsList.push(`${user?.nombre || 'Alumno'}: ${errorMsg}`);
         }
       }
 
@@ -236,7 +237,7 @@ export default function AsignacionEstatus() {
         setTimeout(() => setToastState('fading'), 2000);
         setTimeout(() => setToastState('hidden'), 2300);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (import.meta.env.DEV) {
         console.error('Error al guardar asistencia:', err);
       }

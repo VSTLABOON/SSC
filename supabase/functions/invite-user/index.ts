@@ -5,11 +5,11 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// CRIT-2: Restringir CORS al origen del frontend si está configurado en Deno env
-const SITE_URL = Deno.env.get('SITE_URL') || '*';
+// CRIT-2: Restringir CORS al origen del frontend sin comodin wildcard
+const SITE_URL = Deno.env.get('SITE_URL');
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': SITE_URL,
+  'Access-Control-Allow-Origin': SITE_URL || '',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -19,6 +19,12 @@ serve(async (req: Request) => {
   // Preflight CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
+  }
+
+  // Si SITE_URL no está definida en el entorno, abortar de forma segura sin exponer stack trace
+  if (!SITE_URL) {
+    console.error('Error de configuracion: la variable SITE_URL no esta definida en el entorno.');
+    return json({ error: 'Error interno del servidor.' }, 500);
   }
 
   try {

@@ -100,10 +100,10 @@ export default function HistorialReporteDA() {
       sObj.reports.push(inc);
       sObj.reportCount++;
 
-      const color = inc.categorias_incidencia?.color_semaforo || 'green';
-      if (color === 'red') {
+      const color = inc.categorias_incidencia?.color_semaforo || 'verde';
+      if (color === 'rojo') {
         sObj.reportLevel = 'error';
-      } else if (color === 'yellow' || color === 'orange') {
+      } else if (color === 'naranja') {
         if (sObj.reportLevel !== 'error') {
           sObj.reportLevel = 'warning';
         }
@@ -256,8 +256,8 @@ export default function HistorialReporteDA() {
             <h3 className="hrm-timeline-title">Expediente Disciplinario Completo</h3>
             <div className="hrm-timeline">
               {selectedStudent.reports.map((report) => {
-                const isCritical = report.categorias_incidencia?.color_semaforo === 'red';
-                const isWarning = report.categorias_incidencia?.color_semaforo === 'yellow' || report.categorias_incidencia?.color_semaforo === 'orange';
+                const isCritical = report.categorias_incidencia?.color_semaforo === 'rojo';
+                const isWarning = report.categorias_incidencia?.color_semaforo === 'naranja';
                 let dotClass = 'hrm-timeline-dot--info';
                 if (isCritical) dotClass = 'hrm-timeline-dot--danger';
                 else if (isWarning) dotClass = 'hrm-timeline-dot--warning';

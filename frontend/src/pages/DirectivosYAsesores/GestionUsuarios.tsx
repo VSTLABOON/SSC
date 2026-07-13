@@ -59,9 +59,8 @@ export default function GestionUsuarios() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   // ── Carga de usuarios ──────────────────────────────────────────────────────
-  const cargarUsuarios = useCallback(async () => {
-    if (!plantelId) return;
-    setLoading(true);
+  const fetchUsuarios = useCallback(async () => {
+    if (!plantelId) return [];
     const { data, error } = await supabase
       .from('usuarios')
       .select('id, nombre, apellido, email, rol, activo, plantel_id')
@@ -70,11 +69,38 @@ export default function GestionUsuarios() {
       .order('rol')
       .order('apellido');
 
-    if (!error && data) setUsuarios(data);
-    setLoading(false);
+    if (error) {
+      console.error(error);
+      return [];
+    }
+    return data || [];
   }, [plantelId]);
 
-  useEffect(() => { cargarUsuarios(); }, [cargarUsuarios]);
+  const cargarUsuarios = useCallback(async () => {
+    setLoading(true);
+    const data = await fetchUsuarios();
+    setUsuarios(data);
+    setLoading(false);
+  }, [fetchUsuarios]);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    async function inicializar() {
+      setLoading(true);
+      const data = await fetchUsuarios();
+      if (!cancelado) {
+        setUsuarios(data);
+        setLoading(false);
+      }
+    }
+
+    inicializar();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [fetchUsuarios]);
 
   // ── Cambiar rol ────────────────────────────────────────────────────────────
   async function handleCambiarRol(userId: string, nuevoRol: string) {

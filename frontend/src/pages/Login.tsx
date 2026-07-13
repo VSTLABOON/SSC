@@ -114,12 +114,14 @@ const Login = () => {
     // MEDIO-4: Normalizar email (trim y minúsculas)
     const normalizedEmail = username.trim().toLowerCase();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
     });
 
-    if (error || !data.user) {
+    if (loginError || !data.user) {
+      // Registrar intento fallido en base de datos
+      await supabase.rpc('fn_registrar_intento_fallido', { p_email: normalizedEmail });
       setError('Usuario o contraseña incorrectos.');
       setSubmitting(false);
       return;
@@ -127,7 +129,7 @@ const Login = () => {
 
     const { data: perfil, error: perfilError } = await supabase
       .from('usuarios')
-      .select('rol')
+      .select('rol, activo, bloqueado_hasta')
       .eq('id', data.user.id)
       .single();
 
@@ -137,6 +139,27 @@ const Login = () => {
       setSubmitting(false);
       return;
     }
+
+    // Validar bloqueo temporal de cuenta
+    const ahora = new Date();
+    const isLocked = perfil.bloqueado_hasta && new Date(perfil.bloqueado_hasta) > ahora;
+    if (isLocked) {
+      setError('Esta cuenta se encuentra bloqueada temporalmente por demasiados intentos fallidos.');
+      await supabase.auth.signOut();
+      setSubmitting(false);
+      return;
+    }
+
+    // Validar si el usuario está inactivo
+    if (!perfil.activo) {
+      setError('Esta cuenta ha sido desactivada. Contacte a la dirección.');
+      await supabase.auth.signOut();
+      setSubmitting(false);
+      return;
+    }
+
+    // Si todo está correcto, resetear intentos fallidos
+    await supabase.rpc('fn_reset_intentos_fallidos', { p_email: normalizedEmail });
 
     const rutas: Record<string, string> = {
       alumno: '/alumno/inicio',

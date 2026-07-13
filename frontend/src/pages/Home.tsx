@@ -24,7 +24,7 @@ const SEMAPHORE_THEME: Record<
   string,
   { icon: string; panelClass: string; circleClass: string; labelClass: string; sublabelClass: string; label: string; desc: string }
 > = {
-  green: {
+  verde: {
     icon: 'check_circle',
     panelClass: 'semaphore-panel semaphore-panel--green',
     circleClass: 'semaphore-circle semaphore-circle--green',
@@ -33,25 +33,16 @@ const SEMAPHORE_THEME: Record<
     label: 'Verde',
     desc: 'Se mantiene en verde mientras tengas buen desempeño conductual y académico.',
   },
-  yellow: {
+  naranja: {
     icon: 'warning',
-    panelClass: 'semaphore-panel semaphore-panel--yellow',
-    circleClass: 'semaphore-circle semaphore-circle--yellow',
-    labelClass: 'semaphore-label semaphore-label--yellow',
-    sublabelClass: 'semaphore-sublabel semaphore-sublabel--yellow',
-    label: 'Amarillo',
-    desc: 'Se activa por dificultades académicas menores o de 1 a 3 faltas.',
-  },
-  orange: {
-    icon: 'warning',
-    panelClass: 'semaphore-panel semaphore-panel--yellow', // Reusamos clase amarilla o similar
+    panelClass: 'semaphore-panel semaphore-panel--yellow', // Reusamos clase amarilla
     circleClass: 'semaphore-circle semaphore-circle--yellow',
     labelClass: 'semaphore-label semaphore-label--yellow',
     sublabelClass: 'semaphore-sublabel semaphore-sublabel--yellow',
     label: 'Naranja',
     desc: 'Se activa por incidencias acumuladas o faltas recurrentes.',
   },
-  red: {
+  rojo: {
     icon: 'error',
     panelClass: 'semaphore-panel semaphore-panel--red',
     circleClass: 'semaphore-circle semaphore-circle--red',
@@ -118,8 +109,8 @@ export default function Home() {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando información del alumno...</div>;
   }
 
-  const level = alumno?.nivel_semaforo || 'green';
-  const theme = SEMAPHORE_THEME[level] || SEMAPHORE_THEME.green;
+  const level = alumno?.nivel_semaforo || 'verde';
+  const theme = SEMAPHORE_THEME[level] || SEMAPHORE_THEME.verde;
 
   // Calculamos promedio de asistencia o mock
   const asistenciaPorcentaje = 94; // Mantener mock por ahora

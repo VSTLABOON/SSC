@@ -104,11 +104,11 @@ export default function History() {
       const catRaw = r.categorias_incidencia;
       const cat = (Array.isArray(catRaw) ? catRaw[0] : catRaw) as { nombre?: string; color_semaforo?: string } | null;
       const catName = cat?.nombre || 'General';
-      const color = cat?.color_semaforo || 'green';
+      const color = cat?.color_semaforo || 'verde';
       
       let filterGroup: 'positive' | 'warning' | 'negative' = 'positive';
       if (r.impacto_puntos < 0) {
-        filterGroup = color === 'red' ? 'negative' : 'warning';
+        filterGroup = color === 'rojo' ? 'negative' : 'warning';
       }
 
       let categoryKey = 'general';

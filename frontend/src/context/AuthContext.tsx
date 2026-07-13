@@ -9,6 +9,8 @@ interface AuthContextValue {
   rol: string | null;
   nombre: string | null;
   plantelId: string | null;
+  activo: boolean | null;
+  bloqueadoHasta: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
@@ -20,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [rol, setRol] = useState<string | null>(null);
   const [nombre, setNombre] = useState<string | null>(null);
   const [plantelId, setPlantelId] = useState<string | null>(null);
+  const [activo, setActivo] = useState<boolean | null>(null);
+  const [bloqueadoHasta, setBloqueadoHasta] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function hidratarPerfil(userId: string) {
@@ -38,10 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRol(bloqueado || !data.activo ? 'pendiente' : data.rol);
       setNombre(data.nombre);
       setPlantelId(data.plantel_id);
+      setActivo(data.activo);
+      setBloqueadoHasta(data.bloqueado_hasta);
     } else {
       setRol(null);
       setNombre(null);
       setPlantelId(null);
+      setActivo(null);
+      setBloqueadoHasta(null);
     }
   }
 
@@ -56,6 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRol(null);
         setNombre(null);
         setPlantelId(null);
+        setActivo(null);
+        setBloqueadoHasta(null);
       }
       setLoading(false);
     });
@@ -68,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, rol, nombre, plantelId, loading, signOut }}>
+    <AuthContext.Provider value={{ session, rol, nombre, plantelId, activo, bloqueadoHasta, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
