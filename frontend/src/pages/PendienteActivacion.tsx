@@ -32,11 +32,15 @@ export default function PendienteActivacion() {
     icon = 'block';
   }
 
+  const isErrorState = isLocked || isInactive;
+  const iconWrapClass = `pa-icon-wrap${isErrorState ? ' pa-icon-wrap--error' : ''}`;
+  const iconClass = `material-symbols-outlined pa-icon${isErrorState ? ' pa-icon--error' : ''}`;
+
   return (
     <div className="pa-page">
       <div className="pa-card">
-        <div className="pa-icon-wrap">
-          <span className="material-symbols-outlined pa-icon">{icon}</span>
+        <div className={iconWrapClass}>
+          <span className={iconClass}>{icon}</span>
         </div>
         <h1 className="pa-title">{title}</h1>
         <p className="pa-desc">

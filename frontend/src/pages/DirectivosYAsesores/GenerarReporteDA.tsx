@@ -6,7 +6,7 @@ import { getPeriodoActivo } from '../../services/periodos';
 import { supabase } from '../../lib/supabaseClient';
 import './GenerarReporteDA.css';
 
-type Severity = 'red' | 'orange' | 'yellow' | 'green' | null;
+type Severity = 'verde' | 'naranja' | 'rojo' | null;
 
 interface StudentFromDB {
   id: string;
@@ -68,7 +68,7 @@ export default function GenerarReporteDA() {
           name: `${a.usuarios?.nombre || ''} ${a.usuarios?.apellido || ''}`.trim(),
           matricula: a.matricula,
           groupName: a.grupos?.nombre || 'N/A',
-          status: a.nivel_semaforo || 'green',
+          status: a.nivel_semaforo || 'verde',
           puntosTotales: a.puntos_totales ?? 100,
         }));
         setStudents(formatted);
@@ -98,7 +98,7 @@ export default function GenerarReporteDA() {
 
   function handleOpenModal(student: StudentFromDB) {
     setSelectedStudent(student);
-    setSeverity('yellow');
+    setSeverity('naranja');
     setSelectedCategoryId('');
     setComment('');
     setLocationName('Plantel');
@@ -119,10 +119,9 @@ export default function GenerarReporteDA() {
   }
 
   const filteredCategories = categories.filter(c => {
-    if (severity === 'green') return c.color_semaforo === 'verde' && c.impacto_base >= 0;
-    if (severity === 'yellow') return c.color_semaforo === 'verde' && c.impacto_base < 0;
-    if (severity === 'orange') return c.color_semaforo === 'naranja';
-    if (severity === 'red') return c.color_semaforo === 'rojo';
+    if (severity === 'verde') return c.color_semaforo === 'verde';
+    if (severity === 'naranja') return c.color_semaforo === 'naranja';
+    if (severity === 'rojo') return c.color_semaforo === 'rojo';
     return false;
   });
 
@@ -140,11 +139,8 @@ export default function GenerarReporteDA() {
 
     setSubmitting(true);
     try {
-      let impacto = -5;
-      if (severity === 'red') impacto = -15;
-      else if (severity === 'orange') impacto = -10;
-      else if (severity === 'yellow') impacto = -5;
-      else if (severity === 'green') impacto = 5;
+      const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+      const impacto = selectedCategory ? selectedCategory.impacto_base : 0;
 
       const { error } = await supabase
         .from('incidencias')
@@ -196,22 +192,22 @@ export default function GenerarReporteDA() {
 
       <div className="grm-stats-row">
         <div className="grm-stat-card">
-          <span className="grm-stat-number grm-stat-number--red">
-            {students.filter(s => s.status === 'red').length}
+          <span className="grm-stat-number grm-stat-number--rojo">
+            {students.filter(s => s.status === 'rojo').length}
           </span>
           <span className="grm-stat-label">Reportes Críticos (Rojo)</span>
         </div>
         <div className="grm-stat-card">
-          <span className="grm-stat-number grm-stat-number--orange">
-            {students.filter(s => s.status === 'orange').length}
+          <span className="grm-stat-number grm-stat-number--naranja">
+            {students.filter(s => s.status === 'naranja').length}
           </span>
           <span className="grm-stat-label">Advertencias (Naranja)</span>
         </div>
         <div className="grm-stat-card">
-          <span className="grm-stat-number grm-stat-number--yellow">
-            {students.filter(s => s.status === 'yellow').length}
+          <span className="grm-stat-number grm-stat-number--verde">
+            {students.filter(s => s.status === 'verde').length}
           </span>
-          <span className="grm-stat-label">Seguimientos (Amarillo)</span>
+          <span className="grm-stat-label">Alumnos Óptimos (Verde)</span>
         </div>
       </div>
 
@@ -242,10 +238,9 @@ export default function GenerarReporteDA() {
                     <td className="grm-td-center">{student.puntosTotales} pts</td>
                     <td>
                       <span className={`grm-status-badge grm-status-badge--${student.status}`}>
-                        {student.status === 'green' && 'Óptimo'}
-                        {student.status === 'yellow' && 'Leve'}
-                        {student.status === 'orange' && 'Grave'}
-                        {student.status === 'red' && 'Crítico'}
+                        {student.status === 'verde' && 'Óptimo'}
+                        {student.status === 'naranja' && 'Grave'}
+                        {student.status === 'rojo' && 'Crítico'}
                       </span>
                     </td>
                     <td>
@@ -306,32 +301,24 @@ export default function GenerarReporteDA() {
                   <div className="grm-severity-selector">
                     <button
                       type="button"
-                      className={`grm-severity-btn grm-severity-btn--green ${severity === 'green' ? 'active' : ''}`}
-                      onClick={() => handleSelectSeverity('green')}
+                      className={`grm-severity-btn grm-severity-btn--verde ${severity === 'verde' ? 'active' : ''}`}
+                      onClick={() => handleSelectSeverity('verde')}
                     >
                       <Icon name="check_circle" />
                       <span>Verde (Positivo)</span>
                     </button>
                     <button
                       type="button"
-                      className={`grm-severity-btn grm-severity-btn--yellow ${severity === 'yellow' ? 'active' : ''}`}
-                      onClick={() => handleSelectSeverity('yellow')}
-                    >
-                      <Icon name="warning" />
-                      <span>Amarillo (Leve)</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`grm-severity-btn grm-severity-btn--orange ${severity === 'orange' ? 'active' : ''}`}
-                      onClick={() => handleSelectSeverity('orange')}
+                      className={`grm-severity-btn grm-severity-btn--naranja ${severity === 'naranja' ? 'active' : ''}`}
+                      onClick={() => handleSelectSeverity('naranja')}
                     >
                       <Icon name="warning" />
                       <span>Naranja (Grave)</span>
                     </button>
                     <button
                       type="button"
-                      className={`grm-severity-btn grm-severity-btn--red ${severity === 'red' ? 'active' : ''}`}
-                      onClick={() => handleSelectSeverity('red')}
+                      className={`grm-severity-btn grm-severity-btn--rojo ${severity === 'rojo' ? 'active' : ''}`}
+                      onClick={() => handleSelectSeverity('rojo')}
                     >
                       <Icon name="error" />
                       <span>Rojo (Crítico)</span>

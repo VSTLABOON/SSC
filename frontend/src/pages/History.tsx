@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 import { getIncidenciasDelAlumno } from '../services/incidencias';
 import './History.css';
 
@@ -75,7 +76,7 @@ function formatDateShort(dateStr: string) {
 }
 
 export default function History() {
-  const { session } = useAuth();
+  const { session, rol } = useAuth();
   const [dbReports, setDbReports] = useState<IncidentFromDB[]>([]);
   const [loading, setLoading] = useState(true);
   const [incidentFilter, setIncidentFilter] = useState<IncidentFilter>('all');
@@ -86,7 +87,26 @@ export default function History() {
 
     async function loadReports() {
       try {
-        const data = await getIncidenciasDelAlumno(session!.user!.id);
+        let studentId = session!.user!.id;
+
+        if (rol === 'padre') {
+          const { data: linkData, error: linkError } = await supabase
+            .from('padres_alumnos')
+            .select('alumno_id')
+            .eq('padre_id', session!.user!.id)
+            .maybeSingle();
+
+          if (linkError) throw linkError;
+          if (!linkData?.alumno_id) {
+            console.warn('El tutor no tiene alumnos vinculados.');
+            setDbReports([]);
+            setLoading(false);
+            return;
+          }
+          studentId = linkData.alumno_id;
+        }
+
+        const data = await getIncidenciasDelAlumno(studentId);
         setDbReports(data as unknown as IncidentFromDB[]);
       } catch (err) {
         console.error('Error al cargar historial de reportes:', err);
@@ -96,7 +116,7 @@ export default function History() {
     }
 
     loadReports();
-  }, [session]);
+  }, [session, rol]);
 
   // Procesamos incidencias del backend a las estructuras de la UI
   const reports: ProcessedReport[] = useMemo(() => {

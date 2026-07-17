@@ -200,7 +200,9 @@ export default function HistorialReportesM() {
                 ) : (
                   <tr>
                     <td colSpan={5} className="hrm-td-empty" style={{ textAlign: 'center', padding: '32px' }}>
-                      No tienes reportes de alumnos registrados en tu historial.
+                      {incidents.length === 0
+                        ? 'No tienes reportes de alumnos registrados en tu historial.'
+                        : 'No se encontraron alumnos con los criterios de búsqueda.'}
                     </td>
                   </tr>
                 )}

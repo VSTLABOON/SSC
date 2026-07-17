@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 import { getPerfilAlumno } from '../services/alumnos';
 import { getIncidenciasDelAlumno } from '../services/incidencias';
 import './Home.css';
@@ -26,28 +27,28 @@ const SEMAPHORE_THEME: Record<
 > = {
   verde: {
     icon: 'check_circle',
-    panelClass: 'semaphore-panel semaphore-panel--green',
-    circleClass: 'semaphore-circle semaphore-circle--green',
-    labelClass: 'semaphore-label semaphore-label--green',
-    sublabelClass: 'semaphore-sublabel semaphore-sublabel--green',
+    panelClass: 'semaphore-panel semaphore-panel--verde',
+    circleClass: 'semaphore-circle semaphore-circle--verde',
+    labelClass: 'semaphore-label semaphore-label--verde',
+    sublabelClass: 'semaphore-sublabel semaphore-sublabel--verde',
     label: 'Verde',
     desc: 'Se mantiene en verde mientras tengas buen desempeño conductual y académico.',
   },
   naranja: {
     icon: 'warning',
-    panelClass: 'semaphore-panel semaphore-panel--yellow', // Reusamos clase amarilla
-    circleClass: 'semaphore-circle semaphore-circle--yellow',
-    labelClass: 'semaphore-label semaphore-label--yellow',
-    sublabelClass: 'semaphore-sublabel semaphore-sublabel--yellow',
+    panelClass: 'semaphore-panel semaphore-panel--naranja',
+    circleClass: 'semaphore-circle semaphore-circle--naranja',
+    labelClass: 'semaphore-label semaphore-label--naranja',
+    sublabelClass: 'semaphore-sublabel semaphore-sublabel--naranja',
     label: 'Naranja',
     desc: 'Se activa por incidencias acumuladas o faltas recurrentes.',
   },
   rojo: {
     icon: 'error',
-    panelClass: 'semaphore-panel semaphore-panel--red',
-    circleClass: 'semaphore-circle semaphore-circle--red',
-    labelClass: 'semaphore-label semaphore-label--red',
-    sublabelClass: 'semaphore-sublabel semaphore-sublabel--red',
+    panelClass: 'semaphore-panel semaphore-panel--rojo',
+    circleClass: 'semaphore-circle semaphore-circle--rojo',
+    labelClass: 'semaphore-label semaphore-label--rojo',
+    sublabelClass: 'semaphore-sublabel semaphore-sublabel--rojo',
     label: 'Rojo',
     desc: 'Se activa por más de 3 faltas o acumulación de reportes conductuales graves.',
   },
@@ -80,7 +81,7 @@ interface AlumnoProfile {
 }
 
 export default function Home() {
-  const { session } = useAuth();
+  const { session, rol } = useAuth();
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [incidencias, setIncidencias] = useState<IncidentFromDB[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -90,10 +91,29 @@ export default function Home() {
 
     async function loadData() {
       try {
-        const studentData = await getPerfilAlumno(session!.user!.id);
+        let studentId = session!.user!.id;
+
+        if (rol === 'padre') {
+          const { data: linkData, error: linkError } = await supabase
+            .from('padres_alumnos')
+            .select('alumno_id')
+            .eq('padre_id', session!.user!.id)
+            .maybeSingle();
+
+          if (linkError) throw linkError;
+          if (!linkData?.alumno_id) {
+            console.warn('El tutor no tiene alumnos vinculados.');
+            setAlumno(null);
+            setLoadingData(false);
+            return;
+          }
+          studentId = linkData.alumno_id;
+        }
+
+        const studentData = await getPerfilAlumno(studentId);
         setAlumno(studentData);
 
-        const incs = await getIncidenciasDelAlumno(session!.user!.id);
+        const incs = await getIncidenciasDelAlumno(studentId);
         setIncidencias(incs as unknown as IncidentFromDB[]);
       } catch (err) {
         console.error('Error al cargar datos del alumno:', err);
@@ -103,7 +123,7 @@ export default function Home() {
     }
 
     loadData();
-  }, [session]);
+  }, [session, rol]);
 
   if (loadingData) {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando información del alumno...</div>;

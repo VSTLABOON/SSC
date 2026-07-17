@@ -634,17 +634,17 @@ body.no-scroll {
   border-radius: var(--radius-lg);
 }
 
-.semaphore-panel--yellow {
+.semaphore-panel--naranja {
   background-color: rgba(254, 243, 199, 0.3);
   border: 1px solid var(--color-amber-100);
 }
 
-.semaphore-panel--green {
+.semaphore-panel--verde {
   background-color: rgba(220, 252, 231, 0.4);
   border: 1px solid #bbf7d0;
 }
 
-.semaphore-panel--red {
+.semaphore-panel--rojo {
   background-color: rgba(254, 226, 226, 0.4);
   border: 1px solid #fecaca;
 }
@@ -666,17 +666,17 @@ body.no-scroll {
   }
 }
 
-.semaphore-circle--yellow {
+.semaphore-circle--naranja {
   background-color: var(--color-amber-500);
   box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
 }
 
-.semaphore-circle--green {
+.semaphore-circle--verde {
   background-color: #22c55e;
   box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
 }
 
-.semaphore-circle--red {
+.semaphore-circle--rojo {
   background-color: #ef4444;
   box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
 }
@@ -704,15 +704,15 @@ body.no-scroll {
   letter-spacing: -0.02em;
 }
 
-.semaphore-label--yellow {
+.semaphore-label--naranja {
   color: var(--color-amber-600);
 }
 
-.semaphore-label--green {
+.semaphore-label--verde {
   color: #16a34a;
 }
 
-.semaphore-label--red {
+.semaphore-label--rojo {
   color: #dc2626;
 }
 
@@ -728,15 +728,15 @@ body.no-scroll {
   }
 }
 
-.semaphore-sublabel--yellow {
+.semaphore-sublabel--naranja {
   color: var(--color-amber-800);
 }
 
-.semaphore-sublabel--green {
+.semaphore-sublabel--verde {
   color: #15803d;
 }
 
-.semaphore-sublabel--red {
+.semaphore-sublabel--rojo {
   color: #991b1b;
 }
 

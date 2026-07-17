@@ -89,3 +89,17 @@
 }
 .pa-btn:hover  { background: #163560; transform: translateY(-1px); }
 .pa-btn:active { transform: translateY(0); }
+
+.pa-icon-wrap--error {
+  background: #fde8e8;
+  animation: pa-pulse-error 2s ease-in-out infinite;
+}
+
+.pa-icon--error {
+  color: #ef4444;
+}
+
+@keyframes pa-pulse-error {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0    rgba(239,68,68,.4); }
+  50%       { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+}

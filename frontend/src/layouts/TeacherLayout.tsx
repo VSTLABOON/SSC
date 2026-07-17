@@ -60,6 +60,11 @@ export default function TeacherLayout() {
     return () => window.removeEventListener('resize', handleResize);
   }, [isOverlayActive]);
 
+  useEffect(() => {
+    document.body.classList.toggle('no-scroll', isOverlayActive);
+    return () => document.body.classList.remove('no-scroll');
+  }, [isOverlayActive]);
+
   const handleLogout = async () => {
     await signOut();
     navigate('/login');

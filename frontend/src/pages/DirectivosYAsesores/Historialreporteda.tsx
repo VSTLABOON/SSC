@@ -206,7 +206,9 @@ export default function HistorialReporteDA() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="hrm-td-empty" style={{ textAlign: 'center', padding: '32px' }}>
-                      No se han registrado reportes disciplinarios en el plantel.
+                      {incidents.length === 0
+                        ? 'No se han registrado reportes disciplinarios en el plantel.'
+                        : 'No se encontraron alumnos con los criterios de búsqueda.'}
                     </td>
                   </tr>
                 )}

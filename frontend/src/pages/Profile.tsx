@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 import { getPerfilAlumno } from '../services/alumnos';
 import './Profile.css';
 import fotoPerfil from "../assets/imagenes/FotoPerfil.jpg";
@@ -19,7 +20,7 @@ interface AlumnoProfile {
 }
 
 export default function Profile() {
-  const { session } = useAuth();
+  const { session, rol } = useAuth();
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +29,26 @@ export default function Profile() {
 
     async function loadProfile() {
       try {
-        const profileData = await getPerfilAlumno(session!.user!.id);
+        let studentId = session!.user!.id;
+
+        if (rol === 'padre') {
+          const { data: linkData, error: linkError } = await supabase
+            .from('padres_alumnos')
+            .select('alumno_id')
+            .eq('padre_id', session!.user!.id)
+            .maybeSingle();
+
+          if (linkError) throw linkError;
+          if (!linkData?.alumno_id) {
+            console.warn('El tutor no tiene alumnos vinculados.');
+            setAlumno(null);
+            setLoading(false);
+            return;
+          }
+          studentId = linkData.alumno_id;
+        }
+
+        const profileData = await getPerfilAlumno(studentId);
         setAlumno(profileData as unknown as AlumnoProfile);
       } catch (err) {
         console.error('Error al cargar perfil:', err);
@@ -38,7 +58,7 @@ export default function Profile() {
     }
 
     loadProfile();
-  }, [session]);
+  }, [session, rol]);
 
   if (loading) {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando perfil...</div>;
