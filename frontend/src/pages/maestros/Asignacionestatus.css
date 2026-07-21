@@ -742,25 +742,29 @@ input {
   flex-shrink: 0;
 }
 
-.filter-legend-dot--participo {
-  background-color: var(--status-green);
-}
-
-.filter-legend-dot--falta {
-  background-color: #ffffff;
-  border: 1px solid var(--outline-variant);
-}
-
-.filter-legend-dot--problema {
-  background-color: var(--status-red);
+.filter-legend-dot--asistio {
+  background-color: #10B981;
 }
 
 .filter-legend-dot--retardo {
-  background-color: var(--status-yellow);
+  background-color: #F59E0B;
 }
 
-.filter-legend-dot--no-trabajo {
-  background-color: var(--status-orange);
+.filter-legend-dot--falta {
+  background-color: #EF4444;
+}
+
+.filter-legend-dot--participo {
+  background-color: #10B981;
+  border: 2px solid #10B981;
+}
+
+.filter-legend-dot--neutral {
+  background-color: #F59E0B;
+}
+
+.filter-legend-dot--no-participo {
+  background-color: #EF4444;
 }
 
 /* ============================================================
@@ -952,12 +956,12 @@ input {
 
 .attendance-mobile-status-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   background-color: var(--surface-container-low, #f1f5ef);
   padding: 12px;
   border-radius: var(--radius-lg);
-  gap: 12px;
+  gap: 16px;
 }
 
 .attendance-mobile-status-label {
@@ -1135,4 +1139,154 @@ input {
 
 .regresar-a-grupos:active {
     transform: scale(0.96);
+}
+
+/* ============================================================
+   3+3 Attendance Redesign Styles
+   ============================================================ */
+
+.status-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-group__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8896a0;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.status-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.status-dot:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.status-dot--active {
+  transform: scale(1.1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.status-dot--faded {
+  opacity: 0.35;
+  transform: scale(0.9);
+}
+
+.status-group--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  filter: grayscale(30%);
+}
+
+.attendance-th--asistencia,
+.attendance-th--desempeno {
+  width: 180px;
+  text-align: center;
+}
+
+.justified-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #5c5f60;
+}
+
+.obs-expand-row {
+  padding: 4px 16px 12px;
+  background-color: rgba(245, 247, 250, 0.5);
+}
+
+.obs-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid #dde3e8;
+  font-size: 12px;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.obs-input:focus {
+  outline: none;
+  border-color: var(--chambray, #204785);
+}
+
+.obs-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8896a0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--radius, 4px);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.obs-toggle-btn:hover {
+  color: #204785;
+  background-color: rgba(32, 71, 133, 0.05);
+}
+
+.evidence-upload {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #5c5f60;
+}
+
+.evidence-label {
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 6px);
+  background-color: #f0f4f8;
+  border: 1px dashed #bec9c0;
+  font-size: 11px;
+  color: #204785;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.evidence-label:hover {
+  background-color: #e2e8f0;
+}
+
+.evidence-filename {
+  font-size: 11px;
+  color: #10B981;
+  font-weight: 500;
+}
+
+.attendance-row.attendance-row--asistio {
+  background-color: rgba(16, 185, 129, 0.04);
+}
+
+.attendance-row.attendance-row--retardo {
+  background-color: rgba(245, 158, 11, 0.04);
+}
+
+.attendance-row.attendance-row--falta {
+  background-color: rgba(239, 68, 68, 0.04);
+}
+
+.status-dot--justified {
+  border: 2px dashed rgba(239, 68, 68, 0.6);
+  background-color: transparent !important;
 }
