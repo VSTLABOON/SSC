@@ -5,6 +5,7 @@ import { getAlumnosDeGrupo } from '../../services/alumnos';
 import { getPeriodoActivo } from '../../services/periodos';
 import { getCategoriasIncidencia } from '../../services/incidencias';
 import { supabase } from '../../lib/supabaseClient';
+import InlineAlert from '../../components/InlineAlert';
 import './Asignacionestatus.css';
 
 interface StatusOption {
@@ -58,6 +59,7 @@ export default function AsignacionEstatus() {
   const [students, setStudents] = useState<StudentForAttendance[]>([]);
   const [statuses, setStatuses] = useState<RowStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   // Período activo y categorías de incidencia del plantel
   const [periodoId, setPeriodoId] = useState<string | null>(null);
@@ -130,12 +132,13 @@ export default function AsignacionEstatus() {
   // Guardar datos en la base de datos de Supabase distribuyendo a las 3 tablas
   // Guardar datos en la base de datos de Supabase distribuyendo a las 3 tablas
   const handleSave = async () => {
+    setErrorText(null);
     if (materiaId === 'sin-id') {
-      alert('Error: No se ha provisto una materia válida para registrar la asistencia.');
+      setErrorText('Error: No se ha provisto una materia válida para registrar la asistencia.');
       return;
     }
     if (!periodoId) {
-      alert('Error: No se pudo resolver el período escolar activo para este plantel.');
+      setErrorText('Error: No se pudo resolver el período escolar activo para este plantel.');
       return;
     }
 
@@ -231,7 +234,7 @@ export default function AsignacionEstatus() {
       }
 
       if (errorsList.length > 0) {
-        alert(`Se guardaron algunos registros con errores:\n\n${errorsList.join('\n')}`);
+        setErrorText(`Se guardaron algunos registros con errores:\n\n${errorsList.join('\n')}`);
       } else {
         setToastState('visible');
         setTimeout(() => setToastState('fading'), 2000);
@@ -241,7 +244,7 @@ export default function AsignacionEstatus() {
       if (import.meta.env.DEV) {
         console.error('Error al guardar asistencia:', err);
       }
-      alert('Ocurrió un error inesperado al registrar los datos en Supabase.');
+      setErrorText('Ocurrió un error inesperado al registrar los datos en Supabase.');
     } finally {
       setIsSaving(false);
     }
@@ -284,6 +287,9 @@ export default function AsignacionEstatus() {
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, minHeight: 0 }}>
+      {errorText && (
+        <InlineAlert type="error" message={errorText} onClose={() => setErrorText(null)} />
+      )}
       {/* Cabecera */}
       <header className="page-header">
         <div>

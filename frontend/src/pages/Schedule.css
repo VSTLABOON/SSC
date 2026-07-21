@@ -777,3 +777,62 @@ body.no-scroll {
 @media (min-width: 768px) {
   .btn-report { width: auto; }
 }
+
+.schedule-cell--break {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--color-surface-container-highest);
+  color: var(--color-on-surface-variant);
+  font-weight: 500;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  margin: 4px;
+  border: 1px dashed var(--color-outline-variant);
+}
+
+.break-icon {
+  font-size: 18px;
+  color: var(--color-primary);
+}
+
+/* ── Notificación Flotante (Toast) ── */
+.schedule-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #1e293b; /* slate-800 */
+  color: #ffffff;
+  padding: 14px 22px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  font-size: 14px;
+  font-weight: 500;
+  animation: toastSlideIn 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.schedule-toast__icon {
+  color: #4ade80; /* green-400 */
+  font-size: 20px;
+}
+
+.schedule-toast__text {
+  font-family: inherit;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

@@ -32,7 +32,30 @@ export default function StudentLayout() {
     return () => document.body.classList.remove('no-scroll');
   }, [isSidebarOpen]);
 
+  // Cerrar sidebar al cambiar de ruta
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Listener de resize para limpiar el estado al pasar a escritorio
+  useEffect(() => {
+    function handleResize(): void {
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(false);
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const closeSidebar = () => setIsSidebarOpen(false);
+
+  function handleMenuToggleClick(event: React.MouseEvent): void {
+    event.stopPropagation();
+    if (window.innerWidth >= 768) return;
+    setIsSidebarOpen((prev) => !prev);
+  }
 
   const handleLogout = async () => {
     await signOut();
@@ -90,7 +113,7 @@ export default function StudentLayout() {
               type="button"
               className="mobile-menu-btn"
               aria-label="Abrir menú de navegación"
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              onClick={handleMenuToggleClick}
             >
               <Icon name="menu" />
             </button>

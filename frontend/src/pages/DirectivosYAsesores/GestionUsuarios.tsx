@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import './GestionUsuarios.css';
+import InlineAlert from '../../components/InlineAlert';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ export default function GestionUsuarios() {
   const [invApellido, setInvApellido] = useState('');
   const [invRol, setInvRol] = useState<typeof ROLES_ASIGNABLES[number]>('docente');
   const [invLoading, setInvLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [invError, setInvError] = useState<string | null>(null);
 
   // Feedback inline de tabla
@@ -104,6 +106,7 @@ export default function GestionUsuarios() {
 
   // ── Cambiar rol ────────────────────────────────────────────────────────────
   async function handleCambiarRol(userId: string, nuevoRol: string) {
+    setActionError(null);
     setUpdatingId(userId);
     const { error } = await supabase
       .from('usuarios')
@@ -115,13 +118,14 @@ export default function GestionUsuarios() {
         prev.map(u => u.id === userId ? { ...u, rol: nuevoRol } : u)
       );
     } else {
-      alert(`No se pudo cambiar el rol del usuario: ${error.message}`);
+      setActionError(`No se pudo cambiar el rol del usuario: ${error.message}`);
     }
     setUpdatingId(null);
   }
 
   // ── Activar / Desactivar usuario ──────────────────────────────────────────
   async function handleToggleActivo(userId: string, nuevoActivo: boolean) {
+    setActionError(null);
     setUpdatingId(userId);
     const { error } = await supabase
       .from('usuarios')
@@ -133,7 +137,7 @@ export default function GestionUsuarios() {
         prev.map(u => u.id === userId ? { ...u, activo: nuevoActivo } : u)
       );
     } else {
-      alert(`No se pudo actualizar el estado del usuario: ${error.message}`);
+      setActionError(`No se pudo actualizar el estado del usuario: ${error.message}`);
     }
     setUpdatingId(null);
   }
@@ -223,6 +227,9 @@ export default function GestionUsuarios() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="gu-page">
+      {actionError && (
+        <InlineAlert type="error" message={actionError} onClose={() => setActionError(null)} />
+      )}
       {/* Header */}
       <div className="gu-header">
         <div className="gu-header-text">

@@ -16,8 +16,7 @@ interface NavItem {
 
 
 export default function DirectorLayout() {
-  const [isSidebarHidden, setIsSidebarHidden] = useState(true);
-  const [isOverlayActive, setIsOverlayActive] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { nombre, rol, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,44 +32,35 @@ export default function DirectorLayout() {
     ),
   ];
 
-  function openSidebar(): void {
-    setIsSidebarHidden(false);
-    setIsOverlayActive(true);
-  }
-
-  function closeSidebar(): void {
-    setIsSidebarHidden(true);
-    setIsOverlayActive(false);
-  }
+  const closeSidebar = () => setIsSidebarOpen(false);
 
   function handleMenuToggleClick(event: React.MouseEvent): void {
     event.stopPropagation();
-    if (isSidebarHidden) {
-      openSidebar();
-    } else {
-      closeSidebar();
-    }
+    if (window.innerWidth >= 768) return;
+    setIsSidebarOpen(prev => !prev);
   }
 
   useEffect(() => {
     function handleResize(): void {
       if (window.innerWidth >= 768) {
-        setIsSidebarHidden(false);
-        setIsOverlayActive(false);
-      } else if (!isOverlayActive) {
-        setIsSidebarHidden(true);
+        setIsSidebarOpen(false);
       }
     }
 
     window.addEventListener('resize', handleResize);
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
-  }, [isOverlayActive]);
+  }, []);
 
   useEffect(() => {
-    document.body.classList.toggle('no-scroll', isOverlayActive);
+    document.body.classList.toggle('no-scroll', isSidebarOpen);
     return () => document.body.classList.remove('no-scroll');
-  }, [isOverlayActive]);
+  }, [isSidebarOpen]);
+
+  // Cerrar sidebar al cambiar de ruta
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await signOut();
@@ -79,12 +69,12 @@ export default function DirectorLayout() {
 
   const sidebarClassName = [
     'grm-sidebar',
-    isSidebarHidden ? 'grm-sidebar--mobile-hidden' : '',
+    !isSidebarOpen ? 'grm-sidebar--mobile-hidden' : '',
   ].filter(Boolean).join(' ');
 
   const overlayClassName = [
     'grm-overlay',
-    isOverlayActive ? 'grm-overlay--active' : '',
+    isSidebarOpen ? 'grm-overlay--active' : '',
   ].filter(Boolean).join(' ');
 
   return (

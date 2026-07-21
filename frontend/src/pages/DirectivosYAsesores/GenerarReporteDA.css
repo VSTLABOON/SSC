@@ -358,29 +358,9 @@ a      { text-decoration: none; }
 }
 
 /* ── Modal ────────────────────────────────────────────────────────────────── */
-.grm-modal-backdrop {
-  position: fixed; inset: 0; z-index: 60;
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
-  background: rgba(45,49,46,.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.grm-modal-box--alert {
+  max-width: 480px;
 }
-.grm-modal {
-  background: var(--c-white);
-  width: 100%; max-width: 640px;
-  max-height: 90dvh;
-  overflow-y: auto;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 24px 64px rgba(0,0,0,.2);
-  animation: grm-zoom-in 0.2s ease;
-}
-@keyframes grm-zoom-in {
-  from { opacity: 0; transform: scale(.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
-.grm-modal::-webkit-scrollbar { width: 4px; }
-.grm-modal::-webkit-scrollbar-thumb { background: var(--c-outline-variant); border-radius: 4px; }
 
 .grm-modal-header {
   position: sticky; top: 0; z-index: 10;
@@ -425,6 +405,10 @@ a      { text-decoration: none; }
 .grm-field-input:focus {
   border-color: var(--c-chambray);
   box-shadow: 0 0 0 3px rgba(32,71,133,.12);
+}
+.grm-field-input[rows], textarea.grm-field-input {
+  min-height: 100px;
+  resize: vertical;
 }
 .grm-field-input--readonly {
   background: var(--c-surface-low);
@@ -687,4 +671,11 @@ a      { text-decoration: none; }
   box-shadow:
     0 8px 20px rgba(217,119,6,.4),
     inset 0 1px 2px rgba(255,255,255,.5);
+}
+
+.grm-btn-submit:disabled,
+.grm-success-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
 }

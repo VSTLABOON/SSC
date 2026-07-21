@@ -16,6 +16,12 @@ interface IncidentFromDB {
       nombre: string;
       apellido: string;
     } | null;
+    grupos: {
+      nombre: string;
+      carreras: {
+        nombre: string;
+      } | null;
+    } | null;
   } | null;
   categorias_incidencia: {
     nombre: string;
@@ -70,6 +76,12 @@ export default function HistorialReportesM() {
       const student = (Array.isArray(studentRaw) ? studentRaw[0] : studentRaw) as {
         matricula?: string;
         usuarios?: { nombre: string; apellido: string } | null;
+        grupos?: {
+          nombre: string;
+          carreras?: {
+            nombre: string;
+          } | null;
+        } | null;
       } | null;
       if (!student) return;
 
@@ -78,12 +90,16 @@ export default function HistorialReportesM() {
         const name = `${student.usuarios?.nombre || ''} ${student.usuarios?.apellido || ''}`.trim();
         const initials = ((student.usuarios?.nombre?.substring(0, 1) || '') + (student.usuarios?.apellido?.substring(0, 1) || '')).toUpperCase();
         
+        const groupObj = Array.isArray(student.grupos) ? student.grupos[0] : student.grupos;
+        const carreraObj = groupObj?.carreras;
+        const careerName = (Array.isArray(carreraObj) ? carreraObj[0] : carreraObj)?.nombre || 'Carrera No Especificada';
+
         map.set(studentId, {
           id: studentId,
           name,
           matricula: student.matricula || 'N/A',
-          career: 'CONALEP Plantel Puebla I',
-          group: 'Grupo Asignado',
+          career: careerName,
+          group: groupObj?.nombre || 'Sin Grupo',
           reportCount: 0,
           reportLevel: 'info',
           initials,
@@ -234,8 +250,12 @@ export default function HistorialReportesM() {
                     Matrícula: {selectedStudent.matricula}
                   </span>
                   <span className="hrm-detail-meta__item">
+                    <span className="material-symbols-outlined hrm-meta-icon">groups</span>
+                    Grupo: {selectedStudent.group}
+                  </span>
+                  <span className="hrm-detail-meta__item">
                     <span className="material-symbols-outlined hrm-meta-icon">school</span>
-                    {selectedStudent.career}
+                    Carrera: {selectedStudent.career}
                   </span>
                 </div>
               </div>

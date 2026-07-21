@@ -14,7 +14,7 @@ export async function getIncidenciasDelAlumno(alumnoId: string) {
 export async function getIncidenciasPorDocente(docenteId: string) {
   const { data, error } = await supabase
     .from('incidencias')
-    .select('id, descripcion, lugar, impacto_puntos, created_at, alumno_id, alumnos(matricula, usuarios!alumnos_usuario_id_fkey(nombre, apellido)), categorias_incidencia(nombre, color_semaforo)')
+    .select('id, descripcion, lugar, impacto_puntos, created_at, alumno_id, alumnos(matricula, usuarios!alumnos_usuario_id_fkey(nombre, apellido), grupos(nombre, carreras(nombre))), categorias_incidencia(nombre, color_semaforo)')
     .eq('registrado_por', docenteId)
     .order('created_at', { ascending: false });
 
@@ -25,7 +25,7 @@ export async function getIncidenciasPorDocente(docenteId: string) {
 export async function getIncidenciasPorPlantel(plantelId: string) {
   const { data, error } = await supabase
     .from('incidencias')
-    .select('id, descripcion, lugar, impacto_puntos, created_at, alumno_id, alumnos!inner(matricula, usuarios!alumnos_usuario_id_fkey(nombre, apellido), grupos!inner(plantel_id)), categorias_incidencia(nombre, color_semaforo)')
+    .select('id, descripcion, lugar, impacto_puntos, created_at, alumno_id, alumnos!inner(matricula, usuarios!alumnos_usuario_id_fkey(nombre, apellido), grupos!inner(nombre, plantel_id, carreras(nombre))), categorias_incidencia(nombre, color_semaforo)')
     .eq('alumnos.grupos.plantel_id', plantelId)
     .order('created_at', { ascending: false });
 

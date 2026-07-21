@@ -10,6 +10,8 @@ interface AlumnoProfile {
   matricula: string;
   nivel_semaforo: string;
   puntos_totales: number;
+  tipo_sangre: string | null;
+  alergias: string | null;
   usuarios: unknown; // Se castea localmente para resolver arrays vs objetos
   grupos: unknown;
   contactos_emergency: Array<{
@@ -194,7 +196,7 @@ export default function Profile() {
                 <label className="info-field__label">Tipo de Sangre</label>
                 <div className="blood-type-chip">
                   <span className="material-symbols-outlined">water_drop</span>
-                  <span>O+</span>
+                  <span>{alumno?.tipo_sangre || 'No especificado'}</span>
                 </div>
               </div>
             </div>
@@ -210,7 +212,7 @@ export default function Profile() {
             <div className="info-field">
               <label className="info-field__label">Alergias / Notas</label>
               <p className="info-field__value info-field__value--error">
-                Ninguna reportada
+                {alumno?.alergias || 'No especificado'}
               </p>
             </div>
           </div>

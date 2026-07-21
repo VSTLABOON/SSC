@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState } from 'react';
 import './Schedule.css';
 
 interface ClassCardProps {
@@ -23,32 +23,25 @@ function ClassCard({ borderColor, textColor, subject, professor, icon, room }: C
   );
 }
 
+// NOTA: El horario por hora/día sigue siendo estático en el frontend debido a que
+// el backend no cuenta actualmente con una tabla 'horarios' u otra estructura
+// de base de datos dedicada. Esta conexión queda pendiente para una fase futura.
 export default function Schedule() {
-  const downloadBtnRef = useRef<HTMLButtonElement>(null);
-  const btnTextRef = useRef<HTMLSpanElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
-  useEffect(() => {
-    const downloadBtn = downloadBtnRef.current;
-    const btnText = btnTextRef.current;
+  function handleDownload() {
+    if (isDownloading) return;
+    setIsDownloading(true);
 
-    function handleDownload() {
-      if (!btnText || !downloadBtn) return;
-      const originalContent = btnText.textContent;
-      btnText.textContent = 'Generando...';
-      downloadBtn.classList.add('btn-download--loading');
-
+    setTimeout(() => {
+      setIsDownloading(false);
+      setShowToast(true);
       setTimeout(() => {
-        btnText.textContent = originalContent;
-        downloadBtn.classList.remove('btn-download--loading');
-        alert('El horario se ha descargado correctamente.');
-      }, 1500);
-    }
-
-    if (downloadBtn) downloadBtn.addEventListener('click', handleDownload);
-    return () => {
-      if (downloadBtn) downloadBtn.removeEventListener('click', handleDownload);
-    };
-  }, []);
+        setShowToast(false);
+      }, 4000);
+    }, 1500);
+  }
 
   return (
     <div className="schedule-canvas-only">
@@ -72,12 +65,17 @@ export default function Schedule() {
             <span className="btn-print__label">Imprimir</span>
           </button>
           <button
-            ref={downloadBtnRef}
-            className="btn-download"
+            onClick={handleDownload}
+            className={`btn-download ${isDownloading ? 'btn-download--loading' : ''}`}
+            disabled={isDownloading}
             id="downloadBtn"
           >
-            <span className="material-symbols-outlined">download</span>
-            <span ref={btnTextRef} id="btnText">Descargar PDF</span>
+            <span className="material-symbols-outlined">
+              {isDownloading ? 'sync' : 'download'}
+            </span>
+            <span id="btnText">
+              {isDownloading ? 'Generando...' : 'Descargar PDF'}
+            </span>
           </button>
         </div>
       </header>
@@ -171,6 +169,13 @@ export default function Schedule() {
           </div>
         </div>
       </div>
+
+      {showToast && (
+        <div className="schedule-toast animate-fade-in">
+          <span className="material-symbols-outlined schedule-toast__icon">check_circle</span>
+          <span className="schedule-toast__text">El horario se ha descargado correctamente.</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,9 @@ import { getCategoriasIncidencia } from '../../services/incidencias';
 import { getPeriodoActivo } from '../../services/periodos';
 import { supabase } from '../../lib/supabaseClient';
 import './GenerarReporteDA.css';
+import { Modal } from '../../components/Modal';
+import '../../components/Modal.css';
+import InlineAlert from '../../components/InlineAlert';
 
 type Severity = 'verde' | 'naranja' | 'rojo' | null;
 
@@ -48,6 +51,7 @@ export default function GenerarReporteDA() {
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!plantelId) return;
@@ -111,6 +115,7 @@ export default function GenerarReporteDA() {
     setSeverity(null);
     setSelectedCategoryId('');
     setComment('');
+    setErrorMsg(null);
   }
 
   function handleSelectSeverity(color: NonNullable<Severity>) {
@@ -127,13 +132,14 @@ export default function GenerarReporteDA() {
 
   async function handleSubmitReport(e: React.FormEvent) {
     e.preventDefault();
+    setErrorMsg(null);
 
     if (!severity || !selectedCategoryId || !selectedStudent) {
       setWarningModalOpen(true);
       return;
     }
     if (!periodoId) {
-      alert('Error: No se pudo resolver el período activo del plantel.');
+      setErrorMsg('Error: No se pudo resolver el período activo del plantel.');
       return;
     }
 
@@ -159,7 +165,7 @@ export default function GenerarReporteDA() {
       setSuccessModalOpen(true);
     } catch (err) {
       console.error('Error al guardar reporte disciplinario:', err);
-      alert('Ocurrió un error al guardar el reporte disciplinario.');
+      setErrorMsg('Ocurrió un error al guardar el reporte disciplinario.');
     } finally {
       setSubmitting(false);
     }
@@ -267,166 +273,158 @@ export default function GenerarReporteDA() {
       </div>
 
       {/* MODAL GENERAR REPORTE */}
-      {modalOpen && selectedStudent && (
-        <div className="grm-modal grm-modal--open">
-          <div className="grm-modal-box">
-            <div className="grm-modal-header">
-              <h4 className="grm-modal-title">Generar Reporte Disciplinario</h4>
-              <button className="grm-modal-close" onClick={handleCloseModal}>
-                <span className="material-symbols-outlined">close</span>
-              </button>
+      <Modal isOpen={modalOpen && !!selectedStudent} onClose={handleCloseModal} className="grm-modal-box">
+        <div className="grm-modal-header">
+          <h4 className="grm-modal-title">Generar Reporte Disciplinario</h4>
+          <button className="grm-modal-close" onClick={handleCloseModal}>
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmitReport}>
+          <div className="grm-modal-body">
+            {errorMsg && (
+              <InlineAlert type="error" message={errorMsg} onClose={() => setErrorMsg(null)} />
+            )}
+            {/* Info Alumno */}
+            <div className="grm-modal-student-info">
+              <div>
+                <p className="grm-student-info-label">Alumno seleccionado</p>
+                <p className="grm-student-info-name">{selectedStudent?.name}</p>
+              </div>
+              <div>
+                <p className="grm-student-info-label">Matrícula</p>
+                <p className="grm-student-info-value">{selectedStudent?.matricula}</p>
+              </div>
+              <div>
+                <p className="grm-student-info-label">Grupo</p>
+                <p className="grm-student-info-value">{selectedStudent?.groupName}</p>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmitReport}>
-              <div className="grm-modal-body">
-                {/* Info Alumno */}
-                <div className="grm-modal-student-info">
-                  <div>
-                    <p className="grm-student-info-label">Alumno seleccionado</p>
-                    <p className="grm-student-info-name">{selectedStudent.name}</p>
-                  </div>
-                  <div>
-                    <p className="grm-student-info-label">Matrícula</p>
-                    <p className="grm-student-info-value">{selectedStudent.matricula}</p>
-                  </div>
-                  <div>
-                    <p className="grm-student-info-label">Grupo</p>
-                    <p className="grm-student-info-value">{selectedStudent.groupName}</p>
-                  </div>
-                </div>
-
-                {/* Severidad */}
-                <div className="grm-form-group">
-                  <label className="grm-form-label">Nivel de Severidad</label>
-                  <div className="grm-severity-selector">
-                    <button
-                      type="button"
-                      className={`grm-severity-btn grm-severity-btn--verde ${severity === 'verde' ? 'active' : ''}`}
-                      onClick={() => handleSelectSeverity('verde')}
-                    >
-                      <Icon name="check_circle" />
-                      <span>Verde (Positivo)</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`grm-severity-btn grm-severity-btn--naranja ${severity === 'naranja' ? 'active' : ''}`}
-                      onClick={() => handleSelectSeverity('naranja')}
-                    >
-                      <Icon name="warning" />
-                      <span>Naranja (Grave)</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`grm-severity-btn grm-severity-btn--rojo ${severity === 'rojo' ? 'active' : ''}`}
-                      onClick={() => handleSelectSeverity('rojo')}
-                    >
-                      <Icon name="error" />
-                      <span>Rojo (Crítico)</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Motivos / Categoría */}
-                <div className="grm-form-group">
-                  <label className="grm-form-label">Motivo o Reglamento infringido</label>
-                  <div className="grm-reasons-list">
-                    {filteredCategories.length > 0 ? (
-                      filteredCategories.map(cat => (
-                        <label className="grm-reason-item" key={cat.id}>
-                          <input
-                            type="radio"
-                            name="categoria"
-                            value={cat.id}
-                            checked={selectedCategoryId === cat.id}
-                            onChange={() => setSelectedCategoryId(cat.id)}
-                          />
-                          <span>{cat.nombre} — <small style={{ color: '#5c5f60' }}>Impacto: {cat.impacto_base} pts</small></span>
-                        </label>
-                      ))
-                    ) : (
-                      <p style={{ color: '#ba1a1a', fontSize: '14px', padding: '8px 0' }}>
-                        No hay motivos registrados en la base de datos para este nivel de severidad.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Lugar */}
-                <div className="grm-form-group">
-                  <label className="grm-form-label" htmlFor="location">Lugar del Incidente</label>
-                  <input
-                    type="text"
-                    id="location"
-                    className="grm-input"
-                    value={locationName}
-                    onChange={e => setLocationName(e.target.value)}
-                  />
-                </div>
-
-                {/* Comentarios */}
-                <div className="grm-form-group">
-                  <label className="grm-form-label" htmlFor="comment">Descripción del incidente y Acuerdos de Compromiso</label>
-                  <textarea
-                    id="comment"
-                    className="grm-textarea"
-                    rows={4}
-                    placeholder="Detalle el reporte disciplinario y acuerdos parentales..."
-                    value={comment}
-                    onChange={e => setComment(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grm-modal-footer">
-                <button type="button" className="grm-btn-secondary" onClick={handleCloseModal}>
-                  Cancelar
+            {/* Severidad */}
+            <div className="grm-form-group">
+              <label className="grm-form-label">Nivel de Severidad</label>
+              <div className="grm-severity-selector">
+                <button
+                  type="button"
+                  className={`grm-severity-btn grm-severity-btn--verde ${severity === 'verde' ? 'active' : ''}`}
+                  onClick={() => handleSelectSeverity('verde')}
+                >
+                  <Icon name="check_circle" />
+                  <span>Verde (Positivo)</span>
                 </button>
-                <button type="submit" className="grm-btn-primary" disabled={submitting}>
-                  {submitting ? 'Guardando...' : 'Guardar Reporte'}
+                <button
+                  type="button"
+                  className={`grm-severity-btn grm-severity-btn--naranja ${severity === 'naranja' ? 'active' : ''}`}
+                  onClick={() => handleSelectSeverity('naranja')}
+                >
+                  <Icon name="warning" />
+                  <span>Naranja (Grave)</span>
+                </button>
+                <button
+                  type="button"
+                  className={`grm-severity-btn grm-severity-btn--rojo ${severity === 'rojo' ? 'active' : ''}`}
+                  onClick={() => handleSelectSeverity('rojo')}
+                >
+                  <Icon name="error" />
+                  <span>Rojo (Crítico)</span>
                 </button>
               </div>
-            </form>
+            </div>
+
+            {/* Motivo / Reglamento infringido */}
+            <div className="grm-form-group">
+              <label className="grm-form-label">Motivo o Reglamento infringido</label>
+              <div className="grm-reasons-list">
+                {filteredCategories.length > 0 ? (
+                  filteredCategories.map(cat => (
+                    <label className="grm-reason-item" key={cat.id}>
+                      <input
+                        type="radio"
+                        name="categoria"
+                        className="grm-reason-checkbox"
+                        value={cat.id}
+                        checked={selectedCategoryId === cat.id}
+                        onChange={() => setSelectedCategoryId(cat.id)}
+                      />
+                      <span className="grm-reason-text">{cat.nombre} — <small style={{ color: '#5c5f60' }}>Impacto: {cat.impacto_base} pts</small></span>
+                    </label>
+                  ))
+                ) : (
+                  <p style={{ color: '#ba1a1a', fontSize: '14px', padding: '8px 0' }}>
+                    No hay motivos registrados en la base de datos para este nivel de severidad.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Lugar */}
+            <div className="grm-form-group">
+              <label className="grm-form-label" htmlFor="location">Lugar del Incidente</label>
+              <input
+                type="text"
+                id="location"
+                className="grm-field-input"
+                value={locationName}
+                onChange={e => setLocationName(e.target.value)}
+              />
+            </div>
+
+            {/* Comentario */}
+            <div className="grm-form-group">
+              <label className="grm-form-label" htmlFor="comment">Descripción y Compromisos</label>
+              <textarea
+                id="comment"
+                className="grm-field-input"
+                rows={4}
+                placeholder="Detalle de la incidencia y compromisos..."
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="grm-modal-footer">
+            <button type="button" className="grm-btn-cancel" onClick={handleCloseModal}>
+              Cancelar
+            </button>
+            <button type="submit" className="grm-btn-submit" disabled={submitting}>
+              {submitting ? 'Guardando...' : 'Guardar Reporte'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* MODAL ADVERTENCIA */}
-      {warningModalOpen && (
-        <div className="grm-modal grm-modal--open">
-          <div className="grm-modal-box grm-modal-box--alert">
-            <div className="grm-modal-header">
-              <h4 className="grm-modal-title">Faltan Campos</h4>
-            </div>
-            <div className="grm-modal-body">
-              <p>Por favor complete el nivel de severidad y el motivo reglamentario.</p>
-            </div>
-            <div className="grm-modal-footer">
-              <button className="grm-btn-primary" onClick={() => setWarningModalOpen(false)}>
-                Aceptar
-              </button>
-            </div>
-          </div>
+      <Modal isOpen={warningModalOpen} onClose={() => setWarningModalOpen(false)} className="grm-modal-box grm-modal-box--alert">
+        <div className="grm-modal-header">
+          <h4 className="grm-modal-title">Faltan Campos</h4>
         </div>
-      )}
+        <div className="grm-modal-body">
+          <p>Por favor complete el nivel de severidad y el motivo reglamentario.</p>
+        </div>
+        <div className="grm-modal-footer">
+          <button className="grm-success-btn-primary" onClick={() => setWarningModalOpen(false)}>
+            Aceptar
+          </button>
+        </div>
+      </Modal>
 
       {/* MODAL ÉXITO */}
-      {successModalOpen && (
-        <div className="grm-modal grm-modal--open">
-          <div className="grm-modal-box grm-modal-box--alert">
-            <div className="grm-modal-header">
-              <h4 className="grm-modal-title" style={{ color: '#22c55e' }}>Reporte Guardado</h4>
-            </div>
-            <div className="grm-modal-body">
-              <p>El reporte disciplinario del plantel ha sido guardado exitosamente en Supabase.</p>
-            </div>
-            <div className="grm-modal-footer">
-              <button className="grm-btn-primary" onClick={handleCloseSuccess}>
-                Aceptar
-              </button>
-            </div>
-          </div>
+      <Modal isOpen={successModalOpen} onClose={handleCloseSuccess} className="grm-modal-box grm-modal-box--alert">
+        <div className="grm-modal-header">
+          <h4 className="grm-modal-title" style={{ color: '#22c55e' }}>Reporte Guardado</h4>
         </div>
-      )}
+        <div className="grm-modal-body">
+          <p>El reporte disciplinario del plantel ha sido guardado exitosamente en Supabase.</p>
+        </div>
+        <div className="grm-modal-footer">
+          <button className="grm-success-btn-primary" onClick={handleCloseSuccess}>
+            Aceptar
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

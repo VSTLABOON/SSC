@@ -113,7 +113,7 @@ export default function InicioDA() {
         </div>
         <div className="ida-coming-soon__grid">
           {COMING_SOON.map(card => (
-            <div key={card.id} className="ida-future-card" onClick={() => card.id === 1 && navigate('/director/history')} style={{ cursor: card.id === 1 ? 'pointer' : 'default' }}>
+            <div key={card.id} className="ida-future-card" onClick={() => card.id === 1 && navigate('/director/historial')} style={{ cursor: card.id === 1 ? 'pointer' : 'default' }}>
               <div className="ida-future-card__icon-wrap">
                 <span className="material-symbols-outlined ida-future-card__icon">{card.icon}</span>
               </div>

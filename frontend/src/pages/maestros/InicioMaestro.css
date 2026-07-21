@@ -969,6 +969,13 @@ a {
   background-color: rgba(32, 71, 133, 0.1);
 }
 
+.btn-ver-avisos:disabled {
+  background-color: var(--color-outline-variant, #ccc);
+  color: var(--color-on-surface-variant, #666);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .btn-ver-avisos-icon {
   font-size: 18px;
 }

@@ -54,7 +54,8 @@ export default function ClasesPantalla() {
             Administra la asistencia, participaciones y reportes conductuales de tus alumnos asignados.
           </p>
         </div>
-        <button className="btn-asignar-grupo" onClick={() => console.log('Asignar Grupo')}>
+        {/* Funcionalidad de "Asignar Grupo" pendiente de implementar en el backend */}
+        <button className="btn-asignar-grupo" disabled title="Próximamente" onClick={() => console.log('Asignar Grupo')}>
           <span className="material-symbols-outlined" style={{ marginRight: '8px' }}>add</span>
           <span>Asignar Grupo</span>
         </button>

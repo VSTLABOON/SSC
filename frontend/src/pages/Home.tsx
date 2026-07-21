@@ -255,7 +255,7 @@ export default function Home() {
         <section className="card card-aviso">
           <div>
             <h3 className="card-title card-title--inverse">Reunión de Tutoría</h3>
-            <p className="notice-description">Reunión de tutoría para alumnos en semáforo amarillo y naranja.</p>
+            <p className="notice-description">Reunión de tutoría para alumnos en seguimiento conductual.</p>
           </div>
           <div className="notice-date">
             <Icon name="calendar_month" />

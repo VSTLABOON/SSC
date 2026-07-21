@@ -590,7 +590,7 @@ body.no-scroll {
 }
 
 /* ── Filtro segmentado por tipo ──
-   Traducción de los 3 botones circulares (check / amarillo / rojo) */
+   Traducción de los 3 botones circulares (check / naranja / rojo) */
 .segmented-filter {
   display: flex;
   align-items: center;

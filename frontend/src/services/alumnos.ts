@@ -23,7 +23,7 @@ export async function getAlumnosDePlantel(plantelId: string) {
 export async function getPerfilAlumno(alumnoId: string) {
   const { data, error } = await supabase
     .from('alumnos')
-    .select('id, matricula, nivel_semaforo, puntos_totales, usuarios!alumnos_usuario_id_fkey(nombre, apellido, email), grupos(nombre), contactos_emergency(nombre, parentesco, telefono)')
+    .select('id, matricula, nivel_semaforo, puntos_totales, tipo_sangre, alergias, usuarios!alumnos_usuario_id_fkey(nombre, apellido, email), grupos(nombre), contactos_emergency(nombre, parentesco, telefono)')
     .eq('id', alumnoId)
     .single();
 
