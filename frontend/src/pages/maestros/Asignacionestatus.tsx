@@ -142,6 +142,16 @@ export default function AsignacionEstatus() {
       return;
     }
 
+    const hasProblema = statuses.some((s) => {
+      if (s.selectedIndex === null) return false;
+      return STATUS_OPTIONS[s.selectedIndex].title === 'Problema';
+    });
+
+    if (hasProblema && !defaultCatId) {
+      setErrorText('Error: No se ha podido cargar la categoría por defecto para reportar problemas de conducta.');
+      return;
+    }
+
     setIsSaving(true);
     // ALTO-6: Clonar el estado en un snapshot local para evitar race conditions si el docente hace undo
     const statusesSnapshot = [...statuses];
