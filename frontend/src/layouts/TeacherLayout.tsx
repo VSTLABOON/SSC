@@ -61,34 +61,34 @@ export default function TeacherLayout() {
   };
 
   const sidebarClassName = [
-    'sidebar',
-    !isSidebarOpen ? 'sidebar--mobile-hidden' : '',
+    'tl-sidebar',
+    !isSidebarOpen ? 'tl-sidebar--mobile-hidden' : '',
   ].filter(Boolean).join(' ');
 
   const overlayClassName = [
-    'sidebar-overlay',
-    isSidebarOpen ? 'sidebar-overlay--active' : '',
+    'tl-sidebar-overlay',
+    isSidebarOpen ? 'tl-sidebar-overlay--active' : '',
   ].filter(Boolean).join(' ');
 
   return (
     <div className="im-body">
       <div
         className={overlayClassName}
-        id="sidebar-overlay"
+        id="tl-sidebar-overlay"
         onClick={closeSidebar}
       />
 
-      <aside className={sidebarClassName} id="sidebar">
-        <div className="sidebar-top">
-          <div className="sidebar-brand">
-            <div className="sidebar-brand-logo">
+      <aside className={sidebarClassName} id="tl-sidebar">
+        <div className="tl-sidebar-top">
+          <div className="tl-sidebar-brand">
+            <div className="tl-sidebar-brand-logo">
               <img
                 src={SCTechlogo}
                 alt="Logo SCTech"
-                className="sidebar-brand-logo-img"
+                className="tl-sidebar-brand-logo-img"
               />
             </div>
-            <span className="sidebar-brand-name">
+            <span className="tl-sidebar-brand-name">
               Sistema
               <br />
               Conductual
@@ -111,7 +111,7 @@ export default function TeacherLayout() {
           </div>
         </div>
 
-        <nav className="sidebar-nav" id="sidebar-nav">
+        <nav className="tl-sidebar-nav" id="tl-sidebar-nav">
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.path ||
@@ -120,21 +120,21 @@ export default function TeacherLayout() {
               <Link
                 key={item.id}
                 to={item.path}
-                className={`nav-item ${isActive ? 'nav-item--active' : ''}`}
+                className={`tl-nav-item ${isActive ? 'tl-nav-item--active' : ''}`}
                 onClick={() => {
                   if (window.innerWidth < 768) closeSidebar();
                 }}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
-                <span className="nav-item-label">{item.label}</span>
+                <span className="tl-nav-item-label">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="sidebar-footer">
+        <div className="tl-sidebar-footer">
           <a
-            className="nav-item nav-item--logout"
+            className="tl-nav-item tl-nav-item--logout"
             href="#"
             onClick={(e) => {
               e.preventDefault();
@@ -142,36 +142,36 @@ export default function TeacherLayout() {
             }}
           >
             <span className="material-symbols-outlined">logout</span>
-            <span className="nav-item-label">Cerrar Sesión</span>
+            <span className="tl-nav-item-label">Cerrar Sesión</span>
           </a>
         </div>
       </aside>
 
-      <main className="main-content">
-        <header className="topbar">
-          <div className="topbar-left">
+      <main className="tl-main-content">
+        <header className="tl-topbar">
+          <div className="tl-topbar-left">
             <button
-              className="menu-toggle"
-              id="menu-toggle"
+              className="tl-menu-toggle"
+              id="tl-menu-toggle"
               onClick={handleMenuToggleClick}
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
-            <h1 className="topbar-title">Portal de Docencia</h1>
+            <h1 className="tl-topbar-title">Portal de Docencia</h1>
           </div>
-          <div className="topbar-right">
-            <div className="topbar-icon-group">
+          <div className="tl-topbar-right">
+            <div className="tl-topbar-icon-group">
               <button
                 className="icon-button"
                 onClick={() => console.log('Notificaciones')}
               />
             </div>
-            <div className="topbar-divider" />
-            <div className="topbar-institution">
-              <span className="topbar-institution-label">Plantel Puebla I</span>
+            <div className="tl-topbar-divider" />
+            <div className="tl-topbar-institution">
+              <span className="tl-topbar-institution-label">Plantel Puebla I</span>
               <img
                 alt="Logo Institucional"
-                className="topbar-institution-logo"
+                className="tl-topbar-institution-logo"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVN4tbYkPmVGUA7PiggmYiGSDi1vpBbCLGyR3yjxujoiVsb8az6OYz9kmbH1GmmTX9_Weg6fhNo1kse5BbZbXJKe03j-_v6ssJ--uGU89jcouUcr5lB6_TetGEee59J7cU4Ms6GbAJ9eDwArGKV8Xh9LG56EEyx9A0shJS5oqlj-8bPi7AI-IxPRE6TF-gqKT9bSBulPhnyEI5cSgFQ4b7rUSLZKsXI8XWoALTtM1qkDhOeh7nKqeKSQk8J7-jdD7_SDggbGWlKw0"
                 onClick={() => console.log('Logo institucional')}
               />
@@ -179,7 +179,7 @@ export default function TeacherLayout() {
           </div>
         </header>
 
-        <div className="content-canvas">
+        <div className="tl-content-canvas">
           <Outlet />
         </div>
       </main>

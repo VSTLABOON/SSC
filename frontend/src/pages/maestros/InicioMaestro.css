@@ -128,7 +128,7 @@ a {
    fixed inset-0 bg-black/50 z-40 md:hidden + #sidebar-overlay / .active
    ============================================================ */
 
-.sidebar-overlay {
+.tl-sidebar-overlay {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -138,13 +138,13 @@ a {
   transition: opacity 0.3s ease-in-out;
 }
 
-.sidebar-overlay--active {
+.tl-sidebar-overlay--active {
   opacity: 1;
   pointer-events: auto;
 }
 
 @media (min-width: 768px) {
-  .sidebar-overlay {
+  .tl-sidebar-overlay {
     display: none;
   }
 }
@@ -156,7 +156,7 @@ a {
    md:transform-none bg-chambray + #sidebar { transition: transform }
    ============================================================ */
 
-.sidebar {
+.tl-sidebar {
   position: fixed;
   left: 0;
   top: 0;
@@ -175,13 +175,13 @@ a {
    dentro del media query (max-width: 767px); en desktop el sidebar
    permanece visible sin importar si la clase está presente. */
 @media (max-width: 767px) {
-  .sidebar--mobile-hidden {
+  .tl-sidebar--mobile-hidden {
     transform: translateX(-100%);
   }
 }
 
 @media (min-width: 768px) {
-  .sidebar {
+  .tl-sidebar {
     box-shadow: none;
     transform: none; /* md:transform-none */
   }
@@ -190,19 +190,19 @@ a {
 /* ── Encabezado del sidebar (logo + marca + tarjeta docente) ──
    equivalente a: p-lg mb-6 */
 
-.sidebar-top {
+.tl-sidebar-top {
   padding: var(--space-lg);
   margin-bottom: 24px;
 }
 
-.sidebar-brand {
+.tl-sidebar-brand {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
 }
 
-.sidebar-brand-logo {
+.tl-sidebar-brand-logo {
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -215,13 +215,13 @@ a {
   overflow: hidden;
 }
 
-.sidebar-brand-logo-img {
+.tl-sidebar-brand-logo-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.sidebar-brand-name {
+.tl-sidebar-brand-name {
   font-weight: 700;
   font-size: 20px;
   letter-spacing: -0.01em;
@@ -277,7 +277,7 @@ a {
 /* ── Navegación — equivalente a:
    flex-1 flex flex-col gap-2 px-4 + .nav-item ... */
 
-.sidebar-nav {
+.tl-sidebar-nav {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -285,7 +285,7 @@ a {
   padding: 0 16px;
 }
 
-.nav-item {
+.tl-nav-item {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -297,25 +297,25 @@ a {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.nav-item:hover {
+.tl-nav-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
 /* Ítem activo — equivalente a:
    bg-mystic text-chambray shadow-lg */
-.nav-item--active {
+.tl-nav-item--active {
   background-color: var(--mystic);
   color: var(--chambray);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-.nav-item--active:hover {
+.tl-nav-item--active:hover {
   background-color: var(--mystic);
   color: var(--chambray);
 }
 
-.nav-item-label {
+.tl-nav-item-label {
   font-size: 14px;
 }
 
@@ -323,7 +323,7 @@ a {
    mt-auto p-lg flex flex-col gap-2 + bg-mystic text-chambray
    hover:bg-white/50 border border-transparent hover:border-chambray/20 */
 
-.sidebar-footer {
+.tl-sidebar-footer {
   margin-top: auto;
   padding: var(--space-lg);
   display: flex;
@@ -331,14 +331,14 @@ a {
   gap: 8px;
 }
 
-.nav-item--logout {
+.tl-nav-item--logout {
   background-color: var(--mystic);
   color: var(--chambray);
   border: 1px solid transparent;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.nav-item--logout:hover {
+.tl-nav-item--logout:hover {
   background-color: rgba(255, 255, 255, 0.5);
   border-color: rgba(32, 71, 133, 0.2);
 }
@@ -347,12 +347,12 @@ a {
    MAIN — equivalente a: md:ml-72 flex-1 min-h-screen
    ============================================================ */
 
-.main-content {
+.tl-main-content {
   min-height: 100vh;
 }
 
 @media (min-width: 768px) {
-  .main-content {
+  .tl-main-content {
     margin-left: 288px; /* md:ml-72 */
   }
 }
@@ -363,7 +363,7 @@ a {
    border-b border-chambray/20 sticky top-0 z-40
    ============================================================ */
 
-.topbar {
+.tl-topbar {
   background-color: var(--mystic);
   height: 64px;
   display: flex;
@@ -376,7 +376,7 @@ a {
   z-index: 40;
 }
 
-.topbar-left {
+.tl-topbar-left {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -386,7 +386,7 @@ a {
    p-2 -ml-2 text-chambray cursor-pointer hover:bg-white/50
    rounded-lg transition-colors md:hidden */
 
-.menu-toggle {
+.tl-menu-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -400,12 +400,12 @@ a {
   transition: background-color 0.2s ease;
 }
 
-.menu-toggle:hover {
+.tl-menu-toggle:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
 @media (min-width: 768px) {
-  .menu-toggle {
+  .tl-menu-toggle {
     display: none;
   }
 }
@@ -413,20 +413,20 @@ a {
 /* Título — equivalente a:
    font-headline-sm text-headline-sm font-extrabold text-chambray */
 
-.topbar-title {
+.tl-topbar-title {
   font-weight: 800;
   font-size: 22px;
   color: var(--chambray);
   margin: 0;
 }
 
-.topbar-right {
+.tl-topbar-right {
   display: flex;
   align-items: center;
   gap: 24px;
 }
 
-.topbar-icon-group {
+.tl-topbar-icon-group {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -448,7 +448,7 @@ a {
 /* Divisor — equivalente a:
    hidden sm:block h-8 w-[1px] bg-chambray/20 */
 
-.topbar-divider {
+.tl-topbar-divider {
   display: none;
   width: 1px;
   height: 32px;
@@ -456,12 +456,12 @@ a {
 }
 
 @media (min-width: 640px) {
-  .topbar-divider {
+  .tl-topbar-divider {
     display: block;
   }
 }
 
-.topbar-institution {
+.tl-topbar-institution {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -470,7 +470,7 @@ a {
 /* Etiqueta de plantel — equivalente a:
    hidden sm:inline font-label-md text-label-md text-on-surface-variant */
 
-.topbar-institution-label {
+.tl-topbar-institution-label {
   display: none;
   font-size: 14px;
   font-weight: 500;
@@ -478,7 +478,7 @@ a {
 }
 
 @media (min-width: 640px) {
-  .topbar-institution-label {
+  .tl-topbar-institution-label {
     display: inline;
   }
 }
@@ -486,7 +486,7 @@ a {
 /* Logo institucional — equivalente a:
    h-8 grayscale opacity-70 hover:grayscale-0 transition-all cursor-pointer */
 
-.topbar-institution-logo {
+.tl-topbar-institution-logo {
   height: 32px;
   filter: grayscale(1);
   opacity: 0.7;
@@ -494,7 +494,7 @@ a {
   transition: filter 0.2s ease, opacity 0.2s ease;
 }
 
-.topbar-institution-logo:hover {
+.tl-topbar-institution-logo:hover {
   filter: grayscale(0);
   opacity: 1;
 }
@@ -503,7 +503,7 @@ a {
    CONTENT CANVAS — equivalente a: p-xl max-w-container-max mx-auto
    ============================================================ */
 
-.content-canvas {
+.tl-content-canvas {
   padding: var(--space-xl);
   max-width: var(--space-container-max);
   margin: 0 auto;

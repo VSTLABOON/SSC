@@ -147,7 +147,7 @@ input {
    MENÚ BASE OFICIAL — overlay, sidebar, topbar. No modificar.
    ============================================================ */
 
-.sidebar-overlay {
+.tl-sidebar-overlay {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -157,18 +157,18 @@ input {
   transition: opacity 0.3s ease-in-out;
 }
 
-.sidebar-overlay--active {
+.tl-sidebar-overlay--active {
   opacity: 1;
   pointer-events: auto;
 }
 
 @media (min-width: 768px) {
-  .sidebar-overlay {
+  .tl-sidebar-overlay {
     display: none;
   }
 }
 
-.sidebar {
+.tl-sidebar {
   position: fixed;
   left: 0;
   top: 0;
@@ -184,31 +184,31 @@ input {
 }
 
 @media (max-width: 767px) {
-  .sidebar--mobile-hidden {
+  .tl-sidebar--mobile-hidden {
     transform: translateX(-100%);
   }
 }
 
 @media (min-width: 768px) {
-  .sidebar {
+  .tl-sidebar {
     box-shadow: none;
     transform: none;
   }
 }
 
-.sidebar-top {
+.tl-sidebar-top {
   padding: var(--space-lg);
   margin-bottom: 24px;
 }
 
-.sidebar-brand {
+.tl-sidebar-brand {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
 }
 
-.sidebar-brand-logo {
+.tl-sidebar-brand-logo {
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -221,13 +221,13 @@ input {
   overflow: hidden;
 }
 
-.sidebar-brand-logo-img {
+.tl-sidebar-brand-logo-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.sidebar-brand-name {
+.tl-sidebar-brand-name {
   font-weight: 700;
   font-size: 20px;
   letter-spacing: -0.01em;
@@ -276,7 +276,7 @@ input {
   color: var(--secondary);
 }
 
-.sidebar-nav {
+.tl-sidebar-nav {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -284,7 +284,7 @@ input {
   padding: 0 16px;
 }
 
-.nav-item {
+.tl-nav-item {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -296,27 +296,27 @@ input {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.nav-item:hover {
+.tl-nav-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
-.nav-item--active {
+.tl-nav-item--active {
   background-color: var(--mystic);
   color: var(--chambray);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-.nav-item--active:hover {
+.tl-nav-item--active:hover {
   background-color: var(--mystic);
   color: var(--chambray);
 }
 
-.nav-item-label {
+.tl-nav-item-label {
   font-size: 14px;
 }
 
-.sidebar-footer {
+.tl-sidebar-footer {
   margin-top: auto;
   padding: var(--space-lg);
   display: flex;
@@ -324,14 +324,14 @@ input {
   gap: 8px;
 }
 
-.nav-item--logout {
+.tl-nav-item--logout {
   background-color: var(--mystic);
   color: var(--chambray);
   border: 1px solid transparent;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.nav-item--logout:hover {
+.tl-nav-item--logout:hover {
   background-color: rgba(255, 255, 255, 0.5);
   border-color: rgba(32, 71, 133, 0.2);
 }
@@ -341,19 +341,19 @@ input {
    que el contenido pueda estirarse hasta llenar la pantalla.
    ============================================================ */
 
-.main-content {
+.tl-main-content {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 @media (min-width: 768px) {
-  .main-content {
+  .tl-main-content {
     margin-left: 288px;
   }
 }
 
-.topbar {
+.tl-topbar {
   background-color: var(--mystic);
   height: 64px;
   display: flex;
@@ -367,13 +367,13 @@ input {
   flex-shrink: 0;
 }
 
-.topbar-left {
+.tl-topbar-left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.menu-toggle {
+.tl-menu-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -387,30 +387,30 @@ input {
   transition: background-color 0.2s ease;
 }
 
-.menu-toggle:hover {
+.tl-menu-toggle:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
 @media (min-width: 768px) {
-  .menu-toggle {
+  .tl-menu-toggle {
     display: none;
   }
 }
 
-.topbar-title {
+.tl-topbar-title {
   font-weight: 800;
   font-size: 22px;
   color: var(--chambray);
   margin: 0;
 }
 
-.topbar-right {
+.tl-topbar-right {
   display: flex;
   align-items: center;
   gap: 24px;
 }
 
-.topbar-icon-group {
+.tl-topbar-icon-group {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -426,7 +426,7 @@ input {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
-.topbar-divider {
+.tl-topbar-divider {
   display: none;
   width: 1px;
   height: 32px;
@@ -434,18 +434,18 @@ input {
 }
 
 @media (min-width: 640px) {
-  .topbar-divider {
+  .tl-topbar-divider {
     display: block;
   }
 }
 
-.topbar-institution {
+.tl-topbar-institution {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.topbar-institution-label {
+.tl-topbar-institution-label {
   display: none;
   font-size: 14px;
   font-weight: 500;
@@ -453,12 +453,12 @@ input {
 }
 
 @media (min-width: 640px) {
-  .topbar-institution-label {
+  .tl-topbar-institution-label {
     display: inline;
   }
 }
 
-.topbar-institution-logo {
+.tl-topbar-institution-logo {
   height: 32px;
   filter: grayscale(1);
   opacity: 0.7;
@@ -466,7 +466,7 @@ input {
   transition: filter 0.2s ease, opacity 0.2s ease;
 }
 
-.topbar-institution-logo:hover {
+.tl-topbar-institution-logo:hover {
   filter: grayscale(0);
   opacity: 1;
 }
@@ -497,7 +497,7 @@ input {
    correctamente en vez de depender solo del contenido.
    ============================================================ */
 
-.content-canvas {
+.tl-content-canvas {
   padding: var(--space-md);
   max-width: 100%;
   width: 100%;
@@ -510,14 +510,14 @@ input {
 }
 
 @media (min-width: 1024px) {
-  .content-canvas {
+  .tl-content-canvas {
     padding: var(--space-lg) var(--space-xl);
     gap: var(--space-lg);
   }
 }
 
 @media (min-width: 1600px) {
-  .content-canvas {
+  .tl-content-canvas {
     max-width: 1800px;
   }
 }
