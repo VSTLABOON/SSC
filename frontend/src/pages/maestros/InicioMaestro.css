@@ -176,9 +176,15 @@ a {
 /* .mobile-hidden — en el HTML original esta clase solo tiene efecto
    dentro del media query (max-width: 767px); en desktop el sidebar
    permanece visible sin importar si la clase está presente. */
-@media (max-width: 767px) {
-  .tl-sidebar--mobile-hidden {
-    transform: translateX(-100%);
+@media (max-width: 767.98px) {
+  .tl-sidebar,
+  .tl-sidebar-overlay,
+  .tl-menu-toggle {
+    display: none !important;
+  }
+
+  .tl-content-canvas {
+    padding-bottom: 88px !important; /* Reserva de espacio para la BottomNav flotante */
   }
 }
 

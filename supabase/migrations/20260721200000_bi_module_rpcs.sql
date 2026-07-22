@@ -1,12 +1,12 @@
 -- ============================================================================
--- MIGRACIÓN MÓDULO BI Y LEARNING ANALYTICS (SSC) - VENTANAS TEMPORALES
+-- MIGRACIÓN MÓDULO BI Y LEARNING ANALYTICS (SSC) - VENTANAS TEMPORALES & RLS ESTRICTO
 -- Archivo oficial de migración para Supabase (supabase/migrations)
 -- ============================================================================
 
 -- 1. Permitir notificaciones preventivas/alertas directas sin incidencia asociada
 ALTER TABLE public.notificaciones ALTER COLUMN incidencia_id DROP NOT NULL;
 
--- 2. RPC: fn_bi_get_kpis (Con soporte para p_rango_temporal: 'semana', 'mes', 'periodo')
+-- 2. RPC: fn_bi_get_kpis (Con soporte para p_rango_temporal y validación estricta de v_plantel_id)
 CREATE OR REPLACE FUNCTION public.fn_bi_get_kpis(
     p_periodo_id uuid DEFAULT NULL,
     p_generacion text DEFAULT NULL,

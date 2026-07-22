@@ -1,0 +1,187 @@
+/* ============================================================================
+   BottomNav.css — Barra de Navegación Inferior Flotante Estilo ClickUp
+   Exclusión mutua: Solo se muestra en pantallas móviles (< 768px)
+   z-index: 150 (Entre Sidebar 100 y Modales 200/210)
+   ============================================================================ */
+
+.bottom-nav-container {
+  display: none; /* Oculto por defecto en escritorio */
+}
+
+@media (max-width: 767.98px) {
+  .bottom-nav-container {
+    display: block;
+    position: fixed;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    z-index: 150; /* Superior al canvas (1) y header (30), inferior a modales (200) */
+    pointer-events: none; /* Permite clicks a través de los márgenes laterales */
+  }
+
+  .bottom-nav-bar {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+    padding: 0 8px;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: #64748b;
+    padding: 6px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .bottom-nav-item:hover,
+  .bottom-nav-item--active {
+    color: #204785;
+    background: rgba(32, 71, 133, 0.06);
+  }
+
+  .bottom-nav-icon {
+    font-size: 22px;
+    transition: transform 0.2s ease;
+  }
+
+  .bottom-nav-item--active .bottom-nav-icon {
+    transform: translateY(-2px);
+    font-weight: 700;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.2px;
+  }
+
+  /* Botón Central Elevado de Acción Rápida (+) Estilo ClickUp */
+  .bottom-nav-fab-wrap {
+    position: relative;
+    top: -14px;
+    pointer-events: auto;
+  }
+
+  .bottom-nav-fab {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #204785 0%, #173566 100%);
+    border: 3px solid #ffffff;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(32, 71, 133, 0.35);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;
+  }
+
+  .bottom-nav-fab:active {
+    transform: scale(0.92);
+  }
+
+  .bottom-nav-fab-icon {
+    font-size: 28px;
+    transition: transform 0.25s ease;
+  }
+
+  .bottom-nav-fab--open .bottom-nav-fab-icon {
+    transform: rotate(45deg);
+  }
+
+  /* Menu Modal / Popover de Acciones Rápidas del Botón (+) */
+  .fab-actions-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 145; /* Inmediatamente por debajo de la BottomNav (150) */
+    pointer-events: auto;
+    animation: fabFadeIn 0.2s ease-out;
+  }
+
+  .fab-actions-menu {
+    position: absolute;
+    bottom: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    min-width: 220px;
+    z-index: 155;
+    pointer-events: auto;
+    animation: fabPopUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .fab-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+  }
+
+  .fab-action-btn:hover,
+  .fab-action-btn:active {
+    background: #f1f5f9;
+  }
+
+  .fab-action-icon {
+    font-size: 20px;
+    color: #204785;
+  }
+}
+
+@keyframes fabFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fabPopUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 15px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}

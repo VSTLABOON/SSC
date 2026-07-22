@@ -15,6 +15,8 @@ interface NavItem {
 
 
 
+import { BottomNav } from '../components/navigation/BottomNav';
+
 export default function DirectorLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { nombre, rol, signOut } = useAuth();
@@ -187,6 +189,8 @@ export default function DirectorLayout() {
           <Outlet />
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 }

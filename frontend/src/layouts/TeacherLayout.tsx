@@ -19,6 +19,8 @@ const navItems: NavItem[] = [
   { id: 'historial', icon: 'history', label: 'Historial de reportes', path: '/maestro/historial' },
 ];
 
+import { BottomNav } from '../components/navigation/BottomNav';
+
 export default function TeacherLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { nombre, signOut } = useAuth();
@@ -183,6 +185,8 @@ export default function TeacherLayout() {
           <Outlet />
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 }
