@@ -60,9 +60,15 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading }) =
         </div>
         <p className="bi-kpi-value">{total_alumnos} <span style={{ fontSize: '13px', color: '#64748b' }}>Alumnos</span></p>
         <div className="bi-semaforo-badge-group">
-          <span className="bi-semaforo-chip bi-semaforo-chip--verde">🟢 {conteo_verde}</span>
-          <span className="bi-semaforo-chip bi-semaforo-chip--naranja">🟠 {conteo_naranja}</span>
-          <span className="bi-semaforo-chip bi-semaforo-chip--rojo">🔴 {conteo_rojo}</span>
+          <span className="bi-semaforo-chip bi-semaforo-chip--verde">
+            <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#10b981', verticalAlign: 'middle' }}>check_circle</span> {conteo_verde}
+          </span>
+          <span className="bi-semaforo-chip bi-semaforo-chip--naranja">
+            <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#f59e0b', verticalAlign: 'middle' }}>warning</span> {conteo_naranja}
+          </span>
+          <span className="bi-semaforo-chip bi-semaforo-chip--rojo">
+            <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#ef4444', verticalAlign: 'middle' }}>error</span> {conteo_rojo}
+          </span>
         </div>
       </div>
 

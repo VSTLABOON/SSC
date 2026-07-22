@@ -53,9 +53,9 @@ export const BIFilterBar: React.FC<BIFilterBarProps> = ({
           value={filters.rangoTemporal || 'periodo'}
           onChange={e => handleChange('rangoTemporal', e.target.value)}
         >
-          <option value="semana">📅 Esta Semana</option>
-          <option value="mes">📆 Este Mes</option>
-          <option value="periodo">🎓 Ciclo Escolar Completo</option>
+          <option value="semana">Esta Semana</option>
+          <option value="mes">Este Mes</option>
+          <option value="periodo">Ciclo Escolar Completo</option>
         </select>
       </div>
 
@@ -107,9 +107,9 @@ export const BIFilterBar: React.FC<BIFilterBarProps> = ({
           onChange={e => handleChange('severidad', e.target.value)}
         >
           <option value="all">Todas las Severidades</option>
-          <option value="verde">🟢 Verde (Positivo)</option>
-          <option value="naranja">🟠 Naranja (Atención)</option>
-          <option value="rojo">🔴 Rojo (Crítico)</option>
+          <option value="verde">Verde (Positivo)</option>
+          <option value="naranja">Naranja (Atención)</option>
+          <option value="rojo">Rojo (Crítico)</option>
         </select>
       </div>
 
