@@ -45,7 +45,8 @@ export default function GenerarReporteDA() {
   const [severity, setSeverity] = useState<Severity>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [comment, setComment] = useState('');
-  const [locationName, setLocationName] = useState('Plantel');
+  const [locationName, setLocationName] = useState('Aula');
+  const [activeTab, setActiveTab] = useState<'clasificacion' | 'detalles'>('clasificacion');
 
   // Estados de éxito/advertencia
   const [successModalOpen, setSuccessModalOpen] = useState(false);
@@ -102,10 +103,12 @@ export default function GenerarReporteDA() {
 
   function handleOpenModal(student: StudentFromDB) {
     setSelectedStudent(student);
-    setSeverity('naranja');
+    setSeverity(null);
     setSelectedCategoryId('');
     setComment('');
-    setLocationName('Plantel');
+    setLocationName('Aula');
+    setActiveTab('clasificacion');
+    setErrorMsg(null);
     setModalOpen(true);
   }
 
@@ -115,12 +118,27 @@ export default function GenerarReporteDA() {
     setSeverity(null);
     setSelectedCategoryId('');
     setComment('');
+    setActiveTab('clasificacion');
     setErrorMsg(null);
   }
 
   function handleSelectSeverity(color: NonNullable<Severity>) {
     setSeverity(color);
     setSelectedCategoryId('');
+    setErrorMsg(null);
+  }
+
+  function handleNextTab() {
+    if (!severity) {
+      setErrorMsg('Por favor selecciona un nivel de severidad.');
+      return;
+    }
+    if (!selectedCategoryId) {
+      setErrorMsg('Por favor selecciona un reglamento o motivo específico.');
+      return;
+    }
+    setErrorMsg(null);
+    setActiveTab('detalles');
   }
 
   const filteredCategories = categories.filter(c => {
@@ -135,7 +153,8 @@ export default function GenerarReporteDA() {
     setErrorMsg(null);
 
     if (!severity || !selectedCategoryId || !selectedStudent) {
-      setWarningModalOpen(true);
+      setActiveTab('clasificacion');
+      setErrorMsg('Selecciona un nivel de severidad y un motivo antes de guardar.');
       return;
     }
     if (!periodoId) {
@@ -275,123 +294,179 @@ export default function GenerarReporteDA() {
       {/* MODAL GENERAR REPORTE */}
       <Modal isOpen={modalOpen && !!selectedStudent} onClose={handleCloseModal} className="grm-modal-box">
         <div className="grm-modal-header">
-          <h4 className="grm-modal-title">Generar Reporte Disciplinario</h4>
-          <button className="grm-modal-close" onClick={handleCloseModal}>
+          <div>
+            <h4 className="grm-modal-title">Generar Reporte Disciplinario</h4>
+            <p className="grm-modal-subtitle">
+              {selectedStudent?.name} • {selectedStudent?.groupName} ({selectedStudent?.matricula})
+            </p>
+          </div>
+          <button className="grm-modal-close" onClick={handleCloseModal} aria-label="Cerrar modal">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmitReport}>
+        {/* Tab Navigation Bar */}
+        <div className="grm-tab-bar">
+          <button
+            type="button"
+            className={`grm-tab-btn ${activeTab === 'clasificacion' ? 'grm-tab-btn--active' : ''}`}
+            onClick={() => setActiveTab('clasificacion')}
+          >
+            <span className="material-symbols-outlined">label</span>
+            <span>1. Severidad y Motivo</span>
+          </button>
+          <button
+            type="button"
+            className={`grm-tab-btn ${activeTab === 'detalles' ? 'grm-tab-btn--active' : ''}`}
+            onClick={() => {
+              if (!severity || !selectedCategoryId) {
+                setErrorMsg('Selecciona un nivel de severidad y un motivo antes de continuar.');
+                return;
+              }
+              setErrorMsg(null);
+              setActiveTab('detalles');
+            }}
+          >
+            <span className="material-symbols-outlined">edit_note</span>
+            <span>2. Detalles y Ubicación</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmitReport} className="grm-modal-form-wrap">
           <div className="grm-modal-body">
             {errorMsg && (
               <InlineAlert type="error" message={errorMsg} onClose={() => setErrorMsg(null)} />
             )}
-            {/* Info Alumno */}
-            <div className="grm-modal-student-info">
-              <div>
-                <p className="grm-student-info-label">Alumno seleccionado</p>
-                <p className="grm-student-info-name">{selectedStudent?.name}</p>
-              </div>
-              <div>
-                <p className="grm-student-info-label">Matrícula</p>
-                <p className="grm-student-info-value">{selectedStudent?.matricula}</p>
-              </div>
-              <div>
-                <p className="grm-student-info-label">Grupo</p>
-                <p className="grm-student-info-value">{selectedStudent?.groupName}</p>
-              </div>
-            </div>
 
-            {/* Severidad */}
-            <div className="grm-form-group">
-              <label className="grm-form-label">Nivel de Severidad</label>
-              <div className="grm-severity-selector">
-                <button
-                  type="button"
-                  className={`grm-severity-btn grm-severity-btn--verde ${severity === 'verde' ? 'active' : ''}`}
-                  onClick={() => handleSelectSeverity('verde')}
-                >
-                  <Icon name="check_circle" />
-                  <span>Verde (Positivo)</span>
-                </button>
-                <button
-                  type="button"
-                  className={`grm-severity-btn grm-severity-btn--naranja ${severity === 'naranja' ? 'active' : ''}`}
-                  onClick={() => handleSelectSeverity('naranja')}
-                >
-                  <Icon name="warning" />
-                  <span>Naranja (Grave)</span>
-                </button>
-                <button
-                  type="button"
-                  className={`grm-severity-btn grm-severity-btn--rojo ${severity === 'rojo' ? 'active' : ''}`}
-                  onClick={() => handleSelectSeverity('rojo')}
-                >
-                  <Icon name="error" />
-                  <span>Rojo (Crítico)</span>
-                </button>
-              </div>
-            </div>
+            {/* TAB 1: CLASIFICACIÓN (SEVERIDAD Y MOTIVO) */}
+            {activeTab === 'clasificacion' && (
+              <>
+                {/* Severidad */}
+                <div className="grm-form-group">
+                  <label className="grm-form-label">Nivel de Severidad</label>
+                  <div className="grm-severity-grid">
+                    <button
+                      type="button"
+                      className={`grm-severity-btn grm-severity-btn--verde ${severity === 'verde' ? 'grm-severity-btn--selected' : ''}`}
+                      onClick={() => handleSelectSeverity('verde')}
+                    >
+                      <Icon name="check_circle" className="grm-severity-btn-icon" />
+                      <span className="grm-severity-btn-label">Verde (Positivo)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`grm-severity-btn grm-severity-btn--naranja ${severity === 'naranja' ? 'grm-severity-btn--selected' : ''}`}
+                      onClick={() => handleSelectSeverity('naranja')}
+                    >
+                      <Icon name="warning" className="grm-severity-btn-icon" />
+                      <span className="grm-severity-btn-label">Naranja (Grave)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`grm-severity-btn grm-severity-btn--rojo ${severity === 'rojo' ? 'grm-severity-btn--selected' : ''}`}
+                      onClick={() => handleSelectSeverity('rojo')}
+                    >
+                      <Icon name="error" className="grm-severity-btn-icon" />
+                      <span className="grm-severity-btn-label">Rojo (Crítico)</span>
+                    </button>
+                  </div>
+                </div>
 
-            {/* Motivo / Reglamento infringido */}
-            <div className="grm-form-group">
-              <label className="grm-form-label">Motivo o Reglamento infringido</label>
-              <div className="grm-reasons-list">
-                {filteredCategories.length > 0 ? (
-                  filteredCategories.map(cat => (
-                    <label className="grm-reason-item" key={cat.id}>
-                      <input
-                        type="radio"
-                        name="categoria"
-                        className="grm-reason-checkbox"
-                        value={cat.id}
-                        checked={selectedCategoryId === cat.id}
-                        onChange={() => setSelectedCategoryId(cat.id)}
-                      />
-                      <span className="grm-reason-text">{cat.nombre} — <small style={{ color: '#5c5f60' }}>Impacto: {cat.impacto_base} pts</small></span>
-                    </label>
-                  ))
-                ) : (
-                  <p style={{ color: '#ba1a1a', fontSize: '14px', padding: '8px 0' }}>
-                    No hay motivos registrados en la base de datos para este nivel de severidad.
-                  </p>
-                )}
-              </div>
-            </div>
+                {/* Motivo / Reglamento infringido */}
+                <div className="grm-form-group">
+                  <label className="grm-form-label">Motivo o Reglamento infringido</label>
+                  <div className="grm-reasons-list">
+                    {filteredCategories.length > 0 ? (
+                      filteredCategories.map(cat => (
+                        <label className={`grm-reason-item ${selectedCategoryId === cat.id ? 'grm-reason-item--selected' : ''}`} key={cat.id}>
+                          <input
+                            type="radio"
+                            name="categoria"
+                            className="grm-reason-radio"
+                            value={cat.id}
+                            checked={selectedCategoryId === cat.id}
+                            onChange={() => {
+                              setSelectedCategoryId(cat.id);
+                              setErrorMsg(null);
+                            }}
+                          />
+                          <span className="grm-reason-text">{cat.nombre}</span>
+                          <span className="grm-reason-badge">Impacto: {cat.impacto_base} pts</span>
+                        </label>
+                      ))
+                    ) : (
+                      <p style={{ color: '#ba1a1a', fontSize: '13px', padding: '12px 0', textAlign: 'center' }}>
+                        Selecciona un nivel de severidad arriba para ver los motivos disponibles.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
-            {/* Lugar */}
-            <div className="grm-form-group">
-              <label className="grm-form-label" htmlFor="location">Lugar del Incidente</label>
-              <input
-                type="text"
-                id="location"
-                className="grm-field-input"
-                value={locationName}
-                onChange={e => setLocationName(e.target.value)}
-              />
-            </div>
+            {/* TAB 2: DETALLES Y UBICACIÓN */}
+            {activeTab === 'detalles' && (
+              <>
+                {/* Lugar de la incidencia + chips */}
+                <div className="grm-form-group">
+                  <label className="grm-form-label" htmlFor="location">Lugar del Incidente</label>
+                  <input
+                    type="text"
+                    id="location"
+                    className="grm-field-input"
+                    value={locationName}
+                    onChange={e => setLocationName(e.target.value)}
+                  />
+                  <div className="grm-location-chips">
+                    {['Aula', 'Laboratorio', 'Patio', 'Cafetería', 'Biblioteca'].map(chip => (
+                      <button
+                        key={chip}
+                        type="button"
+                        className={`grm-location-chip ${locationName === chip ? 'grm-location-chip--selected' : ''}`}
+                        onClick={() => setLocationName(chip)}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Comentario */}
-            <div className="grm-form-group">
-              <label className="grm-form-label" htmlFor="comment">Descripción y Compromisos</label>
-              <textarea
-                id="comment"
-                className="grm-field-input"
-                rows={4}
-                placeholder="Detalle de la incidencia y compromisos..."
-                value={comment}
-                onChange={e => setComment(e.target.value)}
-              />
-            </div>
+                {/* Comentarios / Detalles */}
+                <div className="grm-form-group">
+                  <label className="grm-form-label" htmlFor="comment">Descripción y Compromisos</label>
+                  <textarea
+                    id="comment"
+                    className="grm-field-input"
+                    rows={3}
+                    placeholder="Detalle de la incidencia y compromisos acordados..."
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="grm-modal-footer">
-            <button type="button" className="grm-btn-cancel" onClick={handleCloseModal}>
-              Cancelar
-            </button>
-            <button type="submit" className="grm-btn-submit" disabled={submitting}>
-              {submitting ? 'Guardando...' : 'Guardar Reporte'}
-            </button>
+            {activeTab === 'clasificacion' ? (
+              <>
+                <button type="button" className="grm-btn-cancel" onClick={handleCloseModal}>
+                  Cancelar
+                </button>
+                <button type="button" className="grm-btn-submit" onClick={handleNextTab}>
+                  Siguiente: Detalles →
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="grm-btn-cancel" onClick={() => setActiveTab('clasificacion')}>
+                  ← Volver
+                </button>
+                <button type="submit" className="grm-btn-submit" disabled={submitting}>
+                  {submitting ? 'Guardando...' : 'Guardar Reporte'}
+                </button>
+              </>
+            )}
           </div>
         </form>
       </Modal>

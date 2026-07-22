@@ -150,7 +150,7 @@ input {
 .tl-sidebar-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 90;
   background-color: rgba(0, 0, 0, 0.5);
   opacity: 0;
   pointer-events: none;
@@ -173,7 +173,9 @@ input {
   left: 0;
   top: 0;
   height: 100%;
-  z-index: 50;
+  z-index: 100;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   width: 288px;
@@ -363,8 +365,7 @@ input {
   border-bottom: 1px solid rgba(32, 71, 133, 0.2);
   position: sticky;
   top: 0;
-  z-index: 40;
-  flex-shrink: 0;
+  z-index: 30;
 }
 
 .tl-topbar-left {

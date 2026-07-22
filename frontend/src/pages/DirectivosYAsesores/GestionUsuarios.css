@@ -199,7 +199,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 200;
   padding: 16px;
   animation: gu-fade-in .15s ease;
 }
@@ -216,6 +216,9 @@
   width: 100%;
   max-width: 460px;
   box-shadow: var(--shadow-md);
+  z-index: 210;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   animation: gu-slide-up .2s ease;
 }
 

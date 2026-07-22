@@ -122,7 +122,7 @@ body.no-scroll {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 40;
+  z-index: 90;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -153,7 +153,9 @@ body.no-scroll {
   display: flex;
   flex-direction: column;
   padding: 8px;
-  z-index: 50;
+  z-index: 100;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   background-color: var(--color-surface-container-low);
   border-right: 1px solid var(--color-outline-variant);
   box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);

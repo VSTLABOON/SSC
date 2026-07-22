@@ -60,7 +60,7 @@ a      { text-decoration: none; }
 .grm-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.5);
-  z-index: 40; opacity: 0; pointer-events: none;
+  z-index: 90; opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease;
 }
 .grm-overlay--active { opacity: 1; pointer-events: auto; }
@@ -73,7 +73,9 @@ a      { text-decoration: none; }
   background: var(--c-chambray);
   box-shadow: 2px 0 16px rgba(32,71,133,.2);
   border-right: 1px solid rgba(190,201,192,.3);
-  z-index: 50;
+  z-index: 100;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   transition: transform 0.3s ease;
 }
 @media (min-width: 768px) {
@@ -136,7 +138,7 @@ a      { text-decoration: none; }
 
 /* Topbar */
 .grm-topbar {
-  position: sticky; top: 0; z-index: 40;
+  position: sticky; top: 0; z-index: 30;
   height: var(--topbar-h);
   background: var(--c-mystic);
   border-bottom: 1px solid rgba(32,71,133,.2);

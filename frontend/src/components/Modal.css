@@ -1,7 +1,7 @@
 .app-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,8 +17,11 @@
   max-width: 640px;
   max-height: 90dvh;
   overflow-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-lg, 12px);
   box-shadow: 0 24px 64px rgba(0, 0, 0, .2);
+  z-index: 210;
   animation: app-modal-zoom-in 0.2s ease;
 }
 
