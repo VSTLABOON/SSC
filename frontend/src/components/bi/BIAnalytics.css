@@ -1,0 +1,302 @@
+/* ============================================================================
+   SSC BI & LEARNING ANALYTICS DASHBOARD - DESIGN SYSTEM
+   ============================================================================ */
+
+.bi-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding-bottom: 24px;
+}
+
+/* ── Filter Bar ────────────────────────────────────────────────────────── */
+.bi-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.bi-filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+  flex: 1;
+}
+
+.bi-filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bi-filter-select {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.bi-filter-select:focus {
+  border-color: #204785;
+  box-shadow: 0 0 0 3px rgba(32, 71, 133, 0.15);
+  background: #ffffff;
+}
+
+.bi-filter-select:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.bi-btn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  align-self: flex-end;
+  margin-top: auto;
+  transition: all 0.2s ease;
+}
+
+.bi-btn-reset:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ── KPI Cards Grid ────────────────────────────────────────────────────── */
+.bi-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.bi-kpi-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bi-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.bi-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bi-kpi-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0;
+}
+
+.bi-kpi-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f4f8;
+  color: #204785;
+}
+
+.bi-kpi-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 10px 0 4px;
+  line-height: 1.1;
+}
+
+.bi-kpi-value--null {
+  font-size: 16px;
+  font-weight: 600;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.bi-kpi-subtext {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Semáforo Pill Badge */
+.bi-semaforo-badge-group {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.bi-semaforo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.bi-semaforo-chip--verde {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.bi-semaforo-chip--naranja {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.bi-semaforo-chip--rojo {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* ── Analytics Charts Section ─────────────────────────────────────────── */
+.bi-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .bi-charts-grid {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
+
+.bi-chart-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.bi-chart-title-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.bi-chart-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bi-chart-container {
+  width: 100%;
+  height: 280px;
+  min-height: 280px;
+}
+
+/* ── Risk Table Section ────────────────────────────────────────────────── */
+.bi-risk-card {
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.bi-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.bi-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.bi-table th {
+  padding: 10px 14px;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.bi-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.bi-btn-alert-tutor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background: #dc2626;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.bi-btn-alert-tutor:hover {
+  background: #b91c1c;
+}
+
+.bi-btn-alert-tutor:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}

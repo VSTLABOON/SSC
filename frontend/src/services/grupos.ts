@@ -31,3 +31,14 @@ export async function getGruposDeDocente(docenteId: string): Promise<ClassDocent
     turno: item.grupos?.turno || 'Matutino',
   }));
 }
+
+export async function getGruposDePlantel(plantelId: string): Promise<Array<{ id: string; nombre: string }>> {
+  const { data, error } = await supabase
+    .from('grupos')
+    .select('id, nombre')
+    .eq('plantel_id', plantelId)
+    .order('nombre');
+
+  if (error) throw error;
+  return data || [];
+}
