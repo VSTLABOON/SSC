@@ -370,6 +370,8 @@ a {
   margin-left: -8px;
   color: var(--chambray);
   cursor: pointer;
+  border: none;
+  background: none;
   border-radius: var(--radius-lg);
   transition: background-color 0.2s ease;
 }
