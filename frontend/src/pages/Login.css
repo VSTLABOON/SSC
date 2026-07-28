@@ -7,12 +7,6 @@
      --color-brand-light  #007a50
    =========================================================================== */
 
-/* ---------------------------------------------------------------------
-   Reset base: elimina espacios vacíos laterales causados por los
-   estilos por defecto del navegador (margin de <body>, box model, etc.)
-   y garantiza que la página cubra siempre el 100% del viewport.
-   --------------------------------------------------------------------- */
-
 *,
 *::before,
 *::after {
@@ -25,7 +19,7 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* nunca scroll horizontal */
+  overflow-x: hidden;
 }
 
 #root,
@@ -41,22 +35,15 @@ body {
   min-height: 100vh;
   background-color: #ffffff;
   color: #111827;
-  font-family: 'Inter', sans-serif;
+  color-scheme: light;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
 }
 
-
-
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .login-page {
     flex-direction: row;
-    align-items: stretch;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .login-page {
-    flex-direction: row;
+    min-height: 100vh;
     align-items: stretch;
   }
 }
@@ -69,11 +56,10 @@ body {
   position: relative;
   overflow: hidden;
   width: 100%;
-  min-height: 400px;
   display: none;
   flex-direction: column;
   justify-content: space-between;
-  padding: 3rem 1.5rem;
+  padding: 2.5rem;
   background: linear-gradient(135deg, #004d33 0%, #006341 100%);
 }
 
@@ -84,8 +70,8 @@ body {
   height: 200%;
   top: -50%;
   left: -50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
-  opacity: 0.5;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  opacity: 0.6;
   pointer-events: none;
 }
 
@@ -93,27 +79,35 @@ body {
   .login-intro-panel {
     display: flex;
     flex: 1 1 50%;
-    width: auto;
-    min-width: 0;
+    width: 50%;
+    min-height: 100vh;
     padding: 3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .login-intro-panel {
+    padding: 4rem;
   }
 }
 
 .login-intro-content {
   position: relative;
   z-index: 10;
-  margin-top: auto;
-  margin-bottom: auto;
+  margin: auto;
+  width: 100%;
+  max-width: 32rem;
 }
 
 .login-glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1.25rem;
   padding: 2.5rem;
-  max-width: 32rem;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 .login-glass-card h1 {
@@ -121,20 +115,22 @@ body {
   font-size: 2.25rem;
   font-weight: 700;
   line-height: 1.2;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1.25rem 0;
+  letter-spacing: -0.02em;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .login-glass-card h1 {
-    font-size: 3rem;
+    font-size: 2.75rem;
   }
 }
 
 .login-glass-card p {
   color: #f3f4f6;
-  font-size: 1.125rem;
-  margin: 0 0 2.5rem 0;
-  opacity: 0.9;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  margin: 0 0 2rem 0;
+  opacity: 0.95;
 }
 
 .login-feature-list {
@@ -143,7 +139,7 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .login-feature-list li {
@@ -169,14 +165,15 @@ body {
 }
 
 .login-feature-list li span:last-child {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
 .login-intro-footer {
   position: relative;
   z-index: 10;
-  margin-top: 3rem;
+  margin-top: 1.5rem;
+  text-align: center;
 }
 
 .login-intro-footer p {
@@ -184,7 +181,7 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   opacity: 0.9;
   margin: 0;
 }
@@ -196,81 +193,85 @@ body {
 .login-form-panel {
   width: 100%;
   display: flex;
-  flex: 1 1 auto;
-  min-height: 100vh;
   flex-direction: column;
   justify-content: space-between;
   background-color: #ffffff;
-  padding: 3rem 1.5rem;
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
 }
 
 @media (min-width: 768px) {
   .login-form-panel {
     flex: 1 1 50%;
-    width: auto;
-    min-height: 0;
-    min-width: 0;
-    padding: 3rem 6rem;
-    justify-content: center;
+    width: 50%;
+    min-height: 100vh;
+    padding: 3rem 3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .login-form-panel {
+    padding: 4rem 5rem;
   }
 }
 
 .login-form-wrapper {
   max-width: 28rem;
   width: 100%;
-  margin: 0 auto;
-  padding-top: 3rem;
+  margin: auto;
+  padding: 1.5rem 0;
 }
 
 .login-branding {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
 }
 
 .login-logo {
-  height: 56px;
+  height: 52px;
   object-fit: contain;
 }
 
 .login-logo-secondary {
-  height: 40px;
+  height: 38px;
 }
 
 .login-divider {
   width: 1px;
-  height: 48px;
+  height: 44px;
   background-color: #e5e7eb;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .login-header h2 {
-  font-size: 1.875rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
 }
 
 .login-header p {
   color: #6b7280;
+  font-size: 0.95rem;
   margin: 0;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .login-field {
   width: 100%;
-  max-width: 100%;
 }
 
 .login-field label {
@@ -284,7 +285,6 @@ body {
 .login-input-wrapper {
   position: relative;
   width: 100%;
-  max-width: 100%;
 }
 
 .login-input-icon {
@@ -306,11 +306,12 @@ body {
 
 .login-input-wrapper input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 3rem;
+  height: 46px;
+  padding: 0 1rem 0 3rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
-  color: #374151;
-  font-size: 1rem;
+  color: #1f2937;
+  font-size: 0.95rem;
   font-family: inherit;
   background-color: #ffffff;
   box-sizing: border-box;
@@ -323,21 +324,10 @@ body {
   box-shadow: 0 0 0 3px rgba(0, 99, 65, 0.15);
 }
 
-/* El input de contraseña hereda el mismo estilo base que
-   .login-input-wrapper input (mismo width, padding-left,
-   border, box-sizing). Solo necesita espacio extra a la
-   derecha para no quedar debajo del botón mostrar/ocultar. */
 .login-input-wrapper input#password {
   padding-right: 3rem;
 }
 
-/* Botón de mostrar/ocultar contraseña: es un ÍCONO flotante
-   dentro del wrapper (igual que .login-input-icon, pero del
-   lado derecho), NO un input independiente. Antes tenía
-   width:100% + padding + border + background, lo que lo
-   convertía en una segunda "caja tipo input" superpuesta y
-   provocaba el desborde y la desalineación con el campo
-   Usuario. */
 .login-toggle-password {
   position: absolute;
   top: 0;
@@ -363,14 +353,13 @@ body {
 .login-toggle-password svg {
   width: 20px;
   height: 20px;
-  display: block;
 }
 
 .login-captcha {
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0.875rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -385,8 +374,8 @@ body {
 }
 
 .login-captcha-check input {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
   accent-color: #006341;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -401,35 +390,36 @@ body {
 
 .login-captcha-badge {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .login-captcha-badge img {
-  height: 32px;
+  height: 28px;
   filter: grayscale(1);
 }
 
 .login-submit-btn {
   width: 100%;
+  height: 48px;
   background-color: #006341;
   color: #ffffff;
   font-weight: 700;
-  padding: 1rem;
+  padding: 0 1rem;
   border: none;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 99, 65, 0.25);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.875rem;
   font-family: inherit;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
 }
 
 .login-submit-btn:hover {
   background-color: #004d33;
+  box-shadow: 0 6px 16px rgba(0, 99, 65, 0.35);
 }
 
 .login-submit-btn:active {
@@ -441,26 +431,16 @@ body {
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  font-size: 10px;
+  font-size: 11px;
   color: #9ca3af;
-  margin-top: auto;
   border-top: 1px solid #f3f4f6;
-  padding-top: 1.5rem;
+  padding-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 
 @media (min-width: 768px) {
   .login-footer {
     flex-direction: row;
-  }
-}
-
-.login-footer-brand {
-  margin-bottom: 1rem;
-}
-
-@media (min-width: 768px) {
-  .login-footer-brand {
-    margin-bottom: 0;
   }
 }
 
@@ -488,18 +468,4 @@ body {
 
 .login-footer-links a:hover {
   color: #006341;
-}
-
-/* ---------------------------------------------------------------------
-   Ajustes adicionales para tablet
-   --------------------------------------------------------------------- */
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .login-form-panel {
-    padding: 3rem 2.5rem;
-  }
-
-  .login-intro-panel {
-    padding: 2.5rem 2rem;
-  }
 }

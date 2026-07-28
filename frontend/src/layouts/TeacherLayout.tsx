@@ -20,6 +20,8 @@ const navItems: NavItem[] = [
 ];
 
 import { BottomNav } from '../components/navigation/BottomNav';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { NotificationCenter } from '../components/NotificationCenter';
 
 export default function TeacherLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -161,13 +163,9 @@ export default function TeacherLayout() {
             </button>
             <h1 className="tl-topbar-title">Portal de Docencia</h1>
           </div>
-          <div className="tl-topbar-right">
-            <div className="tl-topbar-icon-group">
-              <button
-                className="icon-button"
-                onClick={() => console.log('Notificaciones')}
-              />
-            </div>
+          <div className="tl-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ThemeToggle />
+            <NotificationCenter />
             <div className="tl-topbar-divider" />
             <div className="tl-topbar-institution">
               <span className="tl-topbar-institution-label">Plantel Puebla I</span>

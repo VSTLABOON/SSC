@@ -263,25 +263,29 @@ export default function History() {
             className={`segmented-btn ${incidentFilter === 'all' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('all')}
           >
-            Todos
+            <Icon name="list_alt" style={{ fontSize: '18px', marginRight: '6px' }} />
+            Todos ({reports.length})
           </button>
           <button
             className={`segmented-btn ${incidentFilter === 'positive' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('positive')}
           >
-            Positivos
+            <Icon name="check_circle" style={{ fontSize: '18px', color: '#10b981', marginRight: '6px' }} />
+            Positivos ({positiveCount})
           </button>
           <button
             className={`segmented-btn ${incidentFilter === 'warning' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('warning')}
           >
-            Leves / Advertencias
+            <Icon name="warning" style={{ fontSize: '18px', color: '#f59e0b', marginRight: '6px' }} />
+            Leves ({reports.filter(r => r.filterGroup === 'warning').length})
           </button>
           <button
             className={`segmented-btn ${incidentFilter === 'negative' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('negative')}
           >
-            Graves / Incidencias
+            <Icon name="error" style={{ fontSize: '18px', color: '#ef4444', marginRight: '6px' }} />
+            Graves ({negativeCount})
           </button>
         </div>
 

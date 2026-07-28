@@ -324,11 +324,14 @@ export default function GestionUsuarios() {
                     </td>
                     <td>
                       <span className={badgeClase(u)}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px', verticalAlign: 'middle', marginRight: '4px' }}>
+                          {!u.activo ? 'block' : u.rol === 'pendiente' ? 'hourglass_empty' : 'check_circle'}
+                        </span>
                         {!u.activo
-                          ? '⊘ Inactivo'
+                          ? 'Inactivo'
                           : u.rol === 'pendiente'
-                          ? '⏳ Pendiente'
-                          : '✓ Activo'}
+                          ? 'Pendiente'
+                          : 'Activo'}
                       </span>
                     </td>
                     <td>

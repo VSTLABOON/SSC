@@ -22,6 +22,8 @@ interface StudentIncident {
   } | null;
 }
 
+type ModalFilterType = 'all' | 'verde' | 'naranja' | 'rojo';
+
 export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) => {
   const { session } = useAuth();
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -31,11 +33,13 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
   const [selectedStudent, setSelectedStudent] = useState<BIRiskStudent | null>(null);
   const [studentIncidents, setStudentIncidents] = useState<StudentIncident[]>([]);
   const [loadingIncidents, setLoadingIncidents] = useState(false);
+  const [modalFilter, setModalFilter] = useState<ModalFilterType>('all');
 
   async function handleOpenExpediente(student: BIRiskStudent) {
     setSelectedStudent(student);
     setLoadingIncidents(true);
     setStudentIncidents([]);
+    setModalFilter('all');
     try {
       const data = await getIncidenciasDelAlumno(student.alumno_id);
       setStudentIncidents((data || []) as unknown as StudentIncident[]);
@@ -49,6 +53,7 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
   function handleCloseExpediente() {
     setSelectedStudent(null);
     setStudentIncidents([]);
+    setModalFilter('all');
   }
 
   async function handleAlertTutor(student: BIRiskStudent) {
@@ -75,6 +80,20 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
       setSendingId(null);
     }
   }
+
+  // Filtrado por pastillas dentro del modal
+  const positiveCount = studentIncidents.filter(i => (i.categorias_incidencia?.color_semaforo === 'verde' || i.impacto_puntos > 0)).length;
+  const warningCount = studentIncidents.filter(i => (i.categorias_incidencia?.color_semaforo === 'naranja' && i.impacto_puntos <= 0)).length;
+  const criticalCount = studentIncidents.filter(i => (i.categorias_incidencia?.color_semaforo === 'rojo')).length;
+
+  const filteredIncidents = studentIncidents.filter(inc => {
+    if (modalFilter === 'all') return true;
+    const color = inc.categorias_incidencia?.color_semaforo || 'verde';
+    if (modalFilter === 'verde') return color === 'verde' || inc.impacto_puntos > 0;
+    if (modalFilter === 'naranja') return color === 'naranja' && inc.impacto_puntos <= 0;
+    if (modalFilter === 'rojo') return color === 'rojo';
+    return true;
+  });
 
   if (loading) {
     return (
@@ -179,7 +198,7 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
         </div>
       )}
 
-      {/* Modal de Expediente Disciplinario y Salud Conductual (UI/UX Impecable) */}
+      {/* Modal de Expediente Disciplinario y Salud Conductual con Pastillas de Organización */}
       {selectedStudent && (
         <div
           style={{
@@ -202,7 +221,7 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
             style={{
               backgroundColor: '#ffffff',
               borderRadius: '20px',
-              maxWidth: '680px',
+              maxWidth: '720px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
@@ -237,7 +256,7 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
             </div>
 
             {/* Métrica de Salud del Alumno */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
               <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Puntaje Actual</span>
                 <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 800, color: selectedStudent.puntos_totales < 70 ? '#dc2626' : '#1e293b' }}>
@@ -267,20 +286,62 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
 
             {/* Historial de Incidencias / Expediente */}
             <div>
-              <h4 style={{ margin: '0 0 14px', fontSize: '14px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="material-symbols-outlined" style={{ color: '#204785', fontSize: '18px' }}>history</span>
-                Expediente y Registro Disciplinario
-              </h4>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="material-symbols-outlined" style={{ color: '#204785', fontSize: '18px' }}>history</span>
+                  Expediente y Bitácora Conductual
+                </h4>
+              </div>
+
+              {/* Pastillas de Organización del Expediente */}
+              <div className="dedicated-tabs-container" style={{ marginBottom: '16px', background: '#f1f5f9', padding: '4px', borderRadius: '12px', gap: '4px' }}>
+                <button
+                  type="button"
+                  className={`dedicated-tab-btn ${modalFilter === 'all' ? 'dedicated-tab-btn--active' : ''}`}
+                  onClick={() => setModalFilter('all')}
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>list_alt</span>
+                  Todos ({studentIncidents.length})
+                </button>
+                <button
+                  type="button"
+                  className={`dedicated-tab-btn ${modalFilter === 'verde' ? 'dedicated-tab-btn--active' : ''}`}
+                  onClick={() => setModalFilter('verde')}
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#10b981' }}>check_circle</span>
+                  Positivos ({positiveCount})
+                </button>
+                <button
+                  type="button"
+                  className={`dedicated-tab-btn ${modalFilter === 'naranja' ? 'dedicated-tab-btn--active' : ''}`}
+                  onClick={() => setModalFilter('naranja')}
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#f59e0b' }}>warning</span>
+                  Leves ({warningCount})
+                </button>
+                <button
+                  type="button"
+                  className={`dedicated-tab-btn ${modalFilter === 'rojo' ? 'dedicated-tab-btn--active' : ''}`}
+                  onClick={() => setModalFilter('rojo')}
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#ef4444' }}>error</span>
+                  Críticos ({criticalCount})
+                </button>
+              </div>
 
               {loadingIncidents ? (
                 <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Cargando expediente...</div>
-              ) : studentIncidents.length === 0 ? (
+              ) : filteredIncidents.length === 0 ? (
                 <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  No hay incidencias registradas en el historial de este alumno.
+                  No se encontraron registros de este tipo en el historial del alumno.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {studentIncidents.map(inc => (
+                  {filteredIncidents.map(inc => (
                     <div
                       key={inc.id}
                       style={{
@@ -316,6 +377,16 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
 
             {/* Footer con Botón de Alerta */}
             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                className="bi-btn-reset"
+                onClick={() => window.print()}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                title="Imprimir o guardar expediente en PDF"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>print</span>
+                Imprimir Ficha PDF
+              </button>
               <button
                 type="button"
                 className="bi-btn-reset"

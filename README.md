@@ -1,146 +1,136 @@
-# Sistema Conductual CONALEP Puebla I - Documentacion Tecnica e Integracion
+# Sistema Conductual CONALEP Puebla I - Documentación Técnica e Integración
 
-Este documento contiene la especificacion completa de la arquitectura, base de datos, politicas de seguridad RLS, control de accesos, flujos de invitacion de usuarios y auditorias tecnicas de seguridad aplicadas al proyecto del Sistema Conductual de CONALEP Puebla I (EduTrack 360).
+Este documento contiene la especificación completa de la arquitectura, base de datos, políticas de seguridad RLS, módulo de Business Intelligence (BI), control de accesos, flujos de navegación y auditorías técnicas de seguridad aplicadas al proyecto del Sistema Conductual de CONALEP Puebla I (EduTrack 360).
 
 ---
 
-## 1. Descripcion General del Sistema
+## 1. Descripción General del Sistema
 
-El Sistema Conductual esta disenado para facilitar la gestion de la disciplina, asistencia y participacion de los alumnos en el plantel CONALEP Puebla I. Permite a los docentes registrar pases de lista diarios, participaciones e incidencias de conducta. Los directivos y orientadores supervisan el estado general del plantel, gestionan las cuentas de acceso y generan reportes detallados.
+El Sistema Conductual está diseñado para facilitar la gestión de la disciplina, asistencia y participación de los alumnos en el plantel CONALEP Puebla I. Permite a los docentes registrar pases de lista diarios, participaciones e incidencias de conducta. Los directivos y orientadores supervisan el estado general del plantel, gestionan las cuentas de acceso y analizan tendencias de conducta en tiempo real.
 
-El sistema se basa en una arquitectura cliente-servidor desacoplada utilizando React en el frontend y Supabase (PostgreSQL, Auth y Edge Functions) en el backend.
+El sistema se basa en una arquitectura cliente-servidor desacoplada utilizando React en el frontend y Supabase (PostgreSQL, Auth, RPCs PostgREST y Edge Functions) en el backend.
 
 ---
 
 ## 2. Arquitectura de Componentes y Flujos de Datos
 
 ### Frontend (React, TypeScript, Vite)
-- Estructura modular organizada en componentes, vistas, layouts por rol y servicios para la comunicacion con el backend.
-- Ruteador (React Router DOM) con proteccion por roles mediante el componente RequireAuth.
-- Contexto de Autenticacion (AuthContext.tsx) que gestiona el estado de la sesion de Supabase y recupera la informacion del perfil en tiempo real.
+- Estructura modular organizada en componentes, vistas, layouts por rol y servicios para la comunicación con el backend.
+- **Ruteador**: React Router DOM con protección por roles mediante el componente `RequireAuth`.
+- **Contexto de Autenticación (`AuthContext.tsx`)**: Gestiona el estado de la sesión de Supabase Auth y recupera la información del perfil en tiempo real.
+- **Iconografía Nítida**: Sistema 100% basado en íconos vectoriales oficiales de Material Symbols Outlined (sin uso de emojis), garantizando neutralidad visual e integración corporativa.
 
 ### Backend (Supabase)
-- PostgreSQL: Motor de base de datos relacional con Row Level Security (RLS) habilitado.
-- Supabase Auth: Manejo de autenticacion de usuarios mediante JWT y envio de invitaciones por correo electronico.
-- Edge Functions: Funciones escritas en TypeScript sobre el entorno Deno para operaciones administrativas seguras.
+- **PostgreSQL**: Motor de base de datos relacional con Row Level Security (RLS) habilitado de forma estricta.
+- **Procedimientos Almacenados (RPCs)**: Cálculo autoritativo de métricas de BI directamente en PostgreSQL para prevenir fallbacks manipulables en el cliente.
+- **Supabase Auth**: Manejo de autenticación de usuarios mediante JWT y envío de invitaciones por correo electrónico.
+- **Edge Functions**: Funciones escritas en TypeScript sobre el entorno Deno para operaciones administrativas seguras (`invite-user`).
 
 ---
 
-## 3. Estructura de la Base de Datos y Correcciones Realizadas
+## 3. Módulo de Business Intelligence (BI) y Analítica Conductual
 
-A lo largo del desarrollo, se identificaron y subsanaron desajustes entre la definicion de tipos del frontend y las restricciones fisicas de PostgreSQL.
+El módulo de BI proporciona tableros analíticos en tiempo real para directivos, orientadores y docentes, basándose en la ejecución de RPCs con seguridad RLS estricta:
 
-### Tabla public.planteles
-- Llave primaria: id (UUID)
-- Columna clave_centro (text): Es una columna requerida (NOT NULL) que identifica el codigo oficial del centro escolar. Se corrigio el semillado para asegurar su inclusion.
+### Funciones RPC en PostgreSQL
+1. `fn_bi_get_kpis(p_rango, p_generacion, p_grupo_id, p_severidad)`:
+   - Devuelve el Índice de Salud Conductual (ISC promedio), distribución semafórica (verde, naranja, rojo), total de incidencias y alumnos en riesgo prioritario.
+   - Aplica filtrado estricto `WHERE g.plantel_id = v_plantel_id` asegurando que ningún usuario acceda a planteles ajenos.
+2. `fn_bi_get_trend(p_rango, p_generacion, p_grupo_id, p_severidad)`:
+   - Agrupa incidencias por periodo temporal para renderizar gráficas de evolución conductual en Recharts.
+3. `fn_bi_get_categories(p_rango, p_generacion, p_grupo_id, p_severidad)`:
+   - Retorna el desglose de categorías más recurrentes (asistencia, uniformes, disciplina).
+4. `fn_bi_get_risk_students(p_rango, p_generacion, p_grupo_id, p_severidad)`:
+   - Retorna la lista prioritaria de estudiantes con mayor acumulación de incidencias y permite a directivos y orientadores notificar a los tutores.
 
-### Tabla public.usuarios
-- Llave primaria: id (UUID)
-- Relacion: 1:1 con auth.users.
-- Rol: La columna rol tiene una restriccion de tipo CHECK (chk_usuarios_rol) que limita los valores a: 'docente', 'orientador', 'directivo', 'padre', 'alumno' y 'pendiente'.
-- Seguridad: La columna password_hash es requerida por herencia del diseno original pero no es utilizada para autenticar en el frontend. Se inicializa en vacio y se le han revocado los permisos de lectura para roles publicos.
-- Estado: Se anadieron las columnas obligatorias activo (boolean) e intentos_fallidos (integer).
-
-### Tabla public.alumnos
-- Llave primaria: id (UUID)
-- Relacion: Vinculado a public.usuarios via usuario_id.
-- Columna nivel_semaforo: Es una columna generada de solo lectura (GENERATED ALWAYS AS). El sistema calcula el nivel conductual de manera automatica en la base de datos basandose en reglas de negocio y puntajes totales. Se elimino cualquier insercion manual sobre este campo en el frontend y en el script de semillado.
-- Campos clinicos: Se integraron campos de tipo text nullable para tipo_sangre y alergias.
-
-### Tabla public.contactos_emergency
-- Nombre de la tabla: public.contactos_emergency. Inicialmente referenciada como contactos_emergencia en el frontend. Se corrigieron todas las llamadas API y estructuras de datos para usar el nombre correcto.
-
-### Tabla public.categorias_incidencia
-- Restriccion chk_cat_color: La columna color_semaforo solo acepta los valores textuales en espanol: 'verde', 'naranja' y 'rojo'. Cualquier intento de enviar codigos en ingles o hexadecimales lanza una violacion de CHECK constraint. Se realizo la conversion de valores en los formularios de reportes disciplinarios.
+### Componentes de BI
+- `BIAnalyticsDashboard.tsx`: Contenedor principal del módulo.
+- `BIFilterBar.tsx`: Barra de filtrado dinámico (Ventana temporal, Generación, Grupo y Severidad).
+- `BIKpiCard.tsx`: Tarjetas de indicadores clave (ISC, Semáforos, Total Incidencias, Atención Prioritaria).
+- `BITrendChart.tsx` & `BICategoryChart.tsx`: Visualizaciones gráficas en tiempo real.
+- `BIRiskTable.tsx`: Radar de alumnos en atención prioritaria con modal interactivo de **Expediente Disciplinario Completo**.
 
 ---
 
-## 4. Ciclo de Vida de Usuarios y Control de Roles
+## 4. Rediseño de Navegación UX/UI (ClickUp BottomNav & Pestañas Dedicadas)
 
-La gestion de accesos se ha automatizado por completo para mitigar fallas en la asignacion manual de privilegios:
+### Pantalla Inicial Predeterminada (`Centro BI & KPIs`)
+Al iniciar sesión en los portales de **Directivos (`InicioDA.tsx`)** y **Maestros (`InicioMaestro.tsx`)**, la vista predeterminada es automáticamente la pestaña **`[ Centro BI & KPIs ]`**. Toda la información crítica se presenta en el primer pliegue de la pantalla, reduciendo el desplazamiento vertical.
 
-### Flujo de Registro
-1. Invitacion: Un directivo introduce el correo, nombre, apellido y rol del nuevo usuario en el panel administrativo.
-2. Edge Function: El panel envia los datos a la Edge Function invite-user.
-3. Supabase Auth: La Edge Function ejecuta la creacion del usuario en el esquema interno auth.users e inyecta plantel_id, nombre y apellido en la metadata del usuario (raw_user_meta_data).
-4. Trigger en PostgreSQL: Al insertarse la fila en auth.users, el trigger on_auth_user_created ejecuta la funcion public.handle_new_user(). Esta funcion inserta el perfil correspondiente en public.usuarios con:
-   - rol = 'pendiente'
-   - activo = false
-   - plantel_id obtenido de la metadata de Auth (validado mediante una expresion regular en PostgreSQL para evitar errores de parseo de UUID).
+### Barra de Navegación Inferior Flotante Móvil (`BottomNav.tsx`)
+Inspirada en la aplicación móvil de ClickUp, proporciona acceso rápido en pantallas pequeñas:
+- **Exclusión Mutua por Viewport**:
+  - **Escritorio ($\ge 768\text{px}$)**: `BottomNav` se oculta automáticamente (`display: none !important`) operando el sidebar lateral.
+  - **Móvil ($< 768\text{px}$)**: El sidebar lateral y el menú hamburguesa se ocultan, pasando la responsabilidad de navegación a la `BottomNav`.
+- **Jerarquía de Capas (`z-index: 150`)**: Posicionada por encima del canvas principal (`1`) y del topbar (`30`), pero por debajo de modales (`200`) y alertas (`250`).
+- **Botón Central Elevado (+)**: Despliega un menú flotante de acciones rápidas filtradas por el rol real del usuario (`useAuth()`).
+- **Reserva de Espacio**: Aplica `padding-bottom: 88px` en los contenedores principales para evitar que la barra flotante tape contenido.
 
-### Proceso de Aprobacion y Activacion
-- Pantalla de Espera: Cuando un usuario invitado acepta la invitacion e inicia sesion por primera vez, su sesion de Auth se valida, pero al consultar public.usuarios el sistema detecta que activo es false o que su rol es 'pendiente'. El AuthContext de React detecta este estado y fuerza su rol a 'pendiente', obligando a la aplicacion a redirigirlo a la ruta publica protegida /pendiente-activacion.
-- Panel de Aprobacion: El directivo del plantel visualiza al nuevo usuario en la tabla de Gestion de Usuarios con el estatus "Pendiente". El directivo puede:
-   - Cambiar el rol asignado.
-   - Activar el usuario (estableciendo activo = true). En ese instante, el usuario puede refrescar su sesion y acceder al panel que le corresponde segun su rol.
-   - Suspender o desactivar la cuenta (estableciendo activo = false), lo cual redirige al usuario inmediatamente de vuelta a la pantalla de espera de activacion.
-
----
-
-## 5. Especificacion de Edge Functions
-
-### Funcion invite-user
-- Endpoint: POST /functions/v1/invite-user
-- Seguridad:
-  - Lee el header Authorization del solicitante para validar su JWT.
-  - Verifica que el usuario que llama a la funcion sea un 'directivo' autenticado.
-  - Valida que el directivo y el invitado correspondan al mismo plantel_id, evitando que directivos de otros planteles creen cuentas fuera de su demarcacion.
-  - CORS: Restringido al origen del frontend provisto por la variable de entorno SITE_URL para evitar ataques de Cross-Origin Resource Sharing.
-  - Sanitizacion: Remueve el UUID del usuario invitado de la respuesta JSON exitosa para minimizar la exposicion de identificadores.
-
-### Funcion sai-sync (Stub)
-- Endpoint: POST /functions/v1/sai-sync
-- Proposito: Servira como puente para la sincronizacion de datos provenientes del Sistema de Administracion Institucional (SAI) de CONALEP tras el periodo piloto.
-- Estatus: Retorna 501 (Not Implemented) describiendo el contrato de integracion, mapeo de carreras, semestres, alumnos y docentes.
+### Sistema de Pastillas de Organización del Historial (`Pill Tabs`)
+En todas las vistas de expediente e historial conductual (`BIRiskTable.tsx`, `Historialreporteda.tsx`, `HistorialReportesM.tsx`, `History.tsx`), la bitácora se organiza mediante **pastillas o fichas segmentadas con íconos vectoriales de Material Symbols (sin emojis)**:
+- `[list_alt] Todos`: Bitácora cronológica completa.
+- `[check_circle] Positivos / Méritos`: Reconocimientos y puntos a favor.
+- `[warning] Faltas Leves`: Advertencias o faltas de menor severidad.
+- `[error] Faltas Críticas`: Reportes graves y sanciones de atención prioritaria.
 
 ---
 
-## 6. Auditoria de Seguridad y Cumplimiento OWASP Top 10
+## 5. Diseño y Posicionamiento de Pantalla de Login (`Login.css`)
 
-Se realizo una auditoria de seguridad a nivel de base de datos e inspeccion estatica de codigo fuente.
-
-### OWASP A01: Broken Access Control
-- Aislamiento RLS: Se confirmo que las 23 tablas de la base de datos publica tienen Row Level Security habilitado. El acceso de lectura/escritura anónimo devuelve 0 registros en todas las tablas.
-- Politicas de Ownership: Se crearon politicas RLS explicitas para asegurar que:
-  - Cada usuario autenticado solo pueda ver o modificar sus propios registros en public.refresh_tokens.
-  - Solo los directivos del mismo plantel puedan leer el historico en public.audit_log, bloqueando cualquier escritura directa de clientes externos.
-  - Los alumnos y padres solo tengan visibilidad de sus propios datos conductuales.
-  - Los docentes solo puedan ver a los alumnos y registros disciplinarios de los grupos donde imparten materias.
-  - Los directivos y orientadores esten restringidos a consultar unicamente datos de su propio plantel.
-- Prevencion de Condiciones de Carrera (Asignacionestatus.tsx): En el proceso de guardado de pase de lista de asistencia y participacion, se clona el arreglo de estados en un snapshot local antes de ejecutar el bucle asincrono. Esto asegura que si el docente presiona el boton "Deshacer" mientras el guardado esta en progreso, no se alteren los datos en transmision.
-
-### OWASP A02: Cryptographic Failures
-- Cifrado en Transito: Supabase fuerza HTTPS para todas las consultas.
-- Exposicion del Hash: Se aplico un comando REVOKE SELECT sobre la columna password_hash en la tabla public.usuarios para los roles publicos de PostgREST, garantizando que el hash no viaje al frontend en ninguna peticion de lectura.
-- Variables de Entorno: Se configuro el archivo .gitignore en la raiz del proyecto para excluir .env, .env_Sup y archivos .env locales del control de versiones.
-
-### OWASP A07: Identification and Authentication Failures
-- Verificacion de Captcha: Se forzo la evaluacion del checkbox de verificacion humana en el Login.tsx antes de realizar la llamada de autenticacion a Supabase.
-- Cuentas Bloqueadas: La consulta en AuthContext valida la columna bloqueado_hasta de public.usuarios para bloquear el inicio de sesion a cuentas bloqueadas temporalmente por intentos fallidos de contraseña.
+Se aplicó un rediseño responsivo simétrico en **[Login.css](file:///c:/Users/User/Documents/SSC/frontend/src/pages/Login.css)**:
+- **Centrado Vertical Simétrico**: Utiliza `margin: auto` en `.login-intro-content` (panel institucional izquierdo) y en `.login-form-wrapper` (panel de acceso derecho). Ambas tarjetas se ubican exactamente al centro vertical del viewport.
+- **Protección de Modo Oscuro**: Se estableció `color-scheme: light;` en `.login-page` para impedir que preferencias del sistema operativo inviertan los colores de los inputs, garantizando legibilidad en todo momento.
+- **Proporciones en Escritorio**: Distribución 50% / 50% en pantallas $\ge 768\text{px}$ con padding adaptativo que evita la compresión del formulario en pantallas medianas.
 
 ---
 
-## 7. Instrucciones de Despliegue y Pruebas
+## 6. Estructura de la Base de Datos
+
+### Tabla `public.planteles`
+- Llave primaria: `id` (UUID).
+- Columna `clave_centro` (`text` NOT NULL): Código oficial del centro escolar.
+
+### Tabla `public.usuarios`
+- Llave primaria: `id` (UUID), relación 1:1 con `auth.users`.
+- Restricción `chk_usuarios_rol`: `'docente'`, `'orientador'`, `'directivo'`, `'padre'`, `'alumno'` y `'pendiente'`.
+- Ocultamiento de Hash: Se revocó el permiso `SELECT` sobre `password_hash` para roles públicos.
+- Estado: Columnas `activo` (boolean) e `intentos_fallidos` (integer).
+
+### Tabla `public.alumnos`
+- Relación vinculada a `public.usuarios` vía `usuario_id`.
+- Columna `nivel_semaforo`: Columna generada de solo lectura (`GENERATED ALWAYS AS`).
+
+### Tabla `public.categorias_incidencia`
+- Restricción `chk_cat_color`: Acepta únicamente `'verde'`, `'naranja'` y `'rojo'`.
+
+---
+
+## 7. Ciclo de Vida de Usuarios y Control de Roles
+
+1. **Invitación**: Un directivo ingresa el correo y rol desde el panel administrativo.
+2. **Edge Function `invite-user`**: Vía API administrativa de Supabase Auth, crea la cuenta en `auth.users` e inyecta la metadata.
+3. **Trigger PostgreSQL (`handle_new_user`)**: Crea el registro en `public.usuarios` con `rol = 'pendiente'` y `activo = false`.
+4. **Validación en Frontend**: Usuarios inactivos son redirigidos a `/pendiente-activacion` hasta que un directivo los active desde la interfaz.
+
+---
+
+## 8. Instrucciones de Despliegue y Pruebas
 
 ### Despliegue de Base de Datos
-Ejecutar los archivos de migracion en el SQL Editor de Supabase en el siguiente orden:
-1. supabase/migrations/20260712000000_init_ssc.sql (Creacion de tablas y periodos escolares)
-2. supabase/migrations/20260712010000_user_profile_trigger.sql (Trigger de auto-perfil y politicas de actualizacion)
-3. supabase/migrations/20260712020000_security_fixes.sql (Politicas RLS de seguridad, ocultamiento de hash y regexp del trigger)
+Ejecutar las migraciones en el SQL Editor de Supabase en el siguiente orden:
+1. `supabase/migrations/20260712000000_init_ssc.sql`
+2. `supabase/migrations/20260712010000_user_profile_trigger.sql`
+3. `supabase/migrations/20260712020000_security_fixes.sql`
+4. `supabase/migrations/20260721200000_bi_module_rpcs.sql` (RPCs de BI y RLS)
 
-### Semillado de Prueba
-Ejecutar el contenido de supabase/seed.sql en el SQL Editor para inyectar datos de prueba consistentes y compatibles con todas las restricciones de integridad referencial.
+### Compilación y Ejecución del Frontend
+```bash
+# 1. Instalar dependencias
+pnpm install
 
-### Ejecucion del Frontend
-1. Instalar dependencias en la carpeta frontend:
-   ```bash
-   pnpm install
-   ```
-2. Compilar el proyecto para verificar que no existan errores de TypeScript o configuracion:
-   ```bash
-   pnpm build
-   ```
-3. Ejecutar el servidor de desarrollo:
-   ```bash
-   pnpm dev
-   ```
+# 2. Verificar compilación TypeScript y bundle de Vite
+pnpm build
+
+# 3. Ejecutar servidor de desarrollo
+pnpm dev
+```

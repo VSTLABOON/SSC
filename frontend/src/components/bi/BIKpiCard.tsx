@@ -11,9 +11,10 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading }) =
     return (
       <div className="bi-kpi-grid">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="bi-kpi-card" style={{ opacity: 0.6 }}>
-            <p className="bi-kpi-title">Cargando métricas...</p>
-            <p className="bi-kpi-value">--</p>
+          <div key={i} className="bi-kpi-card">
+            <div className="skeleton-box" style={{ height: '16px', width: '60%', marginBottom: '12px' }} />
+            <div className="skeleton-box" style={{ height: '32px', width: '40%', marginBottom: '12px' }} />
+            <div className="skeleton-box" style={{ height: '14px', width: '80%' }} />
           </div>
         ))}
       </div>

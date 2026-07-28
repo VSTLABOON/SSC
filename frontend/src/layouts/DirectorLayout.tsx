@@ -16,6 +16,8 @@ interface NavItem {
 
 
 import { BottomNav } from '../components/navigation/BottomNav';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { NotificationCenter } from '../components/NotificationCenter';
 
 export default function DirectorLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -171,7 +173,9 @@ export default function DirectorLayout() {
                 : 'Panel Directivo'}
             </h1>
           </div>
-          <div className="grm-topbar-right">
+          <div className="grm-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ThemeToggle />
+            <NotificationCenter />
             <div className="grm-topbar-divider" />
             <div className="grm-topbar-institution">
               <span className="grm-topbar-institution-label">Plantel Puebla I</span>
