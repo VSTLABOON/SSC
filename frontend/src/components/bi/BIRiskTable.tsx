@@ -2,27 +2,13 @@ import React, { useState } from 'react';
 import { sendPreventiveAlertToTutor } from '../../services/bi';
 import type { BIRiskStudent } from '../../services/bi';
 import { useAuth } from '../../context/AuthContext';
-import { getIncidenciasDelAlumno } from '../../services/incidencias';
 import InlineAlert from '../InlineAlert';
+import { StudentExpedienteModal } from './StudentExpedienteModal';
 
 interface BIRiskTableProps {
   students: BIRiskStudent[];
   loading?: boolean;
 }
-
-interface StudentIncident {
-  id: string;
-  descripcion: string;
-  lugar: string;
-  impacto_puntos: number;
-  created_at: string;
-  categorias_incidencia: {
-    nombre: string;
-    color_semaforo: string;
-  } | null;
-}
-
-type ModalFilterType = 'all' | 'verde' | 'naranja' | 'rojo';
 
 export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) => {
   const { session } = useAuth();
@@ -31,32 +17,16 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
   
   // Estado para el modal de expediente disciplinario del alumno
   const [selectedStudent, setSelectedStudent] = useState<BIRiskStudent | null>(null);
-  const [studentIncidents, setStudentIncidents] = useState<StudentIncident[]>([]);
-  const [loadingIncidents, setLoadingIncidents] = useState(false);
-  const [modalFilter, setModalFilter] = useState<ModalFilterType>('all');
 
-  async function handleOpenExpediente(student: BIRiskStudent) {
+  function handleOpenExpediente(student: BIRiskStudent) {
     setSelectedStudent(student);
-    setLoadingIncidents(true);
-    setStudentIncidents([]);
-    setModalFilter('all');
-    try {
-      const data = await getIncidenciasDelAlumno(student.alumno_id);
-      setStudentIncidents((data || []) as unknown as StudentIncident[]);
-    } catch (err) {
-      console.error('Error al obtener incidencias del alumno:', err);
-    } finally {
-      setLoadingIncidents(false);
-    }
   }
 
   function handleCloseExpediente() {
     setSelectedStudent(null);
-    setStudentIncidents([]);
-    setModalFilter('all');
   }
 
-  async function handleAlertTutor(student: BIRiskStudent) {
+  async function handleAlertTutor(student: { alumno_id: string; nombre_completo: string; grupo_nombre: string; puntos_totales: number; nivel_semaforo: string }) {
     if (!session?.user?.id) return;
     setSendingId(student.alumno_id);
     setFeedback(null);
@@ -80,20 +50,6 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
       setSendingId(null);
     }
   }
-
-  // Filtrado por pastillas dentro del modal
-  const positiveCount = studentIncidents.filter(i => (i.categorias_incidencia?.color_semaforo === 'verde' || i.impacto_puntos > 0)).length;
-  const warningCount = studentIncidents.filter(i => (i.categorias_incidencia?.color_semaforo === 'naranja' && i.impacto_puntos <= 0)).length;
-  const criticalCount = studentIncidents.filter(i => (i.categorias_incidencia?.color_semaforo === 'rojo')).length;
-
-  const filteredIncidents = studentIncidents.filter(inc => {
-    if (modalFilter === 'all') return true;
-    const color = inc.categorias_incidencia?.color_semaforo || 'verde';
-    if (modalFilter === 'verde') return color === 'verde' || inc.impacto_puntos > 0;
-    if (modalFilter === 'naranja') return color === 'naranja' && inc.impacto_puntos <= 0;
-    if (modalFilter === 'rojo') return color === 'rojo';
-    return true;
-  });
 
   if (loading) {
     return (
@@ -198,217 +154,14 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
         </div>
       )}
 
-      {/* Modal de Expediente Disciplinario y Salud Conductual con Pastillas de Organización */}
-      {selectedStudent && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 200,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={handleCloseExpediente}
-        >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '20px',
-              maxWidth: '720px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              zIndex: 210,
-              padding: '24px',
-              position: 'relative',
-              animation: 'fabPopUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header del Modal */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#eff6ff', color: '#204785', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px' }}>
-                  {selectedStudent.nombre_completo.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>{selectedStudent.nombre_completo}</h3>
-                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>
-                    Matrícula: <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>{selectedStudent.matricula}</code> • Grupo: <strong>{selectedStudent.grupo_nombre}</strong>
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseExpediente}
-                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
-              </button>
-            </div>
-
-            {/* Métrica de Salud del Alumno */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Puntaje Actual</span>
-                <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 800, color: selectedStudent.puntos_totales < 70 ? '#dc2626' : '#1e293b' }}>
-                  {selectedStudent.puntos_totales} / 100 pts
-                </p>
-              </div>
-
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Estado de Semáforo</span>
-                <div style={{ marginTop: '4px' }}>
-                  <span className={`bi-semaforo-chip bi-semaforo-chip--${selectedStudent.nivel_semaforo}`}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
-                      {selectedStudent.nivel_semaforo === 'verde' ? 'check_circle' : selectedStudent.nivel_semaforo === 'naranja' ? 'warning' : 'error'}
-                    </span>
-                    <span style={{ textTransform: 'capitalize', marginLeft: '4px' }}>{selectedStudent.nivel_semaforo}</span>
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Total Incidencias</span>
-                <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>
-                  {selectedStudent.total_incidencias} Reportes
-                </p>
-              </div>
-            </div>
-
-            {/* Historial de Incidencias / Expediente */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
-                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span className="material-symbols-outlined" style={{ color: '#204785', fontSize: '18px' }}>history</span>
-                  Expediente y Bitácora Conductual
-                </h4>
-              </div>
-
-              {/* Pastillas de Organización del Expediente */}
-              <div className="dedicated-tabs-container" style={{ marginBottom: '16px', background: '#f1f5f9', padding: '4px', borderRadius: '12px', gap: '4px' }}>
-                <button
-                  type="button"
-                  className={`dedicated-tab-btn ${modalFilter === 'all' ? 'dedicated-tab-btn--active' : ''}`}
-                  onClick={() => setModalFilter('all')}
-                  style={{ padding: '6px 12px', fontSize: '12px' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>list_alt</span>
-                  Todos ({studentIncidents.length})
-                </button>
-                <button
-                  type="button"
-                  className={`dedicated-tab-btn ${modalFilter === 'verde' ? 'dedicated-tab-btn--active' : ''}`}
-                  onClick={() => setModalFilter('verde')}
-                  style={{ padding: '6px 12px', fontSize: '12px' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#10b981' }}>check_circle</span>
-                  Positivos ({positiveCount})
-                </button>
-                <button
-                  type="button"
-                  className={`dedicated-tab-btn ${modalFilter === 'naranja' ? 'dedicated-tab-btn--active' : ''}`}
-                  onClick={() => setModalFilter('naranja')}
-                  style={{ padding: '6px 12px', fontSize: '12px' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#f59e0b' }}>warning</span>
-                  Leves ({warningCount})
-                </button>
-                <button
-                  type="button"
-                  className={`dedicated-tab-btn ${modalFilter === 'rojo' ? 'dedicated-tab-btn--active' : ''}`}
-                  onClick={() => setModalFilter('rojo')}
-                  style={{ padding: '6px 12px', fontSize: '12px' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#ef4444' }}>error</span>
-                  Críticos ({criticalCount})
-                </button>
-              </div>
-
-              {loadingIncidents ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Cargando expediente...</div>
-              ) : filteredIncidents.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  No se encontraron registros de este tipo en el historial del alumno.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {filteredIncidents.map(inc => (
-                    <div
-                      key={inc.id}
-                      style={{
-                        padding: '14px 16px',
-                        borderRadius: '12px',
-                        background: '#ffffff',
-                        border: '1px solid #e2e8f0',
-                        borderLeft: `4px solid ${inc.categorias_incidencia?.color_semaforo === 'rojo' ? '#ef4444' : inc.categorias_incidencia?.color_semaforo === 'naranja' ? '#f59e0b' : '#10b981'}`,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>
-                          {inc.categorias_incidencia?.nombre || 'Incidencia General'}
-                        </span>
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>
-                          {new Date(inc.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </span>
-                      </div>
-                      <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#475569', lineHeight: 1.4 }}>
-                        {inc.descripcion}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', color: '#64748b' }}>
-                        <span>Lugar: {inc.lugar || 'No especificado'}</span>
-                        <span style={{ fontWeight: 600, color: inc.impacto_puntos > 0 ? '#10b981' : '#ef4444' }}>
-                          Impacto: {inc.impacto_puntos > 0 ? `+${inc.impacto_puntos}` : inc.impacto_puntos} pts
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer con Botón de Alerta */}
-            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button
-                type="button"
-                className="bi-btn-reset"
-                onClick={() => window.print()}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                title="Imprimir o guardar expediente en PDF"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>print</span>
-                Imprimir Ficha PDF
-              </button>
-              <button
-                type="button"
-                className="bi-btn-reset"
-                onClick={handleCloseExpediente}
-              >
-                Cerrar
-              </button>
-              <button
-                type="button"
-                className="bi-btn-alert-tutor"
-                disabled={sendingId === selectedStudent.alumno_id}
-                onClick={() => handleAlertTutor(selectedStudent)}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-                  {sendingId === selectedStudent.alumno_id ? 'sync' : 'notifications_active'}
-                </span>
-                {sendingId === selectedStudent.alumno_id ? 'Enviando...' : 'Alertar Tutor'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Reutilizable de Expediente (Renderizado vía Portal en document.body para Centrado Instantáneo) */}
+      <StudentExpedienteModal
+        isOpen={!!selectedStudent}
+        student={selectedStudent}
+        onClose={handleCloseExpediente}
+        onAlertTutor={handleAlertTutor}
+        sendingAlertId={sendingId}
+      />
     </div>
   );
 };

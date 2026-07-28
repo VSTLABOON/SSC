@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getIncidenciasPorDocente } from '../../services/incidencias';
+import { StudentExpedienteModal } from '../../components/bi/StudentExpedienteModal';
+import type { StudentExpedienteData } from '../../components/bi/StudentExpedienteModal';
+import { sendPreventiveAlertToTutor } from '../../services/bi';
+import InlineAlert from '../../components/InlineAlert';
 import './HistorialReportesM.css';
 
 interface IncidentFromDB {
@@ -12,6 +16,8 @@ interface IncidentFromDB {
   alumno_id: string;
   alumnos: {
     matricula: string;
+    puntos_totales?: number;
+    nivel_semaforo?: string;
     usuarios: {
       nombre: string;
       apellido: string;
@@ -35,6 +41,8 @@ interface ProcessedStudent {
   matricula: string;
   career: string;
   group: string;
+  puntosTotales: number;
+  semaforo: string;
   reportCount: number;
   reportLevel: 'error' | 'warning' | 'info';
   initials: string;
@@ -42,15 +50,14 @@ interface ProcessedStudent {
   reports: IncidentFromDB[];
 }
 
-type DetailFilterType = 'all' | 'verde' | 'naranja' | 'rojo';
-
 export default function HistorialReportesM() {
   const { session } = useAuth();
   const [incidents, setIncidents] = useState<IncidentFromDB[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<ProcessedStudent | null>(null);
-  const [detailFilter, setDetailFilter] = useState<DetailFilterType>('all');
+  const [sendingAlertId, setSendingAlertId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -78,6 +85,8 @@ export default function HistorialReportesM() {
       const studentRaw = inc.alumnos;
       const student = (Array.isArray(studentRaw) ? studentRaw[0] : studentRaw) as {
         matricula?: string;
+        puntos_totales?: number;
+        nivel_semaforo?: string;
         usuarios?: { nombre: string; apellido: string } | null;
         grupos?: {
           nombre: string;
@@ -103,6 +112,8 @@ export default function HistorialReportesM() {
           matricula: student.matricula || 'N/A',
           career: careerName,
           group: groupObj?.nombre || 'Sin Grupo',
+          puntosTotales: student.puntos_totales ?? 100,
+          semaforo: student.nivel_semaforo || 'verde',
           reportCount: 0,
           reportLevel: 'info',
           initials,
@@ -136,38 +147,41 @@ export default function HistorialReportesM() {
     );
   }, [studentsList, searchQuery]);
 
-  function handleShowDetail(student: ProcessedStudent) {
-    setSelectedStudent(student);
-    setDetailFilter('all');
+  async function handleAlertTutor(studentData: StudentExpedienteData) {
+    if (!session?.user?.id) return;
+    setSendingAlertId(studentData.alumno_id);
+    setFeedback(null);
+
+    try {
+      const mensaje = `Estimado tutor: Se le informa que el estudiante ${studentData.nombre_completo} (${studentData.grupo_nombre}) registra incidencias en su bitácora conductual. Se solicita su seguimiento continuo.`;
+      
+      await sendPreventiveAlertToTutor(studentData.alumno_id, mensaje, session.user.id);
+
+      setFeedback({
+        type: 'success',
+        message: `Alerta preventiva enviada con éxito al tutor de ${studentData.nombre_completo}.`,
+      });
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'No se pudo enviar la alerta al tutor.';
+      setFeedback({
+        type: 'error',
+        message: errMsg,
+      });
+    } finally {
+      setSendingAlertId(null);
+    }
   }
 
-  function handleHideDetail() {
-    setSelectedStudent(null);
-    setDetailFilter('all');
-  }
-
-  function formatDate(dateStr: string) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-  }
-
-  // Filtrado de incidencias del alumno por pastillas
-  const positiveCount = selectedStudent?.reports.filter(r => (r.categorias_incidencia?.color_semaforo === 'verde' || r.impacto_puntos > 0)).length || 0;
-  const warningCount = selectedStudent?.reports.filter(r => (r.categorias_incidencia?.color_semaforo === 'naranja' && r.impacto_puntos <= 0)).length || 0;
-  const criticalCount = selectedStudent?.reports.filter(r => (r.categorias_incidencia?.color_semaforo === 'rojo')).length || 0;
-
-  const filteredDetailReports = useMemo(() => {
-    if (!selectedStudent) return [];
-    return selectedStudent.reports.filter(r => {
-      if (detailFilter === 'all') return true;
-      const color = r.categorias_incidencia?.color_semaforo || 'verde';
-      if (detailFilter === 'verde') return color === 'verde' || r.impacto_puntos > 0;
-      if (detailFilter === 'naranja') return color === 'naranja' && r.impacto_puntos <= 0;
-      if (detailFilter === 'rojo') return color === 'rojo';
-      return true;
-    });
-  }, [selectedStudent, detailFilter]);
+  const modalStudentData: StudentExpedienteData | null = selectedStudent ? {
+    alumno_id: selectedStudent.id,
+    nombre_completo: selectedStudent.name,
+    matricula: selectedStudent.matricula,
+    grupo_nombre: selectedStudent.group,
+    carrera_nombre: selectedStudent.career,
+    nivel_semaforo: selectedStudent.semaforo || (selectedStudent.reportLevel === 'error' ? 'rojo' : selectedStudent.reportLevel === 'warning' ? 'naranja' : 'verde'),
+    puntos_totales: selectedStudent.puntosTotales,
+    total_incidencias: selectedStudent.reportCount,
+  } : null;
 
   if (loading) {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando bitácora disciplinaria...</div>;
@@ -181,209 +195,91 @@ export default function HistorialReportesM() {
           <h2 className="hrm-page-title">Historial de Reportes</h2>
           <p className="hrm-page-subtitle">Registro de incidencias de tus alumnos asignados.</p>
         </div>
-        {!selectedStudent && (
-          <div className="hrm-search-wrap">
-            <span className="material-symbols-outlined hrm-search-icon">search</span>
-            <input
-              className="hrm-search-input"
-              placeholder="Buscar por nombre o matrícula..."
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-          </div>
-        )}
+        <div className="hrm-search-wrap">
+          <span className="material-symbols-outlined hrm-search-icon">search</span>
+          <input
+            className="hrm-search-input"
+            placeholder="Buscar por nombre o matrícula..."
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
+      {feedback && (
+        <div style={{ marginBottom: '16px' }}>
+          <InlineAlert
+            type={feedback.type}
+            message={feedback.message}
+            onClose={() => setFeedback(null)}
+          />
+        </div>
+      )}
+
       {/* List view */}
-      {!selectedStudent && (
-        <div className="hrm-table-container animate-fade-in">
-          <div className="hrm-table-scroll">
-            <table className="hrm-table">
-              <thead>
-                <tr>
-                  <th>Nombre del Alumno</th>
-                  <th>Matrícula</th>
-                  <th>Grupo</th>
-                  <th>Carrera</th>
-                  <th>Reportes Totales</th>
-                  <th className="hrm-th-right">Ver Detalles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStudents.length > 0 ? (
-                  filteredStudents.map(s => (
-                    <tr
-                      key={s.id}
-                      className="hrm-tr-clickable"
-                      onClick={() => handleShowDetail(s)}
-                    >
-                      <td>
-                        <div className="hrm-student-cell">
-                          <div className={`hrm-avatar hrm-avatar--${s.avatarTone}`}>{s.initials}</div>
-                          <span className="hrm-student-name">{s.name}</span>
-                        </div>
-                      </td>
-                      <td className="hrm-td-muted">{s.matricula}</td>
-                      <td className="hrm-td-muted">{s.group}</td>
-                      <td className="hrm-td-muted">{s.career}</td>
-                      <td>
-                        <span className={`hrm-report-badge hrm-report-badge--${s.reportLevel}`}>
-                          {s.reportCount} {s.reportCount === 1 ? 'Reporte' : 'Reportes'}
-                        </span>
-                      </td>
-                      <td className="hrm-td-action">
-                        <span className="material-symbols-outlined hrm-chevron">chevron_right</span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="hrm-td-empty" style={{ textAlign: 'center', padding: '32px' }}>
-                      {incidents.length === 0
-                        ? 'No se han registrado reportes disciplinarios.'
-                        : 'No se encontraron alumnos con los criterios de búsqueda.'}
+      <div className="hrm-table-container animate-fade-in">
+        <div className="hrm-table-scroll">
+          <table className="hrm-table">
+            <thead>
+              <tr>
+                <th>Nombre del Alumno</th>
+                <th>Matrícula</th>
+                <th>Grupo</th>
+                <th>Carrera</th>
+                <th>Reportes Totales</th>
+                <th className="hrm-th-right">Ver Expediente Modal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map(s => (
+                  <tr
+                    key={s.id}
+                    className="hrm-tr-clickable"
+                    onClick={() => setSelectedStudent(s)}
+                  >
+                    <td>
+                      <div className="hrm-student-cell">
+                        <div className={`hrm-avatar hrm-avatar--${s.avatarTone}`}>{s.initials}</div>
+                        <span className="hrm-student-name">{s.name}</span>
+                      </div>
+                    </td>
+                    <td className="hrm-td-muted">{s.matricula}</td>
+                    <td className="hrm-td-muted">{s.group}</td>
+                    <td className="hrm-td-muted">{s.career}</td>
+                    <td>
+                      <span className={`hrm-report-badge hrm-report-badge--${s.reportLevel}`}>
+                        {s.reportCount} {s.reportCount === 1 ? 'Reporte' : 'Reportes'}
+                      </span>
+                    </td>
+                    <td className="hrm-td-action">
+                      <span className="material-symbols-outlined hrm-chevron">visibility</span>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="hrm-td-empty" style={{ textAlign: 'center', padding: '32px' }}>
+                    {incidents.length === 0
+                      ? 'No se han registrado reportes disciplinarios.'
+                      : 'No se encontraron alumnos con los criterios de búsqueda.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
-      {/* Detail view con Pastillas de Organización */}
-      {selectedStudent && (
-        <div className="hrm-detail animate-fade-in">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-            <button className="hrm-back-btn" onClick={handleHideDetail} style={{ margin: 0 }}>
-              <span className="material-symbols-outlined">arrow_back</span>
-              Regresar al listado consolidado
-            </button>
-            <button
-              type="button"
-              className="hrm-back-btn"
-              onClick={() => window.print()}
-              style={{ margin: 0, background: '#ffffff', border: '1px solid #e2e8f0', color: '#204785' }}
-              title="Imprimir expediente del alumno"
-            >
-              <span className="material-symbols-outlined">print</span>
-              Imprimir Ficha PDF
-            </button>
-          </div>
-
-          {/* Student card */}
-          <div className="hrm-student-card">
-            <div className="hrm-student-card__left">
-              <div className={`hrm-detail-avatar hrm-avatar--${selectedStudent.avatarTone}`}>
-                {selectedStudent.initials}
-              </div>
-              <div>
-                <h2 className="hrm-detail-name">{selectedStudent.name}</h2>
-                <div className="hrm-detail-meta">
-                  <span className="hrm-detail-meta__item">
-                    <span className="material-symbols-outlined hrm-meta-icon">id_card</span>
-                    Matrícula: {selectedStudent.matricula}
-                  </span>
-                  <span className="hrm-detail-meta__item">
-                    <span className="material-symbols-outlined hrm-meta-icon">groups</span>
-                    Grupo: {selectedStudent.group}
-                  </span>
-                  <span className="hrm-detail-meta__item">
-                    <span className="material-symbols-outlined hrm-meta-icon">school</span>
-                    Carrera: {selectedStudent.career}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="hrm-student-card__right">
-              <span className={`hrm-report-badge hrm-report-badge--large hrm-report-badge--${selectedStudent.reportLevel}`}>
-                {selectedStudent.reportCount} {selectedStudent.reportCount === 1 ? 'Reporte' : 'Reportes'}
-              </span>
-            </div>
-          </div>
-
-          {/* Timeline of reports */}
-          <div className="hrm-timeline-container">
-            <h3 className="hrm-timeline-title">Bitácora Histórica</h3>
-
-            {/* Pastillas de Organización del Historial (Pill Tabs) */}
-            <div className="dedicated-tabs-container" style={{ margin: '14px 0 20px', background: '#ffffff', padding: '6px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              <button
-                type="button"
-                className={`dedicated-tab-btn ${detailFilter === 'all' ? 'dedicated-tab-btn--active' : ''}`}
-                onClick={() => setDetailFilter('all')}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>list_alt</span>
-                Todos ({selectedStudent.reports.length})
-              </button>
-              <button
-                type="button"
-                className={`dedicated-tab-btn ${detailFilter === 'verde' ? 'dedicated-tab-btn--active' : ''}`}
-                onClick={() => setDetailFilter('verde')}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#10b981' }}>check_circle</span>
-                Positivos / Méritos ({positiveCount})
-              </button>
-              <button
-                type="button"
-                className={`dedicated-tab-btn ${detailFilter === 'naranja' ? 'dedicated-tab-btn--active' : ''}`}
-                onClick={() => setDetailFilter('naranja')}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#f59e0b' }}>warning</span>
-                Faltas Leves ({warningCount})
-              </button>
-              <button
-                type="button"
-                className={`dedicated-tab-btn ${detailFilter === 'rojo' ? 'dedicated-tab-btn--active' : ''}`}
-                onClick={() => setDetailFilter('rojo')}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#ef4444' }}>error</span>
-                Faltas Críticas ({criticalCount})
-              </button>
-            </div>
-
-            {filteredDetailReports.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '32px', color: '#64748b', background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                No hay incidencias registradas de este tipo para el estudiante.
-              </div>
-            ) : (
-              <div className="hrm-timeline">
-                {filteredDetailReports.map((report) => {
-                  const isCritical = report.categorias_incidencia?.color_semaforo === 'rojo';
-                  const isWarning = report.categorias_incidencia?.color_semaforo === 'naranja';
-                  let dotClass = 'hrm-timeline-dot--info';
-                  if (isCritical) dotClass = 'hrm-timeline-dot--danger';
-                  else if (isWarning) dotClass = 'hrm-timeline-dot--warning';
-
-                  return (
-                    <div className="hrm-timeline-item" key={report.id}>
-                      <div className={`hrm-timeline-dot ${dotClass}`} />
-                      <div className="hrm-timeline-content">
-                        <div className="hrm-timeline-header">
-                          <h4 className="hrm-timeline-item-title">
-                            {report.categorias_incidencia?.nombre || 'Incidencia General'}
-                          </h4>
-                          <span className="hrm-timeline-date">{formatDate(report.created_at)}</span>
-                        </div>
-                        <p className="hrm-timeline-desc">
-                          {report.descripcion}
-                        </p>
-                        <div className="hrm-timeline-meta">
-                          <span className="hrm-timeline-meta-label">Lugar: {report.lugar}</span>
-                          <span className="hrm-timeline-meta-label" style={{ color: report.impacto_puntos > 0 ? '#22c55e' : '#ba1a1a' }}>
-                            Impacto: {report.impacto_puntos > 0 ? `+${report.impacto_puntos}` : report.impacto_puntos} pts
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Modal Dedicado del Alumno (Renderizado vía Portal en document.body para Centrado Instantáneo) */}
+      <StudentExpedienteModal
+        isOpen={!!selectedStudent}
+        student={modalStudentData}
+        onClose={() => setSelectedStudent(null)}
+        onAlertTutor={handleAlertTutor}
+        sendingAlertId={sendingAlertId}
+      />
     </div>
   );
 }

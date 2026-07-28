@@ -42,3 +42,7 @@ export async function getGruposDePlantel(plantelId: string): Promise<Array<{ id:
   if (error) throw error;
   return data || [];
 }
+
+export async function getGeneracionesDisponibles(): Promise<string[]> {
+  return ['2023-2026', '2024-2027', '2025-2028'];
+}
