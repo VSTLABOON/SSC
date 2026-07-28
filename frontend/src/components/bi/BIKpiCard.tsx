@@ -4,9 +4,10 @@ import type { BIKPIStats } from '../../services/bi';
 interface BIKpiCardProps {
   stats: BIKPIStats | null;
   loading: boolean;
+  onKpiClick?: (type: 'kpi_isc' | 'kpi_semaforo' | 'kpi_incidencias' | 'kpi_riesgo') => void;
 }
 
-export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading }) => {
+export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading, onKpiClick }) => {
   if (loading || !stats) {
     return (
       <div className="bi-kpi-grid">
@@ -33,9 +34,17 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading }) =
   return (
     <div className="bi-kpi-grid">
       {/* 1. Índice de Salud Conductual (ISC) */}
-      <div className="bi-kpi-card">
+      <div
+        className="bi-kpi-card"
+        onClick={() => onKpiClick?.('kpi_isc')}
+        style={{ cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+        title="Haz clic para abrir el análisis del Agente IA Resumidor"
+      >
         <div className="bi-kpi-header">
-          <span className="bi-kpi-title">Índice Salud Conductual</span>
+          <span className="bi-kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Índice Salud Conductual
+            <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#204785' }}>smart_toy</span>
+          </span>
           <div className="bi-kpi-icon-wrap">
             <span className="material-symbols-outlined">health_metrics</span>
           </div>
@@ -52,9 +61,17 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading }) =
       </div>
 
       {/* 2. Distribución Semafórica */}
-      <div className="bi-kpi-card">
+      <div
+        className="bi-kpi-card"
+        onClick={() => onKpiClick?.('kpi_semaforo')}
+        style={{ cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+        title="Haz clic para abrir el análisis del Agente IA Resumidor"
+      >
         <div className="bi-kpi-header">
-          <span className="bi-kpi-title">Distribución Semafórica</span>
+          <span className="bi-kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Distribución Semafórica
+            <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#204785' }}>smart_toy</span>
+          </span>
           <div className="bi-kpi-icon-wrap">
             <span className="material-symbols-outlined">traffic</span>
           </div>
@@ -74,9 +91,17 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading }) =
       </div>
 
       {/* 3. Total de Incidencias */}
-      <div className="bi-kpi-card">
+      <div
+        className="bi-kpi-card"
+        onClick={() => onKpiClick?.('kpi_incidencias')}
+        style={{ cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+        title="Haz clic para abrir el análisis del Agente IA Resumidor"
+      >
         <div className="bi-kpi-header">
-          <span className="bi-kpi-title">Total de Incidencias</span>
+          <span className="bi-kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Total de Incidencias
+            <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#204785' }}>smart_toy</span>
+          </span>
           <div className="bi-kpi-icon-wrap">
             <span className="material-symbols-outlined">assignment_late</span>
           </div>
@@ -89,9 +114,17 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading }) =
       </div>
 
       {/* 4. Alumnos en Riesgo Crítico */}
-      <div className="bi-kpi-card">
+      <div
+        className="bi-kpi-card"
+        onClick={() => onKpiClick?.('kpi_riesgo')}
+        style={{ cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+        title="Haz clic para abrir el análisis del Agente IA Resumidor"
+      >
         <div className="bi-kpi-header">
-          <span className="bi-kpi-title">Atención Prioritaria</span>
+          <span className="bi-kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Atención Prioritaria
+            <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#dc2626' }}>smart_toy</span>
+          </span>
           <div className="bi-kpi-icon-wrap" style={{ background: '#fee2e2', color: '#dc2626' }}>
             <span className="material-symbols-outlined">warning</span>
           </div>

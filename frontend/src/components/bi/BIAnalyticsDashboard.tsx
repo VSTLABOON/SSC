@@ -23,6 +23,8 @@ import { BITrendChart } from './BITrendChart';
 import { BICategoryChart } from './BICategoryChart';
 import { BIRiskTable } from './BIRiskTable';
 import { ExecutiveReportModal } from './ExecutiveReportModal';
+import { ExecutiveChartAgentModal } from './ExecutiveChartAgentModal';
+import type { ChartAgentTarget } from './ExecutiveChartAgentModal';
 import { generatePlantelExecutiveReport } from '../../services/bi_analytics_engine';
 import type { PlantelExecutiveReport } from '../../services/bi_analytics_engine';
 import './BIAnalytics.css';
@@ -55,9 +57,12 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
   // Estado de Filtros
   const [filters, setFilters] = useState<BIFilters>({});
 
-  // Estado del Modal Ejecutivo
+  // Estado del Modal Ejecutivo Directivo de Plantel
   const [execModalOpen, setExecModalOpen] = useState(false);
   const [plantelReportData, setPlantelReportData] = useState<PlantelExecutiveReport | null>(null);
+
+  // Estado del Agente IA Resumidor de Gráficas/KPIs
+  const [agentTarget, setAgentTarget] = useState<ChartAgentTarget | null>(null);
 
   // 1. Inicialización de Filtros Opciones
   useEffect(() => {
@@ -147,6 +152,51 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
     setExecModalOpen(true);
   }
 
+  function handleKpiClick(type: 'kpi_isc' | 'kpi_semaforo' | 'kpi_incidencias' | 'kpi_riesgo') {
+    if (!kpis) return;
+    let title = '';
+    let subtitle = '';
+
+    if (type === 'kpi_isc') {
+      title = 'Resumen Ejecutivo: Índice de Salud Conductual (ISC)';
+      subtitle = `Promedio actual del conjunto: ${kpis.promedio_puntos ?? 100} / 100 pts.`;
+    } else if (type === 'kpi_semaforo') {
+      title = 'Resumen Ejecutivo: Distribución Semafórica';
+      subtitle = `${kpis.conteo_verde} Verde, ${kpis.conteo_naranja} Naranja, ${kpis.conteo_rojo} Rojo (Total: ${kpis.total_alumnos} alumnos).`;
+    } else if (type === 'kpi_incidencias') {
+      title = 'Resumen Ejecutivo: Volumen Total de Incidencias';
+      subtitle = `${kpis.total_incidencias} reportes registrados acumulados en el periodo.`;
+    } else {
+      title = 'Resumen Ejecutivo: Alumnos en Atención Prioritaria';
+      subtitle = `${kpis.conteo_naranja + kpis.conteo_rojo} estudiantes registrados en Semáforo Naranja y Rojo.`;
+    }
+
+    setAgentTarget({
+      type,
+      title,
+      subtitle,
+      dataSummary: { ...kpis, riskCount: kpis.conteo_naranja + kpis.conteo_rojo },
+    });
+  }
+
+  function handleTrendChartClick() {
+    setAgentTarget({
+      type: 'chart_tendencia',
+      title: 'Resumen Ejecutivo: Tendencia Temporal de Incidencias',
+      subtitle: 'Evolución cronológica de reportes mes por mes.',
+      dataSummary: { trendData: trend },
+    });
+  }
+
+  function handleCategoryChartClick() {
+    setAgentTarget({
+      type: 'chart_categorias',
+      title: 'Resumen Ejecutivo: Incidencias Frecuentes por Categoría',
+      subtitle: 'Desglose frecuencial por motivo de reporte.',
+      dataSummary: { categoryData: categories },
+    });
+  }
+
   return (
     <div className="bi-dashboard">
       {/* Botón de Reporte Ejecutivo Directivo */}
@@ -184,13 +234,13 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
         onFilterChange={setFilters}
       />
 
-      {/* Tarjetas de Métricas de Alto Nivel */}
-      <BIKpiCardSection stats={kpis} loading={loading} />
+      {/* Tarjetas de Métricas de Alto Nivel con Lanzador de Agente IA */}
+      <BIKpiCardSection stats={kpis} loading={loading} onKpiClick={handleKpiClick} />
 
-      {/* Sección de Gráficas Recharts */}
+      {/* Sección de Gráficas Recharts con Lanzador de Agente IA */}
       <div className="bi-charts-grid">
-        <BITrendChart data={trend} loading={loading} />
-        <BICategoryChart data={categories} loading={loading} />
+        <BITrendChart data={trend} loading={loading} onChartClick={handleTrendChartClick} />
+        <BICategoryChart data={categories} loading={loading} onChartClick={handleCategoryChartClick} />
       </div>
 
       {/* Tabla Radar de Riesgo */}
@@ -202,6 +252,13 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
         onClose={() => setExecModalOpen(false)}
         reportType="plantel"
         plantelData={plantelReportData}
+      />
+
+      {/* Modal del Agente IA Resumidor de Gráficas/KPIs */}
+      <ExecutiveChartAgentModal
+        isOpen={!!agentTarget}
+        target={agentTarget}
+        onClose={() => setAgentTarget(null)}
       />
     </div>
   );

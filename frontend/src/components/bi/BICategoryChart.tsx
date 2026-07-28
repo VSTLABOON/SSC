@@ -14,13 +14,15 @@ import type { BICategoryItem } from '../../services/bi';
 interface BICategoryChartProps {
   data: BICategoryItem[];
   loading?: boolean;
+  onChartClick?: () => void;
 }
 
-export const BICategoryChart: React.FC<BICategoryChartProps> = ({ data, loading }) => {
+export const BICategoryChart: React.FC<BICategoryChartProps> = ({ data, loading, onChartClick }) => {
   if (loading) {
     return (
       <div className="bi-chart-card">
-        <div className="bi-chart-title">Cargando motivos...</div>
+        <div className="skeleton-box" style={{ height: '24px', width: '50%', marginBottom: '16px' }} />
+        <div className="skeleton-box" style={{ height: '180px', width: '100%' }} />
       </div>
     );
   }
@@ -32,12 +34,33 @@ export const BICategoryChart: React.FC<BICategoryChartProps> = ({ data, loading 
   }
 
   return (
-    <div className="bi-chart-card">
-      <div className="bi-chart-title-wrap">
+    <div
+      className="bi-chart-card"
+      onClick={onChartClick}
+      style={{ cursor: onChartClick ? 'pointer' : 'default' }}
+      title="Haz clic para analizar esta gráfica con el Agente IA"
+    >
+      <div className="bi-chart-title-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h4 className="bi-chart-title">
           <span className="material-symbols-outlined" style={{ color: '#204785' }}>bar_chart</span>
           Top Motivos de Reporte
         </h4>
+        <span
+          style={{
+            fontSize: '11px',
+            fontWeight: 700,
+            color: '#204785',
+            background: '#eff6ff',
+            padding: '3px 8px',
+            borderRadius: '6px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>smart_toy</span>
+          Resumir con Agente IA
+        </span>
       </div>
 
       <div className="bi-chart-container">
@@ -59,10 +82,10 @@ export const BICategoryChart: React.FC<BICategoryChartProps> = ({ data, loading 
                 tickFormatter={(val: string) => (val.length > 18 ? `${val.slice(0, 16)}...` : val)}
               />
               <Tooltip
-                contentStyle={{ background: '#ffffff', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }}
-                formatter={(val: any) => [`${val ?? 0} incidencias`, 'Frecuencia']}
+                contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', border: 'none', color: '#ffffff', fontSize: '12px' }}
+                formatter={(val: any) => [`${val} incidencias`, 'Frecuencia']}
               />
-              <Bar dataKey="total_incidencias" radius={[0, 6, 6, 0]} barSize={18}>
+              <Bar dataKey="total_incidencias" radius={[0, 6, 6, 0]}>
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getBarColor(entry.severidad)} />
                 ))}

@@ -1,30 +1,28 @@
-# Sistema Conductual CONALEP Puebla I - Documentación Técnica e Integración
+# Sistema Conductual CONALEP Plantel Puebla I - Documentación Técnica e Integración
 
-Este documento contiene la especificación completa de la arquitectura, base de datos, políticas de seguridad RLS, módulo de Business Intelligence (BI), control de accesos, flujos de navegación y auditorías técnicas de seguridad aplicadas al proyecto del Sistema Conductual de CONALEP Puebla I (EduTrack 360).
+Este documento contiene la especificación completa de la arquitectura, base de datos, políticas de seguridad RLS, módulo de Business Intelligence (BI), matriz de roles y funciones, motor analítico preventivo anti-deserción, agente IA resumidor directivo y flujos de navegación aplicados al **Sistema Conductual de CONALEP Plantel Puebla I (EduTrack 360)**.
 
 ---
 
 ## 1. Descripción General del Sistema
 
-El Sistema Conductual está diseñado para facilitar la gestión de la disciplina, asistencia y participación de los alumnos en el plantel CONALEP Puebla I. Permite a los docentes registrar pases de lista diarios, participaciones e incidencias de conducta. Los directivos y orientadores supervisan el estado general del plantel, gestionan las cuentas de acceso y analizan tendencias de conducta en tiempo real.
+El Sistema Conductual está diseñado para facilitar la gestión de la disciplina, la asistencia y la convivencia escolar en el plantel CONALEP Puebla I. Permite a los docentes registrar pases de lista diarios con esquema granular ($3+3$), participaciones e incidencias de conducta. Los directivos y orientadores supervisan el estado general del plantel, gestionan la permanencia escolar y analizan la trayectoria conductual en tiempo real a través del **Centro de BI & KPIs** y el **Agente IA de Inteligencia Directiva**.
 
 El sistema se basa en una arquitectura cliente-servidor desacoplada utilizando React en el frontend y Supabase (PostgreSQL, Auth, RPCs PostgREST y Edge Functions) en el backend.
 
 ---
 
-## 2. Arquitectura de Componentes y Flujos de Datos
+## 2. Matriz de Roles y Funciones del Sistema
 
-### Frontend (React, TypeScript, Vite)
-- Estructura modular organizada en componentes, vistas, layouts por rol y servicios para la comunicación con el backend.
-- **Ruteador**: React Router DOM con protección por roles mediante el componente `RequireAuth`.
-- **Contexto de Autenticación (`AuthContext.tsx`)**: Gestiona el estado de la sesión de Supabase Auth y recupera la información del perfil en tiempo real.
-- **Iconografía Nítida**: Sistema 100% basado en íconos vectoriales oficiales de Material Symbols Outlined (sin uso de emojis), garantizando neutralidad visual e integración corporativa.
+La plataforma implementa un control de acceso basado en roles (RBAC) estricto, donde cada perfil dispone de una vista inicial predeterminada y herramientas especializadas:
 
-### Backend (Supabase)
-- **PostgreSQL**: Motor de base de datos relacional con Row Level Security (RLS) habilitado de forma estricta.
-- **Procedimientos Almacenados (RPCs)**: Cálculo autoritativo de métricas de BI directamente en PostgreSQL para prevenir fallbacks manipulables en el cliente.
-- **Supabase Auth**: Manejo de autenticación de usuarios mediante JWT y envío de invitaciones por correo electrónico.
-- **Edge Functions**: Funciones escritas en TypeScript sobre el entorno Deno para operaciones administrativas seguras (`invite-user`).
+| Rol de Usuario | Vista Inicial / Inicio | Funciones y Capacidades Principales |
+| :--- | :--- | :--- |
+| **`directivo`** *(Director / Subdirector de Plantel)* | **Centro BI & KPIs** (`InicioDA.tsx`) | • Visión ejecutiva global del plantel en tiempo real.<br>• Generación del **Reporte Ejecutivo Directivo de Plantel** en PDF.<br>• Consulta del **Agente IA de Inteligencia Directiva** (Groq Llama 3.3 70B grounded en BD) al dar clic en cualquier KPI o gráfica.<br>• Gestión y activación de cuentas de usuario (`invite-user` Edge Function).<br>• Configuración y apertura de Periodos Escolares (`services/periodos.ts`).<br>• Envío masivo de avisos institucionales a tutores y alumnos. |
+| **`orientador`** *(Orientador / Psicopedagógico)* | **Centro BI & KPIs y Radar de Riesgo** (`InicioDA.tsx`) | • Monitoreo continuo del **Radar de Alumnos en Atención Prioritaria**.<br>• Diagnóstico narrativo automático de caídas bruscas y riesgo de deserción escolar.<br>• Evaluación de trayectoria granular (Semanal, Mensual, Bimestral, Semestral) en Recharts `<AreaChart>`.<br>• Generación e impresión de la **Ficha Narrativa de Salud Conductual** por estudiante en PDF.<br>• Coordinación de tutorías presenciales con padres de familia. |
+| **`docente`** / **`maestro`** *(Profesor de Asignatura / Tutor)* | **Asignación & Pase de Lista Granular** (`InicioMaestro.tsx`) | • **Pase de Lista Granular 3+3**: Asistencia (Asistió, Retardo, Falta, Falta Justificada con Evidencia) + Desempeño en Aula (Participó, Neutral, No Participó).<br>• Registro inmediato de reportes de conducta leves, moderados y críticos.<br>• Consulta de **Centro BI & KPIs** filtrado exclusivamente para sus grupos asignados.<br>• Consulta del historial por materia estructurado en pastillas (`[Todos]`, `[Positivos]`, `[Leves]`, `[Críticos]`). |
+| **`alumno`** / **`estudiante`** | **Mi Expediente Conductual** (`InicioAlumno.tsx`) | • Consulta del saldo acumulado de Puntos Conductuales (Base 100 pts).<br>• Visualización de la gráfica de evolución y nivel de semáforo (Verde, Naranja, Rojo).<br>• Consulta del historial personal segmentado por pastillas de méritos y observaciones.<br>• Insignias de reconocimiento conductual y puntualidad. |
+| **`padre`** / **`tutor`** *(Tutor Legal)* | **Expediente Conductual del Hijo(a)** (`PortalPadres.tsx`) | • Recepción de avisos e instantáneas de alertamiento ante variaciones a Semáforo Naranja o Rojo.<br>• Visualización de la asistencia diaria registrada por clase.<br>• Descarga de la Ficha Narrativa de Salud Conductual y firma de compromisos de tutoría. |
 
 ---
 
@@ -32,105 +30,63 @@ El sistema se basa en una arquitectura cliente-servidor desacoplada utilizando R
 
 El módulo de BI proporciona tableros analíticos en tiempo real para directivos, orientadores y docentes, basándose en la ejecución de RPCs con seguridad RLS estricta:
 
-### Funciones RPC en PostgreSQL
-1. `fn_bi_get_kpis(p_rango, p_generacion, p_grupo_id, p_severidad)`:
+### Funciones RPC en PostgreSQL (Fuente Única de Verdad)
+1. `fn_bi_get_kpis(p_periodo_id, p_generacion, p_grupo_id, p_severidad, p_rango_temporal)`:
    - Devuelve el Índice de Salud Conductual (ISC promedio), distribución semafórica (verde, naranja, rojo), total de incidencias y alumnos en riesgo prioritario.
-   - Aplica filtrado estricto `WHERE g.plantel_id = v_plantel_id` asegurando que ningún usuario acceda a planteles ajenos.
-2. `fn_bi_get_trend(p_rango, p_generacion, p_grupo_id, p_severidad)`:
+   - Aplica filtrado estricto `WHERE g.plantel_id = v_plantel_id` asegurando aislamiento multi-tenant por plantel.
+2. `fn_bi_get_trend(p_periodo_id, p_generacion, p_grupo_id, p_rango_temporal)`:
    - Agrupa incidencias por periodo temporal para renderizar gráficas de evolución conductual en Recharts.
-3. `fn_bi_get_categories(p_rango, p_generacion, p_grupo_id, p_severidad)`:
+3. `fn_bi_get_categories(p_periodo_id, p_generacion, p_grupo_id, p_rango_temporal)`:
    - Retorna el desglose de categorías más recurrentes (asistencia, uniformes, disciplina).
-4. `fn_bi_get_risk_students(p_rango, p_generacion, p_grupo_id, p_severidad)`:
-   - Retorna la lista prioritaria de estudiantes con mayor acumulación de incidencias y permite a directivos y orientadores notificar a los tutores.
-
-### Componentes de BI
-- `BIAnalyticsDashboard.tsx`: Contenedor principal del módulo.
-- `BIFilterBar.tsx`: Barra de filtrado dinámico (Ventana temporal, Generación, Grupo y Severidad).
-- `BIKpiCard.tsx`: Tarjetas de indicadores clave (ISC, Semáforos, Total Incidencias, Atención Prioritaria).
-- `BITrendChart.tsx` & `BICategoryChart.tsx`: Visualizaciones gráficas en tiempo real.
-- `BIRiskTable.tsx`: Radar de alumnos en atención prioritaria con modal interactivo de **Expediente Disciplinario Completo**.
+4. `fn_bi_get_risk_students(p_periodo_id, p_generacion, p_grupo_id, p_rango_temporal)`:
+   - Retorna la lista prioritaria de estudiantes con mayor acumulación de incidencias y permite notificar a los tutores.
 
 ---
 
-## 4. Rediseño de Navegación UX/UI (ClickUp BottomNav & Pestañas Dedicadas)
+## 4. Motor Analítico Preventivo Anti-Deserción Escolar (`bi_analytics_engine.ts`)
 
-### Pantalla Inicial Predeterminada (`Centro BI & KPIs`)
-Al iniciar sesión en los portales de **Directivos (`InicioDA.tsx`)** y **Maestros (`InicioMaestro.tsx`)**, la vista predeterminada es automáticamente la pestaña **`[ Centro BI & KPIs ]`**. Toda la información crítica se presenta en el primer pliegue de la pantalla, reduciendo el desplazamiento vertical.
+Para evitar que el estudiante sea tratado como un "número frío" u obsoleto, se implementaron algoritmos preventivos de salud conductual:
 
-### Barra de Navegación Inferior Flotante Móvil (`BottomNav.tsx`)
-Inspirada en la aplicación móvil de ClickUp, proporciona acceso rápido en pantallas pequeñas:
-- **Exclusión Mutua por Viewport**:
-  - **Escritorio ($\ge 768\text{px}$)**: `BottomNav` se oculta automáticamente (`display: none !important`) operando el sidebar lateral.
-  - **Móvil ($< 768\text{px}$)**: El sidebar lateral y el menú hamburguesa se ocultan, pasando la responsabilidad de navegación a la `BottomNav`.
-- **Jerarquía de Capas (`z-index: 150`)**: Posicionada por encima del canvas principal (`1`) y del topbar (`30`), pero por debajo de modales (`200`) y alertas (`250`).
-- **Botón Central Elevado (+)**: Despliega un menú flotante de acciones rápidas filtradas por el rol real del usuario (`useAuth()`).
-- **Reserva de Espacio**: Aplica `padding-bottom: 88px` en los contenedores principales para evitar que la barra flotante tape contenido.
-
-### Sistema de Pastillas de Organización del Historial (`Pill Tabs`)
-En todas las vistas de expediente e historial conductual (`BIRiskTable.tsx`, `Historialreporteda.tsx`, `HistorialReportesM.tsx`, `History.tsx`), la bitácora se organiza mediante **pastillas o fichas segmentadas con íconos vectoriales de Material Symbols (sin emojis)**:
-- `[list_alt] Todos`: Bitácora cronológica completa.
-- `[check_circle] Positivos / Méritos`: Reconocimientos y puntos a favor.
-- `[warning] Faltas Leves`: Advertencias o faltas de menor severidad.
-- `[error] Faltas Críticas`: Reportes graves y sanciones de atención prioritaria.
+1. **Algoritmo EWMA (*Exponentially Weighted Moving Average*)**:
+   - Pondera exponencialmente ($\alpha = 0.3$) las incidencias recientes sobre los eventos pasados.
+   - Detecta caídas bruscas ($\ge 15$ pts) semanas antes de que afecten el promedio acumulado.
+2. **Algoritmo Multivariable de Riesgo de Deserción (*Composite Risk Score*)**:
+   - Evalúa 4 dimensiones: $40\%$ ISC Actual + $30\%$ Incidencias Críticas + $20\%$ Velocidad de Caída (EWMA Delta) + $10\%$ Volumen de Observaciones.
+   - Clasifica en 4 categorías: `Bajo` ($0-25\%$), `Moderado` ($26-49\%$), `Alto` ($50-69\%$) y `Crítico` ($\ge 70\%$).
+3. **Generador de Reportes Narrativos Automatizados**:
+   - Transforma los datos tabulares de PostgreSQL en síntesis ejecutivas en lenguaje natural a nivel **Alumno**, **Grupo** y **Plantel Completo**.
 
 ---
 
-## 5. Diseño y Posicionamiento de Pantalla de Login (`Login.css`)
+## 5. Agente IA de Inteligencia Directiva (`ExecutiveChartAgentModal.tsx` & `groq_agent_service.ts`)
 
-Se aplicó un rediseño responsivo simétrico en **[Login.css](file:///c:/Users/User/Documents/SSC/frontend/src/pages/Login.css)**:
-- **Centrado Vertical Simétrico**: Utiliza `margin: auto` en `.login-intro-content` (panel institucional izquierdo) y en `.login-form-wrapper` (panel de acceso derecho). Ambas tarjetas se ubican exactamente al centro vertical del viewport.
-- **Protección de Modo Oscuro**: Se estableció `color-scheme: light;` en `.login-page` para impedir que preferencias del sistema operativo inviertan los colores de los inputs, garantizando legibilidad en todo momento.
-- **Proporciones en Escritorio**: Distribución 50% / 50% en pantallas $\ge 768\text{px}$ con padding adaptativo que evita la compresión del formulario en pantallas medianas.
-
----
-
-## 6. Estructura de la Base de Datos
-
-### Tabla `public.planteles`
-- Llave primaria: `id` (UUID).
-- Columna `clave_centro` (`text` NOT NULL): Código oficial del centro escolar.
-
-### Tabla `public.usuarios`
-- Llave primaria: `id` (UUID), relación 1:1 con `auth.users`.
-- Restricción `chk_usuarios_rol`: `'docente'`, `'orientador'`, `'directivo'`, `'padre'`, `'alumno'` y `'pendiente'`.
-- Ocultamiento de Hash: Se revocó el permiso `SELECT` sobre `password_hash` para roles públicos.
-- Estado: Columnas `activo` (boolean) e `intentos_fallidos` (integer).
-
-### Tabla `public.alumnos`
-- Relación vinculada a `public.usuarios` vía `usuario_id`.
-- Columna `nivel_semaforo`: Columna generada de solo lectura (`GENERATED ALWAYS AS`).
-
-### Tabla `public.categorias_incidencia`
-- Restricción `chk_cat_color`: Acepta únicamente `'verde'`, `'naranja'` y `'rojo'`.
+- **Modelo**: Conectado con la API de **Groq** (`llama-3.3-70b-versatile`).
+- **Garantía de Cero Alucinaciones (PostgreSQL Grounding)**:
+  - Al dar clic sobre cualquier tarjeta KPI o gráfica del tablero de BI, la aplicación primero ejecuta las funciones RPC de PostgreSQL.
+  - El resultado real de la base de datos se inyecta en el System Prompt del modelo con baja temperatura (`0.2`).
+  - El agente **únicamente sintetiza y redacta en español fluido lo que la base de datos acaba de calcular**. Si la BD devuelve 0 registros, el agente reporta 0 registros sin inventar estadísticas.
+- **Chat Interactivo**: Permite a los directivos realizar preguntas de seguimiento sobre recomendaciones pedagógicas o estrategias de permanencia.
 
 ---
 
-## 7. Ciclo de Vida de Usuarios y Control de Roles
+## 6. Rediseño UX/UI e Iconografía Nítida
 
-1. **Invitación**: Un directivo ingresa el correo y rol desde el panel administrativo.
-2. **Edge Function `invite-user`**: Vía API administrativa de Supabase Auth, crea la cuenta en `auth.users` e inyecta la metadata.
-3. **Trigger PostgreSQL (`handle_new_user`)**: Crea el registro en `public.usuarios` con `rol = 'pendiente'` y `activo = false`.
-4. **Validación en Frontend**: Usuarios inactivos son redirigidos a `/pendiente-activacion` hasta que un directivo los active desde la interfaz.
+- **Restricción Estricta de Emojis**: La interfaz completa está libre de emojis y utiliza exclusivamente íconos vectoriales oficiales de **Material Symbols Outlined** (`font-variation-settings: 'FILL' 0, 'wght' 400`).
+- **Navegación Móvil Flotante (`BottomNav.tsx`)**: Barra de navegación inferior flotante tipo ClickUp en dispositivos móviles ($< 768\text{px}$) con exclusión mutua por viewport respecto al sidebar de escritorio.
+- **Modales en Portal React (`ReactDOM.createPortal`)**: Todos los modales del sistema se renderizan directo en `document.body` a `z-index: 9999`, garantizando un centrado instantáneo en pantalla independientemente del scroll o jerarquía del DOM.
+- **Sistema de Pastillas de Organización (`Pill Tabs`)**: Bitácora conductual segmentada enpastillas limpias (`[list_alt] Todos`, `[check_circle] Positivos`, `[warning] Leves`, `[error] Críticos`).
 
 ---
 
-## 8. Instrucciones de Despliegue y Pruebas
+## 7. Instrucciones de Compilación y Verificación
 
-### Despliegue de Base de Datos
-Ejecutar las migraciones en el SQL Editor de Supabase en el siguiente orden:
-1. `supabase/migrations/20260712000000_init_ssc.sql`
-2. `supabase/migrations/20260712010000_user_profile_trigger.sql`
-3. `supabase/migrations/20260712020000_security_fixes.sql`
-4. `supabase/migrations/20260721200000_bi_module_rpcs.sql` (RPCs de BI y RLS)
-
-### Compilación y Ejecución del Frontend
 ```bash
-# 1. Instalar dependencias
+# 1. Instalar dependencias del proyecto
 pnpm install
 
-# 2. Verificar compilación TypeScript y bundle de Vite
+# 2. Compilar TypeScript y validar bundle de producción con Vite
 pnpm build
 
-# 3. Ejecutar servidor de desarrollo
+# 3. Ejecutar servidor local de desarrollo
 pnpm dev
 ```
