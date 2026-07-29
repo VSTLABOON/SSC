@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,23 @@ serve(async (req) => {
       );
     }
 
+    // 1.5. Verificación Estricta de Rol Autorizado (RBAC) y Estado de Cuenta Activa
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: perfil, error: perfilError } = await supabaseAdmin
+      .from('usuarios')
+      .select('rol, activo')
+      .eq('id', user.id)
+      .single();
+
+    const ROLES_AUTORIZADOS = ['directivo', 'orientador'];
+
+    if (perfilError || !perfil || !perfil.activo || !ROLES_AUTORIZADOS.includes(perfil.rol)) {
+      return new Response(
+        JSON.stringify({ error: "No autorizado para consultar el Agente de Inteligencia Directiva." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+
     // 2. Control de Rate Limiting por usuario
     if (isRateLimited(user.id)) {
       return new Response(
@@ -85,11 +103,11 @@ Antes de emitir cualquier conclusión, DEBES leer y procesar TODAS las secciones
 • _seccion_KPIs: Indicadores globales (matrícula, ISC promedio, distribución semafórica, incidencias totales, porcentajes).
 • _seccion_tendencia_temporal: Evolución cronológica mes a mes (verde, naranja, rojo por periodo).
 • _seccion_categorias_frecuentes: Desglose por categoría y severidad de cada tipo de incidencia.
-• _seccion_alumnos_riesgo: Lista nominal de los alumnos en atención prioritaria con su Risk Score, grupo, semáforo y conteo individual.
+• _seccion_alumnos_riesgo: Lista seudonimizada de los alumnos en atención prioritaria con su identificador secuencial (ej. Estudiante #1), Risk Score, grupo, semáforo y conteo individual.
 
 PASO 2 — CRUCE MULTI-DIMENSIONAL:
 Toda conclusión DEBE cruzar al menos 2 secciones. Ejemplos de cruces obligatorios:
-• Correlación entre las categorías más frecuentes (_seccion_categorias) y los alumnos específicos que acumulan esas categorías (_seccion_alumnos_riesgo).
+• Correlación entre las categorías más frecuentes (_seccion_categorias) y los estudiantes específicos que acumulan esas categorías (_seccion_alumnos_riesgo).
 • Correlación entre la tendencia temporal (_seccion_tendencia) y los KPIs actuales: ¿la situación mejora o empeora?
 • Identificación de concentración por grupo: ¿hay un grupo específico que concentre desproporcionadamente los alumnos en riesgo?
 
@@ -103,7 +121,7 @@ PASO 3 — DETECCIÓN DE PATRONES OCULTOS Y SESGO POR OMISIÓN:
 
 1. Basarás tu análisis ÚNICAMENTE en los datos del CONTEXTO_DB proporcionado. NUNCA inventes nombres, números, fechas ni porcentajes.
 2. Si una sección del contexto está vacía o tiene 0 registros, DEBES declararlo explícitamente: "La sección [X] no contiene registros en el periodo evaluado, lo cual puede indicar [sub-registro / periodo sin actividad / filtro demasiado estrecho]."
-3. Cita datos textuales del contexto. Ejemplo correcto: "Según _seccion_alumnos_riesgo, Juan Pérez (matrícula 2024001, grupo 3A) acumula 8 incidencias con Risk Score de 78.5."
+3. Cita datos textuales del contexto. Ejemplo correcto: "Según _seccion_alumnos_riesgo, el Estudiante #1 (grupo 3A) acumula 8 incidencias con Risk Score de 78.5."
 4. NO uses emojis bajo ninguna circunstancia.
 5. Tu tono es profesional, ejecutivo, preventivo y enfocado en proteger la permanencia escolar de menores de edad.
 6. Estructura tu respuesta con encabezados claros y numerados.
@@ -112,7 +130,7 @@ PASO 3 — DETECCIÓN DE PATRONES OCULTOS Y SESGO POR OMISIÓN:
 === ESTRUCTURA DE RESPUESTA OBLIGATORIA ===
 
 1. DIAGNÓSTICO SITUACIONAL: Resumen del estado actual cruzando KPIs + tendencia.
-2. HALLAZGOS ESPECÍFICOS: Datos concretos con nombres, grupos y cifras exactas del contexto.
+2. HALLAZGOS ESPECÍFICOS: Datos concretos con identificadores seudonimizados (ej. Estudiante #1), grupos y cifras exactas del contexto.
 3. PATRONES DETECTADOS: Correlaciones entre categorías, tendencias y alumnos específicos.
 4. RECOMENDACIONES DIRECTIVAS: Acciones concretas priorizadas por urgencia.
 5. VACÍOS DE INFORMACIÓN: Qué datos faltan, qué anomalías sugieren sub-registro o sesgo.`;

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { resolverRutaInicio } from '../constants/routes';
 import './Login.css';
 import logoConalep from '../assets/imagenes/CONALEPlogo.png';
 import logoSCTech from '../assets/imagenes/SCTechlogo.png'; // <- Asegúrate de meter este archivo a la carpeta imágenes en tu explorador
@@ -104,15 +105,9 @@ const Login = () => {
   // Redirigir automáticamente a usuarios con sesión activa
   useEffect(() => {
     if (!loading && session && rol && rol !== 'pendiente') {
-      const rutas: Record<string, string> = {
-        alumno: '/alumno/inicio',
-        docente: '/maestro/inicio',
-        directivo: '/director/inicio',
-        orientador: '/director/inicio',
-        padre: '/alumno/inicio',
-      };
-      if (rutas[rol]) {
-        navigate(rutas[rol], { replace: true });
+      const targetRoute = resolverRutaInicio(rol);
+      if (targetRoute !== '/login') {
+        navigate(targetRoute, { replace: true });
       }
     }
   }, [session, rol, loading, navigate]);
@@ -179,17 +174,7 @@ const Login = () => {
     // Si todo está correcto, resetear intentos fallidos
     await supabase.rpc('fn_reset_intentos_fallidos', { p_email: normalizedEmail });
 
-    const rutas: Record<string, string> = {
-      alumno: '/alumno/inicio',
-      docente: '/maestro/inicio',
-      directivo: '/director/inicio',
-      orientador: '/director/inicio',
-      padre: '/alumno/inicio',
-      // Usuario invitado aún no activado por el directivo — evitar loop con /login
-      pendiente: '/pendiente-activacion',
-    };
-
-    navigate(rutas[perfil.rol] ?? '/login');
+    navigate(resolverRutaInicio(perfil.rol));
     setSubmitting(false);
   };
 

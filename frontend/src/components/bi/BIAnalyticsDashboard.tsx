@@ -203,11 +203,10 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
         })),
       },
       _seccion_alumnos_riesgo: {
-        _descripcion: 'Alumnos en atención prioritaria ordenados por Risk Score SQL (fn_bi_get_risk_students)',
+        _descripcion: 'Alumnos en atención prioritaria ordenados por Risk Score SQL (fn_bi_get_risk_students) - Datos Seudonimizados por LGPDPPSO',
         total_en_riesgo: (riskStudents || []).length,
-        top_15: (riskStudents || []).slice(0, 15).map(s => ({
-          nombre: s.nombre_completo,
-          matricula: s.matricula,
+        top_15: (riskStudents || []).slice(0, 15).map((s, idx) => ({
+          identificador: `Estudiante #${idx + 1}`,
           grupo: s.grupo_nombre,
           semaforo: s.nivel_semaforo,
           puntos_isc: s.puntos_totales,

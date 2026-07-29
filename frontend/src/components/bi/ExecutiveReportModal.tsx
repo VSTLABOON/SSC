@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import type {
   StudentRiskAnalysis,
   GroupExecutiveReport,
@@ -36,15 +37,8 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
     return () => document.body.classList.remove('no-scroll');
   }, [isOpen]);
 
-  // Cerrar modal con tecla Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  // Escuchar tecla Escape con guard para campos editables
+  useEscapeToClose(onClose);
 
   if (!isOpen) return null;
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { queryGroqAgent } from '../../services/groq_agent_service';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 export interface ChartAgentTarget {
   type: 'kpi_isc' | 'kpi_semaforo' | 'kpi_riesgo' | 'kpi_incidencias' | 'chart_tendencia' | 'chart_categorias';
@@ -39,15 +40,8 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
     return () => document.body.classList.remove('no-scroll');
   }, [isOpen]);
 
-  // Escuchar tecla Escape para cerrar modal
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  // Escuchar tecla Escape con guard para campos editables
+  useEscapeToClose(onClose);
 
   // Auto-scroll al final del chat al recibir mensajes
   useEffect(() => {

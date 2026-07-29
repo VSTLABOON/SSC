@@ -1,14 +1,8 @@
 
-export interface EWMAHistoryPoint {
-  periodLabel: string;
-  points: number;
-  ewma: number;
-}
-
 export interface StudentRiskAnalysis {
-  riskScorePercent: number; // 0 to 100
+  riskScorePercent: number;
   riskCategory: 'bajo' | 'moderado' | 'alto' | 'critico';
-  dropAcceleration: number; // delta in recent periods
+  dropAcceleration: number;
   narrativeSummary: string;
   recommendedAction: string;
   fortalezaDestacada: string;
@@ -40,84 +34,6 @@ export interface PlantelExecutiveReport {
   retentionEstimatePercent: number;
   narrativeSummary: string;
   strategicActionPlan: string[];
-}
-
-/**
- * 1. ALGORITMO EWMA (Exponentially Weighted Moving Average)
- * @deprecated Reemplazado por la función SQL inmutable `public.fn_calcular_ewma` en PostgreSQL.
- * Se mantiene por compatibilidad hacia atrás en utilidades del cliente.
- */
-export function calculateEWMA(dataPoints: number[], alpha: number = 0.3): number[] {
-  if (!dataPoints.length) return [];
-  const result: number[] = [];
-  let currentEWMA = dataPoints[0];
-  result.push(Math.round(currentEWMA * 10) / 10);
-
-  for (let i = 1; i < dataPoints.length; i++) {
-    currentEWMA = alpha * dataPoints[i] + (1 - alpha) * currentEWMA;
-    result.push(Math.round(currentEWMA * 10) / 10);
-  }
-
-  return result;
-}
-
-/**
- * 2. ALGORITMO MULTIVARIABLE DE EVALUACIÓN DE RIESGO DE DESERCIÓN (Composite Risk Score)
- * @deprecated Reemplazado por las funciones SQL `public.fn_calcular_risk_score` y la RPC `public.fn_bi_get_risk_score_alumno`.
- * La base de datos PostgreSQL es ahora la ÚNICA FUENTE DE VERDAD para la clasificación de riesgo.
- */
-export function calculateStudentRiskScore(
-  currentISC: number,
-  incidentsCount: number,
-  criticalIncidentsCount: number,
-  recentDrop: number
-): StudentRiskAnalysis {
-  // Factores ponderados
-  const iscFactor = (100 - Math.min(100, Math.max(0, currentISC))) * 0.4;
-  const criticalFactor = Math.min(100, criticalIncidentsCount * 25) * 0.3;
-  const dropFactor = Math.min(100, Math.max(0, recentDrop) * 2.5) * 0.2;
-  const volumeFactor = Math.min(100, incidentsCount * 10) * 0.1;
-
-  const rawScore = Math.round(iscFactor + criticalFactor + dropFactor + volumeFactor);
-  const riskScorePercent = Math.min(100, Math.max(0, rawScore));
-
-  let riskCategory: 'bajo' | 'moderado' | 'alto' | 'critico' = 'bajo';
-  let narrativeSummary = '';
-  let recommendedAction = '';
-  let fortalezaDestacada = 'Respeto a la normatividad y constancia en aula.';
-
-  if (riskScorePercent >= 70 || currentISC < 70) {
-    riskCategory = 'critico';
-    narrativeSummary = `Atención Inmediata Requerida: El alumno registra un Índice de Riesgo Multivariable del ${riskScorePercent}% (ISC actual: ${currentISC} pts). Se identifica una curva acelerada de faltas o afectación de convivencia que incrementa el riesgo de rezago escolar o deserción.`;
-    recommendedAction = 'Acción Prioritaria: Convocar a reunión presencial con el tutor legal, formalizar carta compromiso pedagógica y canalizar a tutoría orientativa continua.';
-  } else if (riskScorePercent >= 40 || currentISC < 90) {
-    riskCategory = 'alto';
-    narrativeSummary = `Seguimiento Preventivo Activo: Se detecta un Índice de Riesgo del ${riskScorePercent}% con fluctuaciones conductuales en el periodo reciente. El estudiante mantiene capacidad de recuperación si se interviene a tiempo.`;
-    recommendedAction = 'Acción Recomendada: Acordar metas semanales de puntualidad y convivencia con el docente asesor.';
-  } else if (riskScorePercent >= 20) {
-    riskCategory = 'moderado';
-    narrativeSummary = `Monitoreo Regular: El estudiante muestra estabilidad general (${currentISC} pts), registrando eventos menores aislados sin afectación crítica.`;
-    recommendedAction = 'Acción Recomendada: Mantener observación regular en aula durante los cambios de asignatura.';
-  } else {
-    riskCategory = 'bajo';
-    narrativeSummary = `Salud Conductual Sobresaliente: El alumno mantiene una trayectoria intachable (${currentISC} pts) con alto grado de integración institucional.`;
-    recommendedAction = 'Acción Recomendada: Reconocer públicamente el liderazgo y desempeño del estudiante.';
-  }
-
-  if (criticalIncidentsCount === 0 && incidentsCount === 0) {
-    fortalezaDestacada = 'Asistencia perfecta y conducta intachable durante todo el ciclo escolar.';
-  } else if (incidentsCount > 0 && criticalIncidentsCount === 0) {
-    fortalezaDestacada = 'Capacidad de rectificación y ausencia de faltas graves o sanciones severas.';
-  }
-
-  return {
-    riskScorePercent,
-    riskCategory,
-    dropAcceleration: recentDrop,
-    narrativeSummary,
-    recommendedAction,
-    fortalezaDestacada,
-  };
 }
 
 /**

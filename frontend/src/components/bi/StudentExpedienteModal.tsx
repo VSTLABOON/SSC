@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -105,15 +106,8 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
     return () => document.body.classList.remove('no-scroll');
   }, [isOpen]);
 
-  // Cerrar modal con tecla Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  // Escuchar tecla Escape con guard para campos editables
+  useEscapeToClose(onClose);
 
   // Filtrado de incidencias por Periodo Seleccionado
   const periodFilteredIncidents = useMemo(() => {

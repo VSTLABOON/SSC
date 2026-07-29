@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { resolverRutaInicio } from './constants/routes';
 import StudentLayout from './layouts/StudentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
 import DirectorLayout from './layouts/DirectorLayout';
@@ -47,14 +48,7 @@ function RequireAuth({ allowedRoles, children }: { allowedRoles: string[]; child
   // Usuario autenticado pero pendiente de activación — evitar loop con /login
   if (rol === 'pendiente') return <Navigate to="/pendiente-activacion" replace />;
   if (!rol || !allowedRoles.includes(rol)) {
-    const homeByRole: Record<string, string> = {
-      alumno: '/alumno/inicio',
-      docente: '/maestro/inicio',
-      directivo: '/director/inicio',
-      orientador: '/director/inicio',
-      padre: '/alumno/inicio',
-    };
-    return <Navigate to={homeByRole[rol || ''] ?? '/login'} replace />;
+    return <Navigate to={resolverRutaInicio(rol)} replace />;
   }
   return children;
 }
@@ -63,15 +57,7 @@ function DefaultRouteRedirect() {
   const { session, rol, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   if (!session) return <Navigate to="/login" replace />;
-  const homeByRole: Record<string, string> = {
-    alumno: '/alumno/inicio',
-    docente: '/maestro/inicio',
-    directivo: '/director/inicio',
-    orientador: '/director/inicio',
-    padre: '/alumno/inicio',
-    pendiente: '/pendiente-activacion',
-  };
-  return <Navigate to={homeByRole[rol || ''] ?? '/login'} replace />;
+  return <Navigate to={resolverRutaInicio(rol)} replace />;
 }
 
 export default function App() {
