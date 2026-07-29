@@ -93,6 +93,7 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
                 <th>Grupo</th>
                 <th>Semáforo</th>
                 <th>Puntos Totales</th>
+                <th>Índice Riesgo (SQL)</th>
                 <th>Acción</th>
               </tr>
             </thead>
@@ -133,6 +134,31 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
                   </td>
                   <td style={{ fontWeight: 700, color: student.puntos_totales < 70 ? '#dc2626' : '#1e293b' }}>
                     {student.puntos_totales} pts
+                  </td>
+                  <td>
+                    {student.risk_score !== undefined ? (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          backgroundColor: student.risk_categoria === 'critico' ? '#fee2e2' : student.risk_categoria === 'alto' ? '#fef3c7' : '#dcfce7',
+                          color: student.risk_categoria === 'critico' ? '#991b1b' : student.risk_categoria === 'alto' ? '#92400e' : '#166534',
+                          border: `1px solid ${student.risk_categoria === 'critico' ? '#fca5a5' : student.risk_categoria === 'alto' ? '#fde68a' : '#86efac'}`,
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>
+                          {student.risk_categoria === 'critico' ? 'warning' : 'analytics'}
+                        </span>
+                        {student.risk_score}% ({student.risk_categoria})
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>N/A</span>
+                    )}
                   </td>
                   <td>
                     <button

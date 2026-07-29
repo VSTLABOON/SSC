@@ -44,7 +44,8 @@ export interface PlantelExecutiveReport {
 
 /**
  * 1. ALGORITMO EWMA (Exponentially Weighted Moving Average)
- * Calcula el promedio móvil ponderado exponencialmente dando más peso a las últimas semanas/meses.
+ * @deprecated Reemplazado por la función SQL inmutable `public.fn_calcular_ewma` en PostgreSQL.
+ * Se mantiene por compatibilidad hacia atrás en utilidades del cliente.
  */
 export function calculateEWMA(dataPoints: number[], alpha: number = 0.3): number[] {
   if (!dataPoints.length) return [];
@@ -62,6 +63,8 @@ export function calculateEWMA(dataPoints: number[], alpha: number = 0.3): number
 
 /**
  * 2. ALGORITMO MULTIVARIABLE DE EVALUACIÓN DE RIESGO DE DESERCIÓN (Composite Risk Score)
+ * @deprecated Reemplazado por las funciones SQL `public.fn_calcular_risk_score` y la RPC `public.fn_bi_get_risk_score_alumno`.
+ * La base de datos PostgreSQL es ahora la ÚNICA FUENTE DE VERDAD para la clasificación de riesgo.
  */
 export function calculateStudentRiskScore(
   currentISC: number,

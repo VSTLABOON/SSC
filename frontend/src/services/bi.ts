@@ -40,6 +40,15 @@ export interface BIRiskStudent {
   nivel_semaforo: 'verde' | 'naranja' | 'rojo';
   puntos_totales: number;
   total_incidencias: number;
+  risk_score?: number;
+  risk_categoria?: string;
+}
+
+export interface StudentRiskScoreResult {
+  alumno_id: string;
+  score: number;
+  categoria: string;
+  recent_drop: number;
 }
 
 /**
@@ -117,6 +126,26 @@ export async function getBIRiskStudents(filters: BIFilters): Promise<BIRiskStude
     throw error;
   }
   return (data || []) as BIRiskStudent[];
+}
+
+/**
+ * Obtener la evaluación de riesgo multivariable de un alumno específico mediante el RPC SQL 'fn_bi_get_risk_score_alumno'
+ * FUENTE ÚNICA DE VERDAD: PostgreSQL RPC
+ */
+export async function getBIRiskScoreAlumno(alumnoId: string): Promise<StudentRiskScoreResult | null> {
+  const { data, error } = await supabase.rpc('fn_bi_get_risk_score_alumno', {
+    p_alumno_id: alumnoId,
+  });
+
+  if (error) {
+    console.error('Error en RPC fn_bi_get_risk_score_alumno:', error);
+    throw error;
+  }
+
+  if (Array.isArray(data) && data.length > 0) {
+    return data[0] as StudentRiskScoreResult;
+  }
+  return data as StudentRiskScoreResult | null;
 }
 
 /**

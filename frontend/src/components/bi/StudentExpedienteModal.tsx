@@ -14,6 +14,8 @@ import { getIncidenciasDelAlumno } from '../../services/incidencias';
 import { useAuth } from '../../context/AuthContext';
 import { getPeriodosDelPlantel } from '../../services/periodos';
 import type { PeriodoEscolar } from '../../services/periodos';
+import { getBIRiskScoreAlumno } from '../../services/bi';
+import type { StudentRiskScoreResult } from '../../services/bi';
 
 export interface StudentExpedienteData {
   alumno_id: string;
@@ -67,6 +69,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   const [granularity, setGranularity] = useState<TimeGranularity>('mensual');
   const [loading, setLoading] = useState(false);
   const [modalFilter, setModalFilter] = useState<ModalFilterType>('all');
+  const [sqlRiskScore, setSqlRiskScore] = useState<StudentRiskScoreResult | null>(null);
 
   useEffect(() => {
     if (isOpen && student?.alumno_id) {
@@ -74,14 +77,17 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
       setIncidents([]);
       setModalFilter('all');
       setSelectedPeriodoId('all');
+      setSqlRiskScore(null);
 
       Promise.all([
         getIncidenciasDelAlumno(student.alumno_id),
         plantelId ? getPeriodosDelPlantel(plantelId) : Promise.resolve([]),
+        getBIRiskScoreAlumno(student.alumno_id).catch(() => null),
       ])
-        .then(([incData, periodosData]) => {
+        .then(([incData, periodosData, riskData]) => {
           setIncidents((incData || []) as unknown as StudentIncident[]);
           setPeriodos(periodosData || []);
+          setSqlRiskScore(riskData);
         })
         .catch(err => {
           console.error('Error al cargar expediente y periodos del alumno:', err);
@@ -304,7 +310,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
             {humanDiagnostic.statusText}
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', paddingTop: '10px', borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', paddingTop: '10px', borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
             <div>
               <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Fortaleza Destacada</span>
               <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#0f172a', fontWeight: 600 }}>{humanDiagnostic.fortaleza}</p>
@@ -313,6 +319,17 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
               <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Recomendación para el Equipo</span>
               <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#0f172a', fontWeight: 600 }}>{humanDiagnostic.recommendation}</p>
             </div>
+            {sqlRiskScore && (
+              <div>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: '#204785', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '12px', color: '#10b981' }}>database</span>
+                  Índice de Riesgo (Motor SQL)
+                </span>
+                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#0f172a', fontWeight: 700 }}>
+                  {sqlRiskScore.score}% — Categoría: <span style={{ textTransform: 'capitalize' }}>{sqlRiskScore.categoria}</span> (Caída EWMA: -{sqlRiskScore.recent_drop} pts)
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
