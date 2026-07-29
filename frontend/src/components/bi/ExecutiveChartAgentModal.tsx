@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { queryGroqAgent } from '../../services/groq_agent_service';
 
@@ -30,6 +30,34 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputQuery, setInputQuery] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.classList.add('no-scroll');
+    return () => document.body.classList.remove('no-scroll');
+  }, [isOpen]);
+
+  // Escuchar tecla Escape para cerrar modal
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Auto-scroll al final del chat al recibir mensajes
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [messages, isThinking]);
 
   useEffect(() => {
     if (isOpen && target) {
@@ -88,12 +116,14 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
       text: aiReplyText,
       timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
     };
+
     setMessages(prev => [...prev, aiMsg]);
     setIsThinking(false);
   }
 
   const modalJSX = (
     <div
+      className="modal-backdrop-animated"
       style={{
         position: 'fixed',
         top: 0,
@@ -101,7 +131,8 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         right: 0,
         bottom: 0,
         backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(6px)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
@@ -111,6 +142,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
       onClick={onClose}
     >
       <div
+        className="modal-box-animated"
         style={{
           backgroundColor: '#ffffff',
           borderRadius: '20px',
@@ -123,7 +155,6 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
           zIndex: 10000,
           position: 'relative',
           overflow: 'hidden',
-          animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -169,7 +200,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         </div>
 
         {/* Creador de Mensajes / Chat del Agente IA */}
-        <div style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#f1f5f9' }}>
+        <div ref={chatContainerRef} style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#f1f5f9' }}>
           {messages.map(m => (
             <div
               key={m.id}

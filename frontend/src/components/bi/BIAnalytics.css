@@ -107,6 +107,7 @@
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
 .bi-kpi-card:hover {
@@ -277,6 +278,14 @@
   color: #1e293b;
 }
 
+.bi-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.bi-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
 .bi-btn-alert-tutor {
   display: inline-flex;
   align-items: center;
@@ -299,4 +308,44 @@
 .bi-btn-alert-tutor:disabled {
   background: #94a3b8;
   cursor: not-allowed;
+}
+
+/* Staggered KPI card entrance animation */
+.bi-kpi-grid .bi-kpi-card {
+  opacity: 0;
+  animation: biCardSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.bi-kpi-grid .bi-kpi-card:nth-child(1) { animation-delay: 0s; }
+.bi-kpi-grid .bi-kpi-card:nth-child(2) { animation-delay: 0.06s; }
+.bi-kpi-grid .bi-kpi-card:nth-child(3) { animation-delay: 0.12s; }
+.bi-kpi-grid .bi-kpi-card:nth-child(4) { animation-delay: 0.18s; }
+
+@keyframes biCardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Chart card entrance animation */
+.bi-chart-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bi-chart-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Risk table card entrance animation */
+.bi-risk-card {
+  transition: box-shadow 0.2s ease;
+}
+
+.bi-risk-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }

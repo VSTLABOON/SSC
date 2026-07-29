@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import {
   getBIKPIStats,
   getBITrend,
@@ -135,6 +136,22 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
   useEffect(() => {
     if (activePlantelId) {
       loadDashboardData();
+
+      // Suscripción WebSocket en Tiempo Real a la tabla public.incidencias
+      const channel = supabase
+        .channel('realtime-bi-incidencias')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'incidencias' },
+          () => {
+            loadDashboardData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [loadDashboardData, activePlantelId]);
 
@@ -150,6 +167,56 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
     );
     setPlantelReportData(report);
     setExecModalOpen(true);
+  }
+
+  // Construir el contexto exhaustivo multi-dimensional para el Agente IA
+  function buildFullDbContext() {
+    return {
+      _seccion_KPIs: {
+        _descripcion: 'Indicadores globales calculados por fn_bi_get_kpis en PostgreSQL',
+        total_alumnos: kpis?.total_alumnos ?? 0,
+        promedio_isc: kpis?.promedio_puntos ?? 100,
+        semaforo_verde: kpis?.conteo_verde ?? 0,
+        semaforo_naranja: kpis?.conteo_naranja ?? 0,
+        semaforo_rojo: kpis?.conteo_rojo ?? 0,
+        total_incidencias_periodo: kpis?.total_incidencias ?? 0,
+        pct_verde: kpis && kpis.total_alumnos > 0 ? Math.round((kpis.conteo_verde / kpis.total_alumnos) * 100) : 0,
+        pct_naranja: kpis && kpis.total_alumnos > 0 ? Math.round((kpis.conteo_naranja / kpis.total_alumnos) * 100) : 0,
+        pct_rojo: kpis && kpis.total_alumnos > 0 ? Math.round((kpis.conteo_rojo / kpis.total_alumnos) * 100) : 0,
+      },
+      _seccion_tendencia_temporal: {
+        _descripcion: 'Evolución mes a mes de incidencias (fn_bi_get_trend)',
+        registros: (trend || []).map(t => ({
+          periodo: t.mes_nombre,
+          verde: t.verde,
+          naranja: t.naranja,
+          rojo: t.rojo,
+          total: t.total,
+        })),
+      },
+      _seccion_categorias_frecuentes: {
+        _descripcion: 'Desglose por categoría y severidad de incidencias (fn_bi_get_categories)',
+        registros: (categories || []).map(c => ({
+          categoria: c.categoria,
+          severidad: c.severidad,
+          total: c.total_incidencias,
+        })),
+      },
+      _seccion_alumnos_riesgo: {
+        _descripcion: 'Alumnos en atención prioritaria ordenados por Risk Score SQL (fn_bi_get_risk_students)',
+        total_en_riesgo: (riskStudents || []).length,
+        top_15: (riskStudents || []).slice(0, 15).map(s => ({
+          nombre: s.nombre_completo,
+          matricula: s.matricula,
+          grupo: s.grupo_nombre,
+          semaforo: s.nivel_semaforo,
+          puntos_isc: s.puntos_totales,
+          incidencias: s.total_incidencias,
+          risk_score: s.risk_score ?? null,
+          risk_categoria: s.risk_categoria ?? null,
+        })),
+      },
+    };
   }
 
   function handleKpiClick(type: 'kpi_isc' | 'kpi_semaforo' | 'kpi_incidencias' | 'kpi_riesgo') {
@@ -175,7 +242,7 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
       type,
       title,
       subtitle,
-      dataSummary: { ...kpis, riskCount: kpis.conteo_naranja + kpis.conteo_rojo },
+      dataSummary: buildFullDbContext(),
     });
   }
 
@@ -184,7 +251,7 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
       type: 'chart_tendencia',
       title: 'Resumen Ejecutivo: Tendencia Temporal de Incidencias',
       subtitle: 'Evolución cronológica de reportes mes por mes.',
-      dataSummary: { trendData: trend },
+      dataSummary: buildFullDbContext(),
     });
   }
 
@@ -193,7 +260,7 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
       type: 'chart_categorias',
       title: 'Resumen Ejecutivo: Incidencias Frecuentes por Categoría',
       subtitle: 'Desglose frecuencial por motivo de reporte.',
-      dataSummary: { categoryData: categories },
+      dataSummary: buildFullDbContext(),
     });
   }
 

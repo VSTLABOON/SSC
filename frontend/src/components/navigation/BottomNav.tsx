@@ -19,22 +19,41 @@ export const BottomNav: React.FC = () => {
   const isDocente = rol === 'docente';
   const isDirectivoOrOrientador = rol === 'directivo' || rol === 'orientador';
 
-  // Configuración de items de navegación según rol
-  const navItems: BottomNavItem[] = isDocente
+  // Configuración simétrica de items de navegación por rol (2 a la izquierda, FAB al centro, 2 a la derecha)
+  const leftItems: BottomNavItem[] = isDocente
     ? [
         { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/maestro/inicio' },
         { id: 'grupos', label: 'Grupos', icon: 'groups', path: '/maestro/clases' },
-        { id: 'historial', label: 'Historial', icon: 'history', path: '/maestro/historial' },
       ]
     : [
         { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/director/inicio' },
+        { id: 'reporte', label: 'Generar', icon: 'assessment', path: '/director/reporte' },
+      ];
+
+  const rightItems: BottomNavItem[] = isDocente
+    ? [
+        { id: 'reporte', label: 'Reporte', icon: 'assessment', path: '/maestro/reporte' },
+        { id: 'historial', label: 'Historial', icon: 'history', path: '/maestro/historial' },
+      ]
+    : [
         { id: 'historial', label: 'Historial', icon: 'history', path: '/director/historial' },
         ...(rol === 'directivo'
           ? [{ id: 'usuarios', label: 'Usuarios', icon: 'manage_accounts', path: '/director/usuarios' }]
           : []),
       ];
 
+  function triggerHaptic() {
+    try {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    } catch {
+      // Ignorar en dispositivos sin soporte háptico
+    }
+  }
+
   function handleNavigate(path: string) {
+    triggerHaptic();
     setIsFabOpen(false);
     navigate(path);
   }
@@ -80,11 +99,11 @@ export const BottomNav: React.FC = () => {
         </div>
       )}
 
-      {/* Contenedor Flotante de la Navegación Inferior */}
+      {/* Contenedor Flotante de la Navegación Inferior Simétrica */}
       <div className="bottom-nav-container">
         <nav className="bottom-nav-bar">
-          {/* Primer item (Inicio) */}
-          {navItems.slice(0, 1).map(item => {
+          {/* Bloque Izquierdo */}
+          {leftItems.map(item => {
             const isActive = location.pathname === item.path;
             return (
               <button
@@ -104,15 +123,18 @@ export const BottomNav: React.FC = () => {
             <button
               type="button"
               className={`bottom-nav-fab ${isFabOpen ? 'bottom-nav-fab--open' : ''}`}
-              onClick={() => setIsFabOpen(prev => !prev)}
+              onClick={() => {
+                triggerHaptic();
+                setIsFabOpen(prev => !prev);
+              }}
               title="Acciones Rápidas"
             >
               <span className="material-symbols-outlined bottom-nav-fab-icon">add</span>
             </button>
           </div>
 
-          {/* Resto de items */}
-          {navItems.slice(1).map(item => {
+          {/* Bloque Derecho */}
+          {rightItems.map(item => {
             const isActive = location.pathname === item.path;
             return (
               <button

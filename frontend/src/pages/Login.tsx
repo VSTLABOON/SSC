@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 import logoConalep from '../assets/imagenes/CONALEPlogo.png';
 import logoSCTech from '../assets/imagenes/SCTechlogo.png'; // <- Asegúrate de meter este archivo a la carpeta imágenes en tu explorador
@@ -92,12 +93,29 @@ const IconEyeOff = () => (
 
 const Login = () => {
   const navigate = useNavigate();
+  const { session, rol, loading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isHuman, setIsHuman] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Redirigir automáticamente a usuarios con sesión activa
+  useEffect(() => {
+    if (!loading && session && rol && rol !== 'pendiente') {
+      const rutas: Record<string, string> = {
+        alumno: '/alumno/inicio',
+        docente: '/maestro/inicio',
+        directivo: '/director/inicio',
+        orientador: '/director/inicio',
+        padre: '/alumno/inicio',
+      };
+      if (rutas[rol]) {
+        navigate(rutas[rol], { replace: true });
+      }
+    }
+  }, [session, rol, loading, navigate]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

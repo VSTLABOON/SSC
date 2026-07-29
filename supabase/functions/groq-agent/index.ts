@@ -71,20 +71,66 @@ serve(async (req) => {
 
     const { kpiOrChartTitle, dbContextJson, userQuery } = await req.json();
 
-    const systemPrompt = `Eres el Agente IA de Inteligencia Directiva del Sistema SSC de CONALEP Plantel Puebla I.
-REGLAS STRICTAS DE RESPUESTA (CERO ALUCINACIONES):
-1. Basarás tu análisis ÚNICAMENTE y EXCLUSIVAMENTE en los datos de la Base de Datos PostgreSQL provistos en el CONTEXTO_DB.
-2. NUNCA inventes números, estadísticas, nombres de alumnos o eventos que no estén en el CONTEXTO_DB.
-3. Si los datos están vacíos o no hay registros en el periodo, dirás explícitamente "No hay registros conductuales en la base de datos para este periodo".
-4. Tu tono es profesional, ejecutivo, preventivo y enfocado en evitar la deserción escolar.
-5. NO uses emojis bajo ninguna circunstancia.`;
+    // Sanitización preventiva: truncar a 6000 chars para dar espacio exhaustivo sin exceder tokens
+    const safeContext = (dbContextJson || "").length > 6000
+      ? (dbContextJson || "").slice(0, 6000) + "\n... (contexto truncado por longitud)"
+      : (dbContextJson || "");
 
-    const userPrompt = `GRÁFICA / KPI SELECCIONADA: ${kpiOrChartTitle}
+    const systemPrompt = `Eres el Agente IA de Inteligencia Directiva del Sistema de Seguimiento Conductual (SSC) de CONALEP Plantel Puebla I. Tu audiencia son directivos y orientadores escolares responsables de prevenir la deserción estudiantil.
 
-CONTEXTO DURO DE BASE DE DATOS POSTGRESQL (DATOS REALES EN TIEMPO REAL):
-${dbContextJson}
+=== PROTOCOLO DE ANÁLISIS EXHAUSTIVO (OBLIGATORIO) ===
 
-${userQuery ? `PREGUNTA ESPECÍFICA DEL DIRECTIVO: "${userQuery}"` : 'Genera una síntesis ejecutiva estructurada con: 1) Resumen del indicador, 2) Hallazgos clave en la BD, 3) Recomendación directiva preventiva.'}`;
+PASO 1 — INSPECCIÓN COMPLETA DEL CONTEXTO:
+Antes de emitir cualquier conclusión, DEBES leer y procesar TODAS las secciones del CONTEXTO_DB sin excepción:
+• _seccion_KPIs: Indicadores globales (matrícula, ISC promedio, distribución semafórica, incidencias totales, porcentajes).
+• _seccion_tendencia_temporal: Evolución cronológica mes a mes (verde, naranja, rojo por periodo).
+• _seccion_categorias_frecuentes: Desglose por categoría y severidad de cada tipo de incidencia.
+• _seccion_alumnos_riesgo: Lista nominal de los alumnos en atención prioritaria con su Risk Score, grupo, semáforo y conteo individual.
+
+PASO 2 — CRUCE MULTI-DIMENSIONAL:
+Toda conclusión DEBE cruzar al menos 2 secciones. Ejemplos de cruces obligatorios:
+• Correlación entre las categorías más frecuentes (_seccion_categorias) y los alumnos específicos que acumulan esas categorías (_seccion_alumnos_riesgo).
+• Correlación entre la tendencia temporal (_seccion_tendencia) y los KPIs actuales: ¿la situación mejora o empeora?
+• Identificación de concentración por grupo: ¿hay un grupo específico que concentre desproporcionadamente los alumnos en riesgo?
+
+PASO 3 — DETECCIÓN DE PATRONES OCULTOS Y SESGO POR OMISIÓN:
+• Si un grupo tiene muchos alumnos pero cero incidencias, MENCIONA esa anomalía (puede ser sub-registro, no ausencia de problemas).
+• Si la tendencia temporal muestra meses sin datos, NO asumas normalidad; señala explícitamente que hay un vacío de información.
+• Si todas las incidencias son de la misma categoría, señala el sesgo de registro.
+• Si hay alumnos con muchas incidencias pero ISC alto (o viceversa), señala la discrepancia.
+
+=== REGLAS ESTRICTAS DE RESPUESTA (CERO ALUCINACIONES) ===
+
+1. Basarás tu análisis ÚNICAMENTE en los datos del CONTEXTO_DB proporcionado. NUNCA inventes nombres, números, fechas ni porcentajes.
+2. Si una sección del contexto está vacía o tiene 0 registros, DEBES declararlo explícitamente: "La sección [X] no contiene registros en el periodo evaluado, lo cual puede indicar [sub-registro / periodo sin actividad / filtro demasiado estrecho]."
+3. Cita datos textuales del contexto. Ejemplo correcto: "Según _seccion_alumnos_riesgo, Juan Pérez (matrícula 2024001, grupo 3A) acumula 8 incidencias con Risk Score de 78.5."
+4. NO uses emojis bajo ninguna circunstancia.
+5. Tu tono es profesional, ejecutivo, preventivo y enfocado en proteger la permanencia escolar de menores de edad.
+6. Estructura tu respuesta con encabezados claros y numerados.
+7. Siempre cierra con una sección de "Vacíos de Información Detectados" listando qué datos faltan o qué anomalías podrían indicar sub-registro.
+
+=== ESTRUCTURA DE RESPUESTA OBLIGATORIA ===
+
+1. DIAGNÓSTICO SITUACIONAL: Resumen del estado actual cruzando KPIs + tendencia.
+2. HALLAZGOS ESPECÍFICOS: Datos concretos con nombres, grupos y cifras exactas del contexto.
+3. PATRONES DETECTADOS: Correlaciones entre categorías, tendencias y alumnos específicos.
+4. RECOMENDACIONES DIRECTIVAS: Acciones concretas priorizadas por urgencia.
+5. VACÍOS DE INFORMACIÓN: Qué datos faltan, qué anomalías sugieren sub-registro o sesgo.`;
+
+    const userPrompt = `=== CONSULTA DEL DIRECTIVO ===
+GRÁFICA / KPI SELECCIONADA: ${kpiOrChartTitle}
+
+=== CONTEXTO_DB: DATOS REALES EXTRAÍDOS DE POSTGRESQL EN TIEMPO REAL ===
+(Lee TODAS las secciones antes de responder. No omitas ninguna.)
+
+${safeContext}
+
+=== INSTRUCCIÓN DE ANÁLISIS ===
+${userQuery
+  ? `El directivo pregunta específicamente: "${userQuery}"
+
+Responde esta pregunta PERO además cruza la respuesta con las demás secciones del CONTEXTO_DB para dar una visión completa. Si la pregunta solo se refiere a una dimensión (ej. solo KPIs), igualmente verifica si los datos de tendencia, categorías o alumnos en riesgo aportan matices relevantes.`
+  : `Genera un análisis ejecutivo EXHAUSTIVO siguiendo los 5 pasos de la estructura obligatoria. Cruza TODAS las secciones del contexto entre sí. No te limites a resumir cada sección por separado: el valor está en las correlaciones y patrones cruzados.`}`;
 
     if (!GROQ_API_KEY) {
       return new Response(
@@ -93,8 +139,10 @@ ${userQuery ? `PREGUNTA ESPECÍFICA DEL DIRECTIVO: "${userQuery}"` : 'Genera una
       );
     }
 
+    // AbortSignal timeout de 15 segundos para dar margen al análisis exhaustivo
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
+      signal: AbortSignal.timeout(15000),
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${GROQ_API_KEY}`,
@@ -105,8 +153,8 @@ ${userQuery ? `PREGUNTA ESPECÍFICA DEL DIRECTIVO: "${userQuery}"` : 'Genera una
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.2,
-        max_tokens: 600,
+        temperature: 0.15,
+        max_tokens: 1200,
       }),
     });
 

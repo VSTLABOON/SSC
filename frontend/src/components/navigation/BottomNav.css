@@ -12,7 +12,7 @@
   .bottom-nav-container {
     display: block;
     position: fixed;
-    bottom: 14px;
+    bottom: max(14px, env(safe-area-inset-bottom, 14px));
     left: 14px;
     right: 14px;
     z-index: 150; /* Superior al canvas (1) y header (30), inferior a modales (200) */
@@ -36,6 +36,7 @@
   }
 
   .bottom-nav-item {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -57,6 +58,17 @@
   .bottom-nav-item--active {
     color: #204785;
     background: rgba(32, 71, 133, 0.06);
+  }
+
+  .bottom-nav-item--active::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #204785;
+    animation: dotAppear 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .bottom-nav-icon {
@@ -183,5 +195,16 @@
   to {
     opacity: 1;
     transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes dotAppear {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

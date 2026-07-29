@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import type {
   StudentRiskAnalysis,
@@ -29,10 +29,28 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
   groupData,
   plantelData,
 }) => {
+  // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.classList.add('no-scroll');
+    return () => document.body.classList.remove('no-scroll');
+  }, [isOpen]);
+
+  // Cerrar modal con tecla Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const modalJSX = (
     <div
+      className="modal-backdrop-animated"
       style={{
         position: 'fixed',
         top: 0,
@@ -40,7 +58,8 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
         right: 0,
         bottom: 0,
         backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(6px)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
@@ -50,6 +69,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
       onClick={onClose}
     >
       <div
+        className="modal-box-animated"
         style={{
           backgroundColor: '#ffffff',
           borderRadius: '20px',
@@ -61,7 +81,6 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
           zIndex: 10000,
           padding: '28px',
           position: 'relative',
-          animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         onClick={e => e.stopPropagation()}
       >

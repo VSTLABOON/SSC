@@ -98,6 +98,23 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
     }
   }, [isOpen, student, plantelId]);
 
+  // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.classList.add('no-scroll');
+    return () => document.body.classList.remove('no-scroll');
+  }, [isOpen]);
+
+  // Cerrar modal con tecla Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Filtrado de incidencias por Periodo Seleccionado
   const periodFilteredIncidents = useMemo(() => {
     if (selectedPeriodoId === 'all') return incidents;
@@ -122,47 +139,64 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
     sorted.forEach(inc => {
       const d = new Date(inc.created_at);
       let key = '';
+
       if (granularity === 'semanal') {
-        const weekNum = Math.ceil(d.getDate() / 7);
-        const monthName = d.toLocaleDateString('es-MX', { month: 'short' });
-        key = `${monthName} Sem ${weekNum}`;
+        const startOfYear = new Date(d.getFullYear(), 0, 1);
+        const weekNum = Math.ceil((((d.getTime() - startOfYear.getTime()) / 86400000) + startOfYear.getDay() + 1) / 7);
+        key = `Sem ${weekNum}`;
       } else if (granularity === 'mensual') {
-        key = d.toLocaleDateString('es-MX', { month: 'short' });
-        key = key.charAt(0).toUpperCase() + key.slice(1);
+        const mesNombre = d.toLocaleDateString('es-MX', { month: 'short' });
+        key = mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1);
       } else if (granularity === 'bimestral') {
-        const month = d.getMonth();
-        const bimonth = Math.floor(month / 2) + 1;
-        key = `Parcial ${bimonth}`;
-      } else {
-        key = inc.periodos_escolares?.nombre || 'Periodo';
+        const monthNum = d.getMonth();
+        const bimesterNum = Math.floor(monthNum / 2) + 1;
+        key = `Bim ${bimesterNum}`;
+      } else if (granularity === 'semestral') {
+        const monthNum = d.getMonth();
+        const semesterNum = monthNum < 6 ? 1 : 2;
+        key = `Semestre ${semesterNum}`;
       }
 
-      const currentDelta = buckets.get(key) || 0;
-      buckets.set(key, currentDelta + (inc.impacto_puntos || 0));
+      buckets.set(key, (buckets.get(key) || 0) + (inc.impacto_puntos || 0));
     });
 
-    let runningPoints = 100;
-    const result: Array<{ label: string; puntos: number }> = [{ label: 'Inicio', puntos: 100 }];
+    let currentPoints = 100;
+    const result: { label: string; puntos: number }[] = [
+      { label: 'Inicio', puntos: 100 },
+    ];
 
-    buckets.forEach((delta, label) => {
-      runningPoints = Math.max(0, Math.min(100, runningPoints + delta));
-      result.push({ label, puntos: runningPoints });
+    buckets.forEach((impactoTotal, periodLabel) => {
+      currentPoints = Math.max(0, currentPoints + impactoTotal);
+      result.push({
+        label: periodLabel,
+        puntos: currentPoints,
+      });
     });
 
     return result;
   }, [periodFilteredIncidents, granularity, student]);
+
+  // Cálculo de Conteos de Incidencias por Severidad
+  const categoryCounts = useMemo(() => {
+    let verde = 0;
+    let naranja = 0;
+    let rojo = 0;
+
+    periodFilteredIncidents.forEach(inc => {
+      const color = inc.categorias_incidencia?.color_semaforo || 'verde';
+      if (color === 'verde' || inc.impacto_puntos > 0) verde++;
+      else if (color === 'naranja' && inc.impacto_puntos <= 0) naranja++;
+      else if (color === 'rojo') rojo++;
+    });
+
+    return { verde, naranja, rojo, total: periodFilteredIncidents.length };
+  }, [periodFilteredIncidents]);
 
   // Cálculo Dinámico de Puntos y Semáforo Actual
   const periodPuntos = useMemo(() => {
     if (trajectoryData.length === 0) return 100;
     return trajectoryData[trajectoryData.length - 1].puntos;
   }, [trajectoryData]);
-
-  const periodSemaforo = useMemo(() => {
-    if (periodPuntos >= 90) return 'verde';
-    if (periodPuntos >= 70) return 'naranja';
-    return 'rojo';
-  }, [periodPuntos]);
 
   // Diagnóstico Narrativo Humanizado y Detección de Riesgo de Deserción
   const humanDiagnostic = useMemo(() => {
@@ -229,6 +263,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
 
   const modalJSX = (
     <div
+      className="modal-backdrop-animated"
       style={{
         position: 'fixed',
         top: 0,
@@ -236,7 +271,8 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
         right: 0,
         bottom: 0,
         backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(6px)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
@@ -246,6 +282,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
       onClick={onClose}
     >
       <div
+        className="modal-box-animated"
         style={{
           backgroundColor: '#ffffff',
           borderRadius: '20px',
@@ -257,7 +294,6 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
           zIndex: 10000,
           padding: '24px',
           position: 'relative',
-          animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         onClick={e => e.stopPropagation()}
       >

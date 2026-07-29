@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ThemeToggle } from '../components/ThemeToggle';
 import '../pages/Home.css';
 
 interface NavItem {
@@ -92,22 +93,20 @@ export default function StudentLayout() {
           })}
         </div>
         <div className="sidebar-footer">
-          <a
-            href="#"
+          <button
+            type="button"
             className="sidebar-logout"
-            onClick={(event) => {
-              event.preventDefault();
-              handleLogout();
-            }}
+            onClick={handleLogout}
           >
             <Icon name="logout" />
             <span>Cerrar Sesión</span>
-          </a>
+          </button>
         </div>
       </nav>
 
       <div className="home-content">
         <header className="topbar">
+
           <div className="topbar-left">
             <button
               type="button"
@@ -118,6 +117,9 @@ export default function StudentLayout() {
               <Icon name="menu" />
             </button>
             <h1 className="topbar-title">CONALEP Gestión Conductual</h1>
+          </div>
+          <div className="topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <ThemeToggle />
           </div>
         </header>
 

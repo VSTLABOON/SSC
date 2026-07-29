@@ -32,9 +32,113 @@
   --color-text-main: #f8fafc;
   --color-text-sub: #94a3b8;
   --color-border-subtle: #334155;
-  --color-brand-chambray: #3b82f6;
+  --color-brand-chambray: #60a5fa;
   --color-brand-primary: #10b981;
   --color-brand-accent: #059669;
+
+  --c-chambray: #60a5fa;
+  --c-mystic: #0f172a;
+  --c-white: #1e293b;
+  --c-on-surface: #f8fafc;
+  --c-on-surface-var: #cbd5e1;
+  --c-secondary: #94a3b8;
+  --c-outline: #475569;
+  --c-outline-variant: #334155;
+  --c-surface-low: #0f172a;
+  --c-surface-high: #1e293b;
+  --c-surface-cont: #334155;
+
+  color-scheme: dark;
+}
+
+/* ── Reglas Específicas de Componentes para Modo Oscuro ────────────────── */
+[data-theme='dark'] body,
+[data-theme='dark'] .ida-body,
+[data-theme='dark'] .ida-main,
+[data-theme='dark'] .tl-body,
+[data-theme='dark'] .tl-main-content,
+[data-theme='dark'] .home-page,
+[data-theme='dark'] .home-content,
+[data-theme='dark'] .page-canvas,
+[data-theme='dark'] .bi-dashboard {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .grm-sidebar,
+[data-theme='dark'] .tl-sidebar,
+[data-theme='dark'] .sidebar {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .grm-topbar,
+[data-theme='dark'] .tl-topbar,
+[data-theme='dark'] .topbar {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-filter-bar,
+[data-theme='dark'] .bi-kpi-card,
+[data-theme='dark'] .bi-chart-card,
+[data-theme='dark'] .bi-risk-card,
+[data-theme='dark'] .app-modal-box,
+[data-theme='dark'] .grm-modal-box,
+[data-theme='dark'] .fab-actions-menu {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-kpi-title,
+[data-theme='dark'] .bi-kpi-subtext,
+[data-theme='dark'] .bi-chart-title,
+[data-theme='dark'] .bi-filter-label,
+[data-theme='dark'] .grm-sidebar-nav-item,
+[data-theme='dark'] .sidebar-link {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .bi-kpi-value {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .bi-filter-select,
+[data-theme='dark'] .bi-btn-reset {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-table th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme='dark'] .bi-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-table tbody tr:hover {
+  background-color: #334155 !important;
+}
+
+[data-theme='dark'] .bottom-nav-bar {
+  background: rgba(30, 41, 59, 0.92) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+[data-theme='dark'] .bottom-nav-item {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .bottom-nav-item--active {
+  color: #60a5fa !important;
+  background: rgba(96, 165, 250, 0.12) !important;
 }
 
 #root {
@@ -103,6 +207,31 @@ code {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ── Universal Smooth Modal Backdrop & Box Animations ───────────────────── */
+.modal-backdrop-animated {
+  animation: backdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal-box-animated {
+  animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 /* ── Skeleton Loaders (Efecto Shimmer de Carga Fluida) ──────────────────── */
 .skeleton-box {
   background: linear-gradient(
@@ -129,6 +258,52 @@ code {
 @keyframes skeletonShimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ── Smooth Scroll Global ──────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Focus-Visible Ring para Accesibilidad de Teclado ──────────────────── */
+:focus-visible {
+  outline: 2px solid #204785;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #204785;
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar Estilizada ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* ── Estilos para Impresión de Expedientes Escolar en PDF ────────────────── */
