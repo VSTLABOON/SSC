@@ -54,7 +54,7 @@ function RequireAuth({ allowedRoles, children }: { allowedRoles: string[]; child
       orientador: '/director/inicio',
       padre: '/alumno/inicio',
     };
-    return <Navigate to={homeByRole[rol] ?? '/login'} replace />;
+    return <Navigate to={homeByRole[rol || ''] ?? '/login'} replace />;
   }
   return children;
 }

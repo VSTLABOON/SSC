@@ -19,13 +19,14 @@ export const NotificationCenter: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    const userId = session?.user?.id;
+    if (!userId) return;
 
     async function fetchNotifications() {
       const { data, error } = await supabase
         .from('notificaciones')
         .select('*')
-        .eq('usuario_id', session.user.id)
+        .eq('usuario_id', userId)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -46,10 +47,10 @@ export const NotificationCenter: React.FC = () => {
 
     // Suscripción WebSocket en Tiempo Real a la tabla notificaciones del usuario
     const channel = supabase
-      .channel(`realtime-notif-${session.user.id}`)
+      .channel(`realtime-notif-${userId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notificaciones', filter: `usuario_id=eq.${session.user.id}` },
+        { event: 'INSERT', schema: 'public', table: 'notificaciones', filter: `usuario_id=eq.${userId}` },
         () => {
           fetchNotifications();
         }

@@ -176,27 +176,17 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
     return result;
   }, [periodFilteredIncidents, granularity, student]);
 
-  // Cálculo de Conteos de Incidencias por Severidad
-  const categoryCounts = useMemo(() => {
-    let verde = 0;
-    let naranja = 0;
-    let rojo = 0;
-
-    periodFilteredIncidents.forEach(inc => {
-      const color = inc.categorias_incidencia?.color_semaforo || 'verde';
-      if (color === 'verde' || inc.impacto_puntos > 0) verde++;
-      else if (color === 'naranja' && inc.impacto_puntos <= 0) naranja++;
-      else if (color === 'rojo') rojo++;
-    });
-
-    return { verde, naranja, rojo, total: periodFilteredIncidents.length };
-  }, [periodFilteredIncidents]);
-
   // Cálculo Dinámico de Puntos y Semáforo Actual
   const periodPuntos = useMemo(() => {
     if (trajectoryData.length === 0) return 100;
     return trajectoryData[trajectoryData.length - 1].puntos;
   }, [trajectoryData]);
+
+  const periodSemaforo = useMemo(() => {
+    if (periodPuntos >= 90) return 'verde';
+    if (periodPuntos >= 70) return 'naranja';
+    return 'rojo';
+  }, [periodPuntos]);
 
   // Diagnóstico Narrativo Humanizado y Detección de Riesgo de Deserción
   const humanDiagnostic = useMemo(() => {
