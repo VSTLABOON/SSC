@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase, parseSupabaseError } from '../lib/supabaseClient';
 
 export interface BIFilters {
   periodoId?: string;
@@ -203,6 +203,6 @@ export async function sendPreventiveAlertToTutor(
       registrado_por: sessionUserId,
     });
 
-  if (insertErr) throw insertErr;
+  if (insertErr) throw parseSupabaseError(insertErr, 'No se pudo registrar la notificación para el tutor.');
   return true;
 }

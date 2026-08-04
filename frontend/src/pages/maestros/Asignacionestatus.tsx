@@ -357,6 +357,22 @@ export default function AsignacionEstatus() {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando lista de asistencia del grupo...</div>;
   }
 
+  if (materiaId === 'sin-id') {
+    return (
+      <div style={{ padding: '48px 24px', textAlign: 'center', background: 'var(--color-bg-card, #ffffff)', borderRadius: '12px', border: '1px solid var(--color-border-subtle, #e2e8f0)', margin: '24px auto', maxWidth: '500px' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#f59e0b', marginBottom: '12px', display: 'block' }}>warning</span>
+        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 8px', color: 'var(--color-text-main, #0f172a)' }}>No se seleccionó ninguna clase</h3>
+        <p style={{ fontSize: '14px', color: 'var(--color-text-sub, #64748b)', marginBottom: '20px' }}>
+          Por favor selecciona un grupo desde la pantalla de tus clases asignadas para tomar la asistencia.
+        </p>
+        <button className="btn-guardar" onClick={() => navigate('/maestro/clases')} style={{ margin: '0 auto', display: 'inline-flex' }}>
+          <span className="material-symbols-outlined">arrow_back</span>
+          Regresar a Mis Clases
+        </button>
+      </div>
+    );
+  }
+
   // ── Filtrado ─────────────────────────────────────────────────────────────
   const filteredStudents = students
     .map((student, originalIndex) => ({ student, originalIndex }))

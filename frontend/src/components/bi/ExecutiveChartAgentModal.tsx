@@ -182,27 +182,27 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         </div>
 
         {/* Subtitle Bar */}
-        <div style={{ background: '#f8fafc', padding: '8px 24px', borderBottom: '1px solid #e2e8f0', fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+        <div style={{ background: 'var(--color-bg-card, #f8fafc)', padding: '8px 24px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)', fontSize: '12px', color: 'var(--color-text-sub, #64748b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#204785' }}>analytics</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-brand-chambray, #204785)' }}>analytics</span>
             {target.subtitle}
           </div>
-          <span style={{ fontSize: '11px', color: '#0f172a', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--color-text-main, #0f172a)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>database</span>
             Fuente: PostgreSQL RPC (Datos Reales)
           </span>
         </div>
 
         {/* Creador de Mensajes / Chat del Agente IA */}
-        <div ref={chatContainerRef} style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#f1f5f9' }}>
+        <div ref={chatContainerRef} style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--color-bg-app, #f1f5f9)' }}>
           {messages.map(m => (
             <div
               key={m.id}
               style={{
                 alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
                 maxWidth: m.sender === 'user' ? '75%' : '90%',
-                backgroundColor: m.sender === 'user' ? '#204785' : '#ffffff',
-                color: m.sender === 'user' ? '#ffffff' : '#0f172a',
+                backgroundColor: m.sender === 'user' ? 'var(--color-brand-chambray, #204785)' : 'var(--color-bg-card, #ffffff)',
+                color: m.sender === 'user' ? '#ffffff' : 'var(--color-text-main, #0f172a)',
                 padding: '14px 18px',
                 borderRadius: m.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)',

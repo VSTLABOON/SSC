@@ -21,6 +21,7 @@ export const ThemeToggle: React.FC = () => {
       type="button"
       onClick={toggleTheme}
       title={theme === 'dark' ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
+      aria-label={theme === 'dark' ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
       style={{
         background: 'none',
         border: 'none',

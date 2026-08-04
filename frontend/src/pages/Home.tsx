@@ -85,29 +85,51 @@ export default function Home() {
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [incidencias, setIncidencias] = useState<IncidentFromDB[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [hijos, setHijos] = useState<Array<{ alumno_id: string; nombre: string; grupo: string }>>([]);
+  const [selectedHijoId, setSelectedHijoId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
     async function loadData() {
       try {
+        setLoadingData(true);
         let studentId = session!.user!.id;
 
         if (rol === 'padre') {
-          const { data: linkData, error: linkError } = await supabase
+          const { data: linkRows, error: linkError } = await supabase
             .from('padres_alumnos')
-            .select('alumno_id')
-            .eq('padre_id', session!.user!.id)
-            .maybeSingle();
+            .select('alumno_id, alumnos(id, matricula, grupos(nombre), usuarios(nombre, apellido))')
+            .eq('padre_id', session!.user!.id);
 
           if (linkError) throw linkError;
-          if (!linkData?.alumno_id) {
+          if (!linkRows || linkRows.length === 0) {
             console.warn('El tutor no tiene alumnos vinculados.');
             setAlumno(null);
             setLoadingData(false);
             return;
           }
-          studentId = linkData.alumno_id;
+
+          const options = linkRows.map((r: any) => {
+            const al = Array.isArray(r.alumnos) ? r.alumnos[0] : r.alumnos;
+            const us = Array.isArray(al?.usuarios) ? al?.usuarios[0] : al?.usuarios;
+            const gr = Array.isArray(al?.grupos) ? al?.grupos[0] : al?.grupos;
+            return {
+              alumno_id: r.alumno_id,
+              nombre: `${us?.nombre || 'Alumno'} ${us?.apellido || ''}`.trim(),
+              grupo: gr?.nombre || 'Sin Grupo',
+            };
+          });
+
+          setHijos(options);
+
+          let currentChildId = selectedHijoId;
+          if (!currentChildId || !options.some(h => h.alumno_id === currentChildId)) {
+            currentChildId = options[0].alumno_id;
+            setSelectedHijoId(currentChildId);
+            localStorage.setItem('ssc_selected_child_id', currentChildId);
+          }
+          studentId = currentChildId;
         }
 
         const studentData = await getPerfilAlumno(studentId);
@@ -123,7 +145,12 @@ export default function Home() {
     }
 
     loadData();
-  }, [session, rol]);
+  }, [session, rol, selectedHijoId]);
+
+  function handleSelectHijo(childId: string) {
+    setSelectedHijoId(childId);
+    localStorage.setItem('ssc_selected_child_id', childId);
+  }
 
   if (loadingData) {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando información del alumno...</div>;
@@ -140,6 +167,27 @@ export default function Home() {
 
   return (
     <div className="home-canvas-only">
+      {/* Selector de Hijo si el tutor tiene 2 o más estudiantes vinculados */}
+      {rol === 'padre' && hijos.length > 1 && (
+        <div style={{ marginBottom: '16px', background: 'var(--color-bg-card, #ffffff)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--color-border-subtle, #e2e8f0)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="material-symbols-outlined" style={{ color: 'var(--color-brand-chambray, #204785)' }}>family_restroom</span>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>Seleccionar Estudiante Tutelado:</span>
+          </div>
+          <select
+            value={selectedHijoId}
+            onChange={e => handleSelectHijo(e.target.value)}
+            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--color-border-subtle, #cbd5e1)', background: 'var(--color-bg-card, #ffffff)', color: 'var(--color-text-main, #0f172a)', fontSize: '13px', fontWeight: 600, outline: 'none' }}
+          >
+            {hijos.map(h => (
+              <option key={h.alumno_id} value={h.alumno_id}>
+                {h.nombre} (Grupo {h.grupo})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Hero */}
       <div className="hero">
         <div className="hero-text">

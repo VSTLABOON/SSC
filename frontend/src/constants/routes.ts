@@ -5,10 +5,10 @@
  */
 export const RUTA_INICIO_POR_ROL: Record<string, string> = {
   alumno: '/alumno/inicio',
+  padre: '/padre/inicio',
   docente: '/maestro/inicio',
+  orientador: '/orientador/inicio',
   directivo: '/director/inicio',
-  orientador: '/director/inicio',
-  padre: '/alumno/inicio',
   pendiente: '/pendiente-activacion',
 };
 

@@ -505,23 +505,23 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
                   style={{
                     padding: '14px 16px',
                     borderRadius: '12px',
-                    background: '#ffffff',
-                    border: '1px solid #e2e8f0',
+                    background: 'var(--color-bg-card, #ffffff)',
+                    border: '1px solid var(--color-border-subtle, #e2e8f0)',
                     borderLeft: `4px solid ${inc.categorias_incidencia?.color_semaforo === 'rojo' ? '#ef4444' : inc.categorias_incidencia?.color_semaforo === 'naranja' ? '#f59e0b' : '#10b981'}`,
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>
+                    <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-text-main, #0f172a)' }}>
                       {inc.categorias_incidencia?.nombre || 'Incidencia General'}
                     </span>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-sub, #64748b)' }}>
                       {new Date(inc.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
-                  <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#475569', lineHeight: 1.4 }}>
+                  <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'var(--color-text-sub, #475569)', lineHeight: 1.4 }}>
                     {inc.descripcion}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', color: '#64748b' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', color: 'var(--color-text-sub, #64748b)' }}>
                     <span>Lugar: {inc.lugar || 'No especificado'}</span>
                     <span style={{ fontWeight: 600, color: inc.impacto_puntos > 0 ? '#10b981' : '#ef4444' }}>
                       Impacto: {inc.impacto_puntos > 0 ? `+${inc.impacto_puntos}` : inc.impacto_puntos} pts
@@ -534,7 +534,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
         </div>
 
         {/* Footer del Modal */}
-        <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--color-border-subtle, #e2e8f0)', display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
           <button
             type="button"
             className="bi-btn-reset"

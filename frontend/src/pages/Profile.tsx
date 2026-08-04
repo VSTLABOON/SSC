@@ -34,20 +34,22 @@ export default function Profile() {
         let studentId = session!.user!.id;
 
         if (rol === 'padre') {
-          const { data: linkData, error: linkError } = await supabase
+          const { data: linkRows, error: linkError } = await supabase
             .from('padres_alumnos')
             .select('alumno_id')
-            .eq('padre_id', session!.user!.id)
-            .maybeSingle();
+            .eq('padre_id', session!.user!.id);
 
           if (linkError) throw linkError;
-          if (!linkData?.alumno_id) {
+          if (!linkRows || linkRows.length === 0) {
             console.warn('El tutor no tiene alumnos vinculados.');
             setAlumno(null);
             setLoading(false);
             return;
           }
-          studentId = linkData.alumno_id;
+
+          const selectedId = localStorage.getItem('ssc_selected_child_id');
+          const matched = linkRows.find(r => r.alumno_id === selectedId);
+          studentId = matched ? matched.alumno_id : linkRows[0].alumno_id;
         }
 
         const profileData = await getPerfilAlumno(studentId);

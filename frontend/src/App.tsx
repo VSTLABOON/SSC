@@ -4,32 +4,48 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { resolverRutaInicio } from './constants/routes';
 import StudentLayout from './layouts/StudentLayout';
+import ParentLayout from './layouts/ParentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
+import CounselorLayout from './layouts/CounselorLayout';
 import DirectorLayout from './layouts/DirectorLayout';
 
 import Login from './pages/Login';
 import PendienteActivacion from './pages/PendienteActivacion';
 
-// Dynamic lazy imports para code-splitting de rutas
-const Home = lazy(() => import('./pages/Home'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Schedule = lazy(() => import('./pages/Schedule'));
-const History = lazy(() => import('./pages/History'));
+// Dynamic lazy imports para code-splitting por rol (Escalabilidad Modular)
+// Rol: alumno
+const InicioAlumno = lazy(() => import('./pages/alumno/InicioAlumno'));
+const PerfilAlumno = lazy(() => import('./pages/alumno/PerfilAlumno'));
+const HorarioAlumno = lazy(() => import('./pages/alumno/HorarioAlumno'));
+const HistorialAlumno = lazy(() => import('./pages/alumno/HistorialAlumno'));
 
-const InicioMaestro = lazy(() => import('./pages/maestros/InicioMaestro'));
-const Clasespantalla = lazy(() => import('./pages/maestros/Clasespantalla'));
-const Asignacionestatus = lazy(() => import('./pages/maestros/Asignacionestatus'));
-const GenerarReporteM = lazy(() => import('./pages/maestros/GenerarReporteM'));
-const HistorialReportesM = lazy(() => import('./pages/maestros/HistorialReportesM'));
+// Rol: padre
+const InicioPadre = lazy(() => import('./pages/padre/InicioPadre'));
+const PerfilTutelado = lazy(() => import('./pages/padre/PerfilTutelado'));
+const HorarioTutelado = lazy(() => import('./pages/padre/HorarioTutelado'));
+const HistorialTutelado = lazy(() => import('./pages/padre/HistorialTutelado'));
 
-const InicioDA = lazy(() => import('./pages/DirectivosYAsesores/InicioDA'));
-const GenerarReporteDA = lazy(() => import('./pages/DirectivosYAsesores/GenerarReporteDA'));
-const Historialreporteda = lazy(() => import('./pages/DirectivosYAsesores/Historialreporteda'));
-const GestionUsuarios = lazy(() => import('./pages/DirectivosYAsesores/GestionUsuarios'));
+// Rol: docente
+const InicioDocente = lazy(() => import('./pages/docente/InicioDocente'));
+const MisClases = lazy(() => import('./pages/docente/MisClases'));
+const PaseLista = lazy(() => import('./pages/docente/PaseLista'));
+const GenerarReporteDocente = lazy(() => import('./pages/docente/GenerarReporteDocente'));
+const HistorialDocente = lazy(() => import('./pages/docente/HistorialDocente'));
+
+// Rol: orientador
+const InicioOrientador = lazy(() => import('./pages/orientador/InicioOrientador'));
+const GenerarReporteOrientador = lazy(() => import('./pages/orientador/GenerarReporteOrientador'));
+const HistorialOrientador = lazy(() => import('./pages/orientador/HistorialOrientador'));
+
+// Rol: directivo
+const InicioDirectivo = lazy(() => import('./pages/directivo/InicioDirectivo'));
+const GenerarReporteDirectivo = lazy(() => import('./pages/directivo/GenerarReporteDirectivo'));
+const HistorialDirectivo = lazy(() => import('./pages/directivo/HistorialDirectivo'));
+const GestionUsuariosDirectivo = lazy(() => import('./pages/directivo/GestionUsuariosDirectivo'));
 
 function LoadingSpinner() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#DDE4E5', color: '#204785' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--color-bg-app, #DDE4E5)', color: 'var(--color-brand-chambray, #204785)' }}>
       <div className="spinner" style={{ border: '4px solid rgba(0,0,0,0.1)', width: '36px', height: '36px', borderRadius: '50%', borderLeftColor: '#204785', animation: 'spin 1s linear infinite' }} />
       <style>{`
         @keyframes spin {
@@ -71,39 +87,56 @@ export default function App() {
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route path="/login" element={<Login />} />
-
-          {/* Ruta pública para cuentas pendientes de activación */}
           <Route path="/pendiente-activacion" element={<PendienteActivacion />} />
 
+          {/* 1. Portal exclusivo: ALUMNO */}
           <Route path="/alumno" element={
-            <RequireAuth allowedRoles={['alumno', 'padre']}><StudentLayout /></RequireAuth>
+            <RequireAuth allowedRoles={['alumno']}><StudentLayout /></RequireAuth>
           }>
-            <Route path="inicio" element={<Home />} />
-            <Route path="perfil" element={<Profile />} />
-            <Route path="horario" element={<Schedule />} />
-            <Route path="historial" element={<History />} />
+            <Route path="inicio" element={<InicioAlumno />} />
+            <Route path="perfil" element={<PerfilAlumno />} />
+            <Route path="horario" element={<HorarioAlumno />} />
+            <Route path="historial" element={<HistorialAlumno />} />
           </Route>
 
+          {/* 2. Portal exclusivo: PADRE / TUTOR */}
+          <Route path="/padre" element={
+            <RequireAuth allowedRoles={['padre']}><ParentLayout /></RequireAuth>
+          }>
+            <Route path="inicio" element={<InicioPadre />} />
+            <Route path="perfil" element={<PerfilTutelado />} />
+            <Route path="horario" element={<HorarioTutelado />} />
+            <Route path="historial" element={<HistorialTutelado />} />
+          </Route>
+
+          {/* 3. Portal exclusivo: DOCENTE */}
           <Route path="/maestro" element={
             <RequireAuth allowedRoles={['docente']}><TeacherLayout /></RequireAuth>
           }>
-            <Route path="inicio" element={<InicioMaestro />} />
-            <Route path="clases" element={<Clasespantalla />} />
-            <Route path="asistencia" element={<Asignacionestatus />} />
-            <Route path="reporte" element={<GenerarReporteM />} />
-            <Route path="historial" element={<HistorialReportesM />} />
+            <Route path="inicio" element={<InicioDocente />} />
+            <Route path="clases" element={<MisClases />} />
+            <Route path="asistencia" element={<PaseLista />} />
+            <Route path="reporte" element={<GenerarReporteDocente />} />
+            <Route path="historial" element={<HistorialDocente />} />
           </Route>
 
-          <Route path="/director" element={
-            <RequireAuth allowedRoles={['directivo', 'orientador']}><DirectorLayout /></RequireAuth>
+          {/* 4. Portal exclusivo: ORIENTADOR */}
+          <Route path="/orientador" element={
+            <RequireAuth allowedRoles={['orientador']}><CounselorLayout /></RequireAuth>
           }>
-            <Route path="inicio" element={<InicioDA />} />
-            <Route path="reporte" element={<GenerarReporteDA />} />
-            <Route path="historial" element={<Historialreporteda />} />
-            {/* Solo directivo — el orientador no tiene acceso a gestión de usuarios */}
-            <Route path="usuarios" element={
-              <RequireAuth allowedRoles={['directivo']}><GestionUsuarios /></RequireAuth>
-            } />
+            <Route path="inicio" element={<InicioOrientador />} />
+            <Route path="reporte" element={<GenerarReporteOrientador />} />
+            <Route path="historial" element={<HistorialOrientador />} />
+          </Route>
+
+          {/* 5. Portal exclusivo: DIRECTIVO */}
+          <Route path="/director" element={
+            <RequireAuth allowedRoles={['directivo']}><DirectorLayout /></RequireAuth>
+          }>
+            <Route path="inicio" element={<InicioDirectivo />} />
+            <Route path="reporte" element={<GenerarReporteDirectivo />} />
+            <Route path="historial" element={<HistorialDirectivo />} />
+            <Route path="usuarios" element={<GestionUsuariosDirectivo />} />
           </Route>
 
           <Route path="*" element={<DefaultRouteRedirect />} />
