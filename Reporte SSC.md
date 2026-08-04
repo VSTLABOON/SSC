@@ -23,9 +23,9 @@
    - 2.2 Patrón de Arquitectura por Capas
    - 2.3 Modelo de Seguridad RBAC y Code-Splitting por Rol
    - 2.4 Diagramas de Arquitectura Global de Infraestructura
-3. [Capítulo III: Diseño y Modelado de la Base de Datos](#capítulo-iii-diseño-y-modelado-de-la-base-de-datos)
-   - 3.1 Modelo Entidad-Relación (Diagrama ERD Completo)
-   - 3.2 Catálogo Extenso de Tablas, Campos, Tipos de Datos y Restricciones
+3. [Capítulo III: Diseño y Modelado de la Base de Datos (24 Tablas Completa)](#capítulo-iii-diseño-y-modelado-de-la-base-de-datos)
+   - 3.1 Modelo Entidad-Relación (Diagrama ERD Completo con 24 Tablas)
+   - 3.2 Catálogo Extenso de las 24 Tablas, Campos, Tipos de Datos y Restricciones
    - 3.3 Código DDL Completo en SQL (Scripts Ejecutables)
    - 3.4 Algoritmo de Semaforización Conductual y Triggers Automáticos
    - 3.5 Funciones Almacenadas (RPCs PL/pgSQL) del Centro BI
@@ -169,9 +169,9 @@ graph TB
 
 ---
 
-## CAPÍTULO III: DISEÑO Y MODELADO DE LA BASE DE DATOS
+## CAPÍTULO III: DISEÑO Y MODELADO DE LA BASE DE DATOS (24 TABLAS COMPLETA)
 
-### 3.1 Modelo Entidad-Relación (Diagrama ERD Completo)
+### 3.1 Modelo Entidad-Relación (Diagrama ERD Completo con las 24 Tablas)
 
 ```mermaid
 erDiagram
@@ -179,23 +179,38 @@ erDiagram
     PLANTELES ||--o{ GRUPOS : "alberga"
     PLANTELES ||--o{ CARRERAS : "imparte"
     PLANTELES ||--o{ PERIODOS_ESCOLARES : "gestiona"
+    PLANTELES ||--o{ AVISOS : "publica"
+    PLANTELES ||--o{ CONFIGURACIONES_PLANTEL : "configura"
+    PLANTELES ||--o{ EXPORTACIONES_REPORTES : "genera"
 
     USUARIOS ||--o| ALUMNOS : "perfil_estudiante"
     USUARIOS ||--o{ PADRES_ALUMNOS : "es_tutor_en"
     USUARIOS ||--o{ INCIDENCIAS : "registra"
     USUARIOS ||--o{ NOTIFICACIONES : "recibe"
+    USUARIOS ||--o{ MATERIAS : "imparte_materia"
+    USUARIOS ||--o{ AUDITORIA_LOGS : "acciona"
+    USUARIOS ||--o| USUARIOS_RLS_BYPASS : "configura_bypass"
 
     GRUPOS ||--o{ ALUMNOS : "inscritos"
-    GRUPOS ||--o{ MATERIAS : "impartidas"
+    GRUPOS ||--o{ MATERIAS : "cursa"
     CARRERAS ||--o{ ALUMNOS : "pertenece"
+    CARRERAS ||--o{ GRUPOS : "organiza"
 
     ALUMNOS ||--o{ PADRES_ALUMNOS : "vinculado"
     ALUMNOS ||--o{ INCIDENCIAS : "acumula"
     ALUMNOS ||--o{ ASISTENCIAS : "evaluado"
+    ALUMNOS ||--o{ PARTICIPACIONES : "registra"
     ALUMNOS ||--o{ CONTACTOS_EMERGENCY : "registra"
+    ALUMNOS ||--o{ SEGUIMIENTOS : "recibe_orientacion"
+    ALUMNOS ||--o{ ALUMNO_INSIGNIAS : "recibe_insignia"
+    ALUMNOS ||--o{ JUSTIFICANTES : "presenta"
+    ALUMNOS ||--o{ CITATORIOS : "notificado_en"
 
+    INSIGNIAS ||--o{ ALUMNO_INSIGNIAS : "asigna"
     MATERIAS ||--o{ ASISTENCIAS : "materia_evaluada"
+    MATERIAS ||--o{ PARTICIPACIONES : "evaluada_en"
     CATEGORIAS_INCIDENCIA ||--o{ INCIDENCIAS : "tipo"
+    PERIODOS_ESCOLARES ||--o{ INCIDENCIAS : "ocurre_en"
 
     USUARIOS {
         uuid id PK
@@ -205,7 +220,13 @@ erDiagram
         string rol
         uuid plantel_id FK
         boolean activo
-        string cargo
+    }
+
+    PLANTELES {
+        uuid id PK
+        string nombre
+        string clave
+        text direccion
     }
 
     ALUMNOS {
@@ -218,73 +239,100 @@ erDiagram
         integer puntos_conducta
     }
 
-    PADRES_ALUMNOS {
-        uuid padre_id PK, FK
-        uuid alumno_id PK, FK
-        string parentesco
-        boolean notificaciones_activas
-    }
-
-    INCIDENCIAS {
-        uuid id PK
-        uuid alumno_id FK
-        uuid categoria_id FK
-        text descripcion
-        string lugar
-        integer impacto_puntos
-        uuid registrado_por FK
-        timestamp created_at
-    }
-
-    ASISTENCIAS {
-        uuid id PK
-        uuid alumno_id FK
-        uuid materia_id FK
-        date fecha
-        string estatus
-        integer desempeno
-        text observaciones
-    }
-
-    CATEGORIAS_INCIDENCIA {
+    INSIGNIAS {
         uuid id PK
         string nombre
-        string tipo
-        integer puntos_impacto
-        string color_semaforo
+        string icono
+        integer puntos_bonus
     }
 
-    NOTIFICACIONES {
+    ALUMNO_INSIGNIAS {
+        uuid alumno_id PK, FK
+        uuid insignia_id PK, FK
+        timestamp otorgado_at
+    }
+
+    JUSTIFICANTES {
+        uuid id PK
+        uuid alumno_id FK
+        date fecha_inicio
+        date fecha_fin
+        string motivo
+        string archivo_url
+        string estado
+    }
+
+    CITATORIOS {
+        uuid id PK
+        uuid alumno_id FK
+        timestamp fecha_cita
+        string motivo
+        string estatus
+    }
+
+    AUDITORIA_LOGS {
         uuid id PK
         uuid usuario_id FK
-        string titulo
-        text mensaje
-        string tipo
-        boolean leida
-        timestamp created_at
+        string accion
+        string tabla_afectada
+        timestamp fecha
+    }
+
+    CONFIGURACIONES_PLANTEL {
+        uuid id PK
+        uuid plantel_id FK
+        integer umbral_verde
+        integer umbral_naranja
+    }
+
+    EXPORTACIONES_REPORTES {
+        uuid id PK
+        uuid plantel_id FK
+        string tipo_reporte
+        timestamp fecha_generacion
+    }
+
+    USUARIOS_RLS_BYPASS {
+        uuid usuario_id PK, FK
+        boolean bypass_activo
     }
 ```
 
-### 3.2 Catálogo Extenso de Tablas
+### 3.2 Catálogo Extenso de las 24 Tablas
 
-1. **`planteles`**: Planteles educativos que integran la red CONALEP.
-2. **`usuarios`**: Cuentas con autenticación JWT de Supabase.
-3. **`carreras`**: Carreras técnicas impartidas en cada plantel.
-4. **`grupos`**: Grupos escolares por semestre (1° a 6°) y turno.
-5. **`alumnos`**: Ficha académica del estudiante y nivel de semáforo conductual.
-6. **`padres_alumnos`**: Tabla relacional N:M entre Tutores Legales y Estudiantes.
-7. **`materias`**: Asignaturas del mapa curricular vinculadas a un docente.
-8. **`periodos_escolares`**: Semestres académicos activos.
-9. **`categorias_incidencia`**: Catálogo de faltas y reconocimientos con puntos asociados.
-10. **`incidencias`**: Bitácora histórica de reportes disciplinarios.
-11. **`asistencias`**: Registro diario de pase de lista por clase y fecha.
-12. **`notificaciones`**: Centro de mensajes de alerta en tiempo real.
+1. **`planteles`**: Registra la infraestructura física institucional (ej. Plantel Puebla I).
+2. **`periodos_escolares`**: Gestiona los ciclos académicos semestrales activos y sus rangos de fechas.
+3. **`carreras`**: Carreras técnicas profesionales ofrecidas por el plantel (ej. Informática, Electromecánica).
+4. **`grupos`**: Semestres (1° a 6°) y secciones académicas por turno.
+5. **`usuarios`**: Perfiles con autenticación JWT vinculados a Supabase Auth.
+6. **`alumnos`**: Ficha académica, expediente conductual y nivel de semáforo conductual.
+7. **`padres_alumnos`**: Relación N:M que soporta múltiples estudiantes vinculados a un solo tutor legal.
+8. **`contactos_emergency`**: Directorio de teléfonos de contacto de emergencia de cada estudiante.
+9. **`materias`**: Asignaturas del mapa curricular y su docente titular asignado.
+10. **`categorias_incidencia`**: Catálogo parametrizado de conductas (positivas o faltas) y su puntaje de impacto.
+11. **`incidencias`**: Bitácora histórica de reportes disciplinarios y reconocimientos aplicados.
+12. **`asistencias`**: Registro diario del pase de lista por materia, fecha, estatus y desempeño.
+13. **`participaciones`**: Registro de intervenciones académicas destacadas o nulas en clase.
+14. **`seguimientos`**: Expediente psicopedagógico y citas de atención por Orientación Educativa.
+15. **`avisos`**: Comunicados informativos e institucionales dirigidos a la comunidad escolar.
+16. **`insignias`**: Catálogo de reconocimientos y bonificaciones por mérito académico/conductual.
+17. **`alumno_insignias`**: Registro de insignias y reconocimientos otorgados a estudiantes.
+18. **`justificantes`**: Solicitudes y comprobantes médicos o legales para justificación de faltas.
+19. **`citatorios`**: Citatorios formalizados para atención presencial de tutores legales.
+20. **`notificaciones`**: Centro de alertas preventivas en tiempo real dirigidas a tutores y personal.
+21. **`auditoria_logs`**: Bitácora de trazabilidad de cambios críticos realizados en la plataforma.
+22. **`usuarios_rls_bypass`**: Control de seguridad para excepciones administrativas de super-usuario.
+23. **`exportaciones_reportes`**: Historial de archivos PDF/Excel consolidados generados por directivos.
+24. **`configuraciones_plantel`**: Parámetros globales de reglas de negocio y umbrales por plantel.
 
-### 3.3 Código DDL Completo en SQL
+### 3.3 Código DDL Completo en SQL (Las 24 Tablas del Sistema)
 
 ```sql
--- Script DDL de Creación del Esquema del Sistema Conductual (SSC)
+-- ============================================================================
+-- SCRIPT DDL MAESTRO - SISTEMA CONDUCTUAL CONALEP (SSC) - 24 TABLAS COMPLETO
+-- ============================================================================
 
+-- 1. Planteles
 CREATE TABLE IF NOT EXISTS public.planteles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nombre VARCHAR(255) NOT NULL,
@@ -293,6 +341,19 @@ CREATE TABLE IF NOT EXISTS public.planteles (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 2. Períodos Escolares
+CREATE TABLE IF NOT EXISTS public.periodos_escolares (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plantel_id UUID NOT NULL REFERENCES public.planteles(id) ON DELETE CASCADE,
+    nombre VARCHAR(100) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_periodo_activo_plantel ON public.periodos_escolares (plantel_id) WHERE (activo = true);
+
+-- 3. Usuarios
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -305,6 +366,7 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 4. Carreras
 CREATE TABLE IF NOT EXISTS public.carreras (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     plantel_id UUID NOT NULL REFERENCES public.planteles(id) ON DELETE CASCADE,
@@ -313,6 +375,7 @@ CREATE TABLE IF NOT EXISTS public.carreras (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 5. Grupos
 CREATE TABLE IF NOT EXISTS public.grupos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     plantel_id UUID NOT NULL REFERENCES public.planteles(id) ON DELETE CASCADE,
@@ -323,6 +386,7 @@ CREATE TABLE IF NOT EXISTS public.grupos (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 6. Alumnos
 CREATE TABLE IF NOT EXISTS public.alumnos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     usuario_id UUID UNIQUE NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
@@ -334,6 +398,7 @@ CREATE TABLE IF NOT EXISTS public.alumnos (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 7. Padres / Alumnos (N:M)
 CREATE TABLE IF NOT EXISTS public.padres_alumnos (
     padre_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
     alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
@@ -342,6 +407,18 @@ CREATE TABLE IF NOT EXISTS public.padres_alumnos (
     PRIMARY KEY (padre_id, alumno_id)
 );
 
+-- 8. Contactos de Emergencia
+CREATE TABLE IF NOT EXISTS public.contactos_emergency (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
+    nombre_contacto VARCHAR(150) NOT NULL,
+    parentesco VARCHAR(50) DEFAULT 'Familiar',
+    telefono VARCHAR(30) NOT NULL,
+    es_principal BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 9. Materias
 CREATE TABLE IF NOT EXISTS public.materias (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     grupo_id UUID NOT NULL REFERENCES public.grupos(id) ON DELETE CASCADE,
@@ -351,10 +428,22 @@ CREATE TABLE IF NOT EXISTS public.materias (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 10. Categorías de Incidencia
+CREATE TABLE IF NOT EXISTS public.categorias_incidencia (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre VARCHAR(150) NOT NULL,
+    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('positiva', 'negativa')),
+    puntos_impacto INTEGER NOT NULL,
+    color_semaforo VARCHAR(20) NOT NULL CHECK (color_semaforo IN ('verde', 'naranja', 'rojo')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 11. Incidencias
 CREATE TABLE IF NOT EXISTS public.incidencias (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
     categoria_id UUID NOT NULL REFERENCES public.categorias_incidencia(id),
+    periodo_id UUID REFERENCES public.periodos_escolares(id) ON DELETE SET NULL,
     descripcion TEXT NOT NULL,
     lugar VARCHAR(150) DEFAULT 'Aula',
     impacto_puntos INTEGER NOT NULL,
@@ -362,6 +451,7 @@ CREATE TABLE IF NOT EXISTS public.incidencias (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 12. Asistencias
 CREATE TABLE IF NOT EXISTS public.asistencias (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
@@ -371,14 +461,132 @@ CREATE TABLE IF NOT EXISTS public.asistencias (
     desempeno INTEGER DEFAULT 100 CHECK (desempeno BETWEEN 0 AND 100),
     observaciones TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(alumno_id, materia_id, fecha)
+    CONSTRAINT uq_asistencia_dia UNIQUE (alumno_id, materia_id, fecha)
 );
 
--- Índices de Alto Rendimiento
+-- 13. Participaciones
+CREATE TABLE IF NOT EXISTS public.participaciones (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
+    materia_id UUID NOT NULL REFERENCES public.materias(id) ON DELETE CASCADE,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    nivel VARCHAR(20) NOT NULL CHECK (nivel IN ('positiva', 'nula')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 14. Seguimientos Psicopedagógicos
+CREATE TABLE IF NOT EXISTS public.seguimientos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
+    orientador_id UUID NOT NULL REFERENCES public.usuarios(id),
+    observaciones TEXT NOT NULL,
+    estado_atencion VARCHAR(50) DEFAULT 'En proceso',
+    fecha_cita TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 15. Avisos Institucionales
+CREATE TABLE IF NOT EXISTS public.avisos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plantel_id UUID NOT NULL REFERENCES public.planteles(id) ON DELETE CASCADE,
+    titulo VARCHAR(200) NOT NULL,
+    contenido TEXT NOT NULL,
+    destinatarios VARCHAR(50) DEFAULT 'todos',
+    fecha_publicacion TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 16. Insignias
+CREATE TABLE IF NOT EXISTS public.insignias (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    icono VARCHAR(100) DEFAULT 'star',
+    puntos_bonus INTEGER DEFAULT 5,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 17. Alumno / Insignias (N:M)
+CREATE TABLE IF NOT EXISTS public.alumno_insignias (
+    alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
+    insignia_id UUID NOT NULL REFERENCES public.insignias(id) ON DELETE CASCADE,
+    otorgado_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (alumno_id, insignia_id)
+);
+
+-- 18. Justificantes
+CREATE TABLE IF NOT EXISTS public.justificantes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    motivo TEXT NOT NULL,
+    archivo_url TEXT,
+    estado VARCHAR(30) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aprobado', 'rechazado')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 19. Citatorios
+CREATE TABLE IF NOT EXISTS public.citatorios (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    alumno_id UUID NOT NULL REFERENCES public.alumnos(id) ON DELETE CASCADE,
+    fecha_cita TIMESTAMP WITH TIME ZONE NOT NULL,
+    motivo TEXT NOT NULL,
+    estatus VARCHAR(30) DEFAULT 'programado' CHECK (estatus IN ('programado', 'atendido', 'cancelado')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 20. Notificaciones
+CREATE TABLE IF NOT EXISTS public.notificaciones (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
+    titulo VARCHAR(200) NOT NULL,
+    mensaje TEXT NOT NULL,
+    tipo VARCHAR(50) DEFAULT 'info',
+    leida BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 21. Auditoría Logs
+CREATE TABLE IF NOT EXISTS public.auditoria_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID REFERENCES public.usuarios(id) ON DELETE SET NULL,
+    accion VARCHAR(100) NOT NULL,
+    tabla_afectada VARCHAR(100) NOT NULL,
+    detalles JSONB,
+    fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 22. Usuarios RLS Bypass Control
+CREATE TABLE IF NOT EXISTS public.usuarios_rls_bypass (
+    usuario_id UUID PRIMARY KEY REFERENCES public.usuarios(id) ON DELETE CASCADE,
+    bypass_activo BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 23. Exportaciones de Reportes
+CREATE TABLE IF NOT EXISTS public.exportaciones_reportes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plantel_id UUID NOT NULL REFERENCES public.planteles(id) ON DELETE CASCADE,
+    tipo_reporte VARCHAR(100) NOT NULL,
+    usuario_id UUID REFERENCES public.usuarios(id),
+    fecha_generacion TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 24. Configuraciones de Plantel
+CREATE TABLE IF NOT EXISTS public.configuraciones_plantel (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plantel_id UUID UNIQUE NOT NULL REFERENCES public.planteles(id) ON DELETE CASCADE,
+    umbral_verde INTEGER DEFAULT 80,
+    umbral_naranja INTEGER DEFAULT 50,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices Optimización
 CREATE INDEX IF NOT EXISTS idx_alumnos_grupo ON public.alumnos(grupo_id);
 CREATE INDEX IF NOT EXISTS idx_padres_alumnos_padre ON public.padres_alumnos(padre_id);
 CREATE INDEX IF NOT EXISTS idx_incidencias_alumno ON public.incidencias(alumno_id);
 CREATE INDEX IF NOT EXISTS idx_asistencias_alumno_fecha ON public.asistencias(alumno_id, fecha);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario ON public.notificaciones(usuario_id, leida);
 ```
 
 ### 3.4 Algoritmo de Semaforización Conductual
