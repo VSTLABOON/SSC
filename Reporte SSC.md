@@ -1,4 +1,4 @@
-# 📚 TESINA Y MEMORIA TÉCNICA DE ARQUITECTURA
+# TESINA Y MEMORIA TÉCNICA DE ARQUITECTURA
 ## "DISEÑO, ARQUITECTURA E IMPLEMENTACIÓN DEL SISTEMA CONDUCTUAL CONALEP (SSC): PLATAFORMA WEB INTEGRAL DE SEMAFORIZACIÓN CONDUCTUAL EN TIEMPO REAL, PASE DE LISTA E INTELIGENCIA DE NEGOCIOS"
 
 ---
@@ -53,22 +53,22 @@
 ### 1.1 Planteamiento del Problema en la Educación Media Superior
 En la Educación Media Superior (EMS), factores como la falta de seguimiento oportuno a faltas disciplinarias, el ausentismo no detectado a tiempo y la limitada comunicación entre la institución educativa y los tutores legales constituyen causas primarias de reprobación y deserción escolar.
 
-Los sistemas tradicionales de gestión escolar suelen ser puramente administrativos (captura de calificaciones finales al concluir el semestre), careciendo de mecanismos de **alerta temprana** que permitan intervenir pedagógica o psicológicamente mientras el estudiante aún se encuentra a tiempo de recuperar su trayectoria académica.
+Los sistemas tradicionales de gestión escolar suelen ser puramente administrativos (captura de calificaciones finales al concluir el semestre), careciendo de mecanismos de alerta temprana que permitan intervenir pedagógica o psicológicamente mientras el estudiante aún se encuentra a tiempo de recuperar su trayectoria académica.
 
 ### 1.2 Objetivos del Sistema
 #### Objetivo General:
-Diseñar, construir e implementar una plataforma web progresiva e integral denominada **Sistema Conductual CONALEP (SSC)**, orientada al monitoreo en tiempo real del estatus conductual de los estudiantes mediante un algoritmo de semaforización automática (**Verde**, **Naranja**, **Rojo**), pase de lista diario por materia, notificación preventiva a tutores legales y análisis ejecutivo de indicadores (BI).
+Diseñar, construir e implementar una plataforma web progresiva e integral denominada Sistema Conductual CONALEP (SSC), orientada al monitoreo en tiempo real del estatus conductual de los estudiantes mediante un algoritmo de semaforización automática (Verde, Naranja, Rojo), pase de lista diario por materia, notificación preventiva a tutores legales y análisis ejecutivo de indicadores (BI).
 
 #### Objetivos Específicos:
 1. Automatizar el cálculo del índice conductual de cada estudiante a partir del registro estandarizado de reconocimientos positivos y faltas disciplinarias.
-2. Garantizar la comunicación inmediata con padres de familia a través de notificaciones preventivas y un portal dedicado con soporte nativo para **múltiples tutelados**.
+2. Garantizar la comunicación inmediata con padres de familia a través de notificaciones preventivas y un portal dedicado con soporte nativo para múltiples tutelados.
 3. Dotar a los profesores de una herramienta ágil para el pase de lista diario por materia, registrando simultáneamente niveles de desempeño y asistencia.
 4. Proveer a Orientadores y Directivos de un Centro de Inteligencia de Negocios (BI) asistido por Inteligencia Artificial para la toma de decisiones institucionales.
-5. Implementar un modelo de seguridad estricto a nivel de base de datos (*Row Level Security — RLS*) que aísle la información entre planteles y garantice que cada rol acceda únicamente a los datos que le corresponden.
+5. Implementar un modelo de seguridad estricto a nivel de base de datos (Row Level Security — RLS) que aísle la información entre planteles y garantice que cada rol acceda únicamente a los datos que le corresponden.
 
 ### 1.3 Justificación Técnica y Social
-- **Justificación Social:** Favorece la permanencia escolar, la cultura de paz y la corresponsabilidad de los padres de familia en la educación de sus hijos.
-- **Justificación Técnica:** La migración a una arquitectura moderna basada en **React 18 + Vite + Supabase (PostgreSQL)** permite reducir los tiempos de respuesta a milisegundos, eliminar fallas por concurrencia y ofrecer un sistema ligero que funciona con fluidez en computadoras de escritorio y dispositivos móviles.
+- Justificación Social: Favorece la permanencia escolar, la cultura de paz y la corresponsabilidad de los padres de familia en la educación de sus hijos.
+- Justificación Técnica: La migración a una arquitectura moderna basada en React 18 + Vite + Supabase (PostgreSQL) permite reducir los tiempos de respuesta a milisegundos, eliminar fallas por concurrencia y ofrecer un sistema ligero que funciona con fluidez en computadoras de escritorio y dispositivos móviles.
 
 ### 1.4 Delimitación y Alcance por Roles
 El sistema delimita las responsabilidades de 5 actores clave:
@@ -88,12 +88,12 @@ El sistema delimita las responsabilidades de 5 actores clave:
 ### 2.1 Stack Tecnológico Seleccionado
 La selección de tecnologías responde a criterios de mantenibilidad, tipo estricto, velocidad de carga y rendimiento de base de datos:
 
-- **Frontend:** React 18.3, TypeScript 5.5, Vite 8.1.
-- **Enrutamiento:** React Router DOM v6.
-- **Sistema de Estilos:** Vanilla CSS con CSS Variables (Design System tokens) y soporte de Modo Oscuro nativo (`data-theme='dark'`).
-- **Backend & Persistence:** Supabase Cloud (PostgreSQL 15+).
-- **Autenticación & RBAC:** Supabase Auth (GoTrue con Tokens JWT) + Middleware custom `RequireAuth`.
-- **Inteligencia Artificial:** Agente ejecutivo conversacional para interpretación de tableros BI.
+- Frontend: React 18.3, TypeScript 5.5, Vite 8.1.
+- Enrutamiento: React Router DOM v6.
+- Sistema de Estilos: Vanilla CSS con CSS Variables (Design System tokens) y soporte de Modo Oscuro nativo (`data-theme='dark'`).
+- Backend & Persistence: Supabase Cloud (PostgreSQL 15+).
+- Autenticación & RBAC: Supabase Auth (GoTrue con Tokens JWT) + Middleware custom `RequireAuth`.
+- Inteligencia Artificial: Agente ejecutivo conversacional para interpretación de tableros BI.
 
 ### 2.2 Patrón de Arquitectura por Capas
 
@@ -139,30 +139,32 @@ function RequireAuth({ allowedRoles, children }: { allowedRoles: string[]; child
 ### 2.4 Diagramas de Arquitectura Global de Infraestructura
 
 ```mermaid
-architecture-beta
-    group client_layer(cloud, "Capa de Cliente Web (Vite + React 18)")
-    service portal_alumno(browser, "Portal Alumno (/alumno/*)", "React Router v6") in client_layer
-    service portal_padre(browser, "Portal Padre (/padre/*)", "React Router v6") in client_layer
-    service portal_docente(browser, "Portal Docente (/maestro/*)", "React Router v6") in client_layer
-    service portal_orientador(browser, "Portal Orientador (/orientador/*)", "React Router v6") in client_layer
-    service portal_directivo(browser, "Portal Directivo (/director/*)", "React Router v6") in client_layer
+graph TB
+    subgraph ClientLayer["Capa de Cliente Web (Vite + React 18)"]
+        PA["Portal Alumno (/alumno/*)"]
+        PP["Portal Padre (/padre/*)"]
+        PD["Portal Docente (/maestro/*)"]
+        PO["Portal Orientador (/orientador/*)"]
+        PDIR["Portal Directivo (/director/*)"]
+    end
 
-    group backend_layer(database, "Capa de Datos & Servicios (Supabase / Postgres 15)")
-    service auth_jwt(server, "Supabase Auth (GoTrue)", "JWT Auth Tokens") in backend_layer
-    service rls_policies(shield, "Kernel de Seguridad RLS", "Postgres Security Definer") in backend_layer
-    service rpc_engine(server, "Motor BI & RPCs PL/pgSQL", "STABLE Functions") in backend_layer
-    service trigger_engine(code, "Triggers & Semaforización", "Automatic Point Recalculation") in backend_layer
-    service db_storage(database, "PostgreSQL Database", "Tables & Relations") in backend_layer
+    subgraph BackendLayer["Capa de Datos y Servicios (Supabase / Postgres 15)"]
+        AUTH["Supabase Auth (GoTrue JWT)"]
+        RLS["Kernel de Seguridad RLS"]
+        RPC["Motor BI y RPCs PL/pgSQL"]
+        TRIG["Triggers de Semaforización"]
+        DB[(Base de Datos PostgreSQL)]
+    end
 
-    portal_alumno --> auth_jwt
-    portal_padre --> auth_jwt
-    portal_docente --> rls_policies
-    portal_orientador --> rpc_engine
-    portal_directivo --> rpc_engine
+    PA --> AUTH
+    PP --> AUTH
+    PD --> RLS
+    PO --> RPC
+    PDIR --> RPC
 
-    rls_policies --> db_storage
-    rpc_engine --> db_storage
-    trigger_engine --> db_storage
+    RLS --> DB
+    RPC --> DB
+    TRIG --> DB
 ```
 
 ---
@@ -526,13 +528,13 @@ const selectedId = localStorage.getItem('ssc_selected_child_id') || linkRows[0]?
 ## CAPÍTULO V: METODOLOGÍA DE DESARROLLO, PRUEBAS Y MEGA MIGRACIÓN
 
 ### 5.1 Historial Completo de Corrección de Bugs del Piloto
-- **Patrón 1 (Modo Oscuro):** Reemplazo de colores fijos por tokens CSS adaptables.
-- **Patrón 2 (Tarjetas KPI):** Reestructuración de la grilla a 3 columnas independientes con `gap: 16px`.
-- **Patrón 3 (Carga Infinita):** Desacoplamiento de `loading` y `!stats` en `BIAnalyticsDashboard.tsx` usando `Promise.allSettled`.
-- **Patrón 4 (Botones & Navegación):** Conexión de reportes PDF a `window.print()` e implementación de un selector de tutelados para tutores.
+- Patrón 1 (Modo Oscuro): Reemplazo de colores fijos por tokens CSS adaptables.
+- Patrón 2 (Tarjetas KPI): Reestructuración de la grilla a 3 columnas independientes con `gap: 16px`.
+- Patrón 3 (Carga Infinita): Desacoplamiento de `loading` y `!stats` en `BIAnalyticsDashboard.tsx` usando `Promise.allSettled`.
+- Patrón 4 (Botones & Navegación): Conexión de reportes PDF a `window.print()` e implementación de un selector de tutelados para tutores.
 
 ### 5.2 Mega Migración de Portales por Rol
-Se crearon los layouts independientes [ParentLayout.tsx](file:///c:/Users/User/Documents/SSC/frontend/src/layouts/ParentLayout.tsx) y [CounselorLayout.tsx](file:///c:/Users/User/Documents/SSC/frontend/src/layouts/CounselorLayout.tsx), organizando los componentes de pantalla en 5 carpetas independientes en `src/pages/`.
+Se crearon los layouts independientes ParentLayout.tsx y CounselorLayout.tsx, organizando los componentes de pantalla en 5 carpetas independientes en `src/pages/`.
 
 ### 5.3 Validación de Compilación
 ```bash
@@ -577,7 +579,7 @@ gantt
     Agente IA Pedagógico Local (Edge Functions) :p5, 2026-11-01, 45d
 ```
 
-1. **Notificaciones Push Móviles (PWA / FCM):** Alertas sonoras e instantáneas en smartphones de tutores.
-2. **Integración con WhatsApp Business API:** Envíos de avisos automáticos ante falta injustificada o semáforo rojo.
-3. **Carga e Importación Masiva (CSV/Excel):** Creación en lote de estudiantes, grupos y asignaciones de tutores.
-4. **Firma Digital y QR en PDF:** Citatorios oficiales verificables con código QR.
+1. Notificaciones Push Móviles (PWA / FCM): Alertas sonoras e instantáneas en smartphones de tutores.
+2. Integración con WhatsApp Business API: Envíos de avisos automáticos ante falta injustificada o semáforo rojo.
+3. Carga e Importación Masiva (CSV/Excel): Creación en lote de estudiantes, grupos y asignaciones de tutores.
+4. Firma Digital y QR en PDF: Citatorios oficiales verificables con código QR.

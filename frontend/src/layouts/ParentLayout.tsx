@@ -19,8 +19,8 @@ const navItems: NavItem[] = [
   { id: 'historial', icon: 'history', label: 'Historial de Reportes', path: '/padre/historial' },
 ];
 
-const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
-  <span className={`material-symbols-outlined ${className}`.trim()}>{name}</span>
+const Icon = ({ name, className = '', style }: { name: string; className?: string; style?: React.CSSProperties }) => (
+  <span className={`material-symbols-outlined ${className}`.trim()} style={style}>{name}</span>
 );
 
 export default function ParentLayout() {
