@@ -67,7 +67,10 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
 
   // 1. Inicialización de Filtros Opciones
   useEffect(() => {
-    if (!activePlantelId) return;
+    if (!activePlantelId) {
+      setLoading(false);
+      return;
+    }
 
     async function initOptions() {
       try {
@@ -79,18 +82,27 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
           pId = undefined;
         }
 
-        const gens = await getGeneracionesDisponibles();
+        let gens: string[] = [];
+        try {
+          gens = await getGeneracionesDisponibles();
+        } catch {
+          gens = [];
+        }
         setGeneraciones(gens);
 
         let groupList: Array<{ id: string; nombre: string }> = [];
-        if (userRole === 'docente' && session?.user?.id) {
-          const mGrupos = await getGruposDeDocente(session.user.id);
-          const map = new Map<string, string>();
-          mGrupos.forEach(c => map.set(c.grupoId, c.grupoNombre));
-          groupList = Array.from(map.entries()).map(([id, nombre]) => ({ id, nombre }));
-        } else {
-          const pGrupos = await getGruposDePlantel(activePlantelId!);
-          groupList = pGrupos.map(g => ({ id: g.id, nombre: g.nombre }));
+        try {
+          if (userRole === 'docente' && session?.user?.id) {
+            const mGrupos = await getGruposDeDocente(session.user.id);
+            const map = new Map<string, string>();
+            mGrupos.forEach(c => map.set(c.grupoId, c.grupoNombre));
+            groupList = Array.from(map.entries()).map(([id, nombre]) => ({ id, nombre }));
+          } else {
+            const pGrupos = await getGruposDePlantel(activePlantelId!);
+            groupList = pGrupos.map(g => ({ id: g.id, nombre: g.nombre }));
+          }
+        } catch (err) {
+          console.error('Error al cargar grupos:', err);
         }
         setGrupos(groupList);
 
@@ -115,17 +127,29 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
     try {
       setLoading(true);
 
-      const [kpiRes, trendRes, catRes, riskRes] = await Promise.all([
+      const [kpiRes, trendRes, catRes, riskRes] = await Promise.allSettled([
         getBIKPIStats(filters),
         getBITrend(filters),
         getBICategories(filters),
         getBIRiskStudents(filters),
       ]);
 
-      setKpis(kpiRes);
-      setTrend(trendRes);
-      setCategories(catRes);
-      setRiskStudents(riskRes);
+      if (kpiRes.status === 'fulfilled' && kpiRes.value) {
+        setKpis(kpiRes.value);
+      } else {
+        setKpis({
+          total_alumnos: 0,
+          promedio_puntos: null,
+          conteo_verde: 0,
+          conteo_naranja: 0,
+          conteo_rojo: 0,
+          total_incidencias: 0,
+        });
+      }
+
+      setTrend(trendRes.status === 'fulfilled' ? trendRes.value : []);
+      setCategories(catRes.status === 'fulfilled' ? catRes.value : []);
+      setRiskStudents(riskRes.status === 'fulfilled' ? riskRes.value : []);
     } catch (err) {
       console.error('Error al cargar datos del dashboard de BI:', err);
     } finally {
@@ -152,6 +176,8 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
       return () => {
         supabase.removeChannel(channel);
       };
+    } else {
+      setLoading(false);
     }
   }, [loadDashboardData, activePlantelId]);
 

@@ -154,7 +154,7 @@ export default function Home() {
           </p>
         </div>
         <div className="hero-actions">
-          <button type="button" className="btn-download" onClick={() => console.log('Mock: descargar reporte PDF')}>
+          <button type="button" className="btn-download" onClick={() => window.print()} title="Imprimir / Guardar Ficha Conductual en PDF">
             <Icon name="download" />
             <span className="btn-download-label-full">Descargar Reporte PDF</span>
             <span className="btn-download-label-short">Reporte</span>

@@ -484,7 +484,7 @@ body.no-scroll {
 /* ── Tarjetas simples (positivos / negativos) ──
    Traducción de: bg-white p-8 rounded-xl shadow-sm border ... h-44 */
 .stat-card--simple {
-  background-color: #ffffff;
+  background-color: var(--color-bg-card, #ffffff);
   padding: 32px;
   border-radius: var(--radius-xl);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
@@ -530,7 +530,7 @@ body.no-scroll {
    ============================================================ */
 
 .table-section {
-  background-color: #ffffff;
+  background-color: var(--color-bg-card, #ffffff);
   border-radius: var(--radius-xl);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
   border: 1px solid var(--color-outline-variant);
@@ -880,4 +880,40 @@ body.no-scroll {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* ── Reglas de Modo Oscuro para Historial Alumno/Padre ──────────────────── */
+[data-theme='dark'] .stat-card,
+[data-theme='dark'] .stat-card--simple,
+[data-theme='dark'] .table-section,
+[data-theme='dark'] .info-banner {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .table-section-header,
+[data-theme='dark'] .history-table th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme='dark'] .history-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .stat-card__value,
+[data-theme='dark'] .page-header__title,
+[data-theme='dark'] .table-section-title,
+[data-theme='dark'] .info-banner-highlight {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .stat-label,
+[data-theme='dark'] .stat-sublabel,
+[data-theme='dark'] .page-header__subtitle,
+[data-theme='dark'] .info-banner-text {
+  color: #cbd5e1 !important;
 }

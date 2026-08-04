@@ -218,7 +218,7 @@ export default function History() {
           </div>
         </div>
         <div className="page-header__actions">
-          <button className="btn-download" onClick={() => console.log('Mock: descargar reporte PDF')}>
+          <button className="btn-download" onClick={() => window.print()} title="Imprimir / Guardar Historial en PDF">
             <Icon name="download" />
             Descargar Historial
           </button>

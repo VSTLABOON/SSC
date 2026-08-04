@@ -8,7 +8,7 @@ interface BIKpiCardProps {
 }
 
 export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading, onKpiClick }) => {
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="bi-kpi-grid">
         {[1, 2, 3, 4].map(i => (
@@ -22,6 +22,15 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading, onK
     );
   }
 
+  const effectiveStats: BIKPIStats = stats || {
+    total_alumnos: 0,
+    promedio_puntos: null,
+    conteo_verde: 0,
+    conteo_naranja: 0,
+    conteo_rojo: 0,
+    total_incidencias: 0,
+  };
+
   const {
     total_alumnos,
     promedio_puntos,
@@ -29,7 +38,7 @@ export const BIKpiCardSection: React.FC<BIKpiCardProps> = ({ stats, loading, onK
     conteo_naranja,
     conteo_rojo,
     total_incidencias,
-  } = stats;
+  } = effectiveStats;
 
   return (
     <div className="bi-kpi-grid">

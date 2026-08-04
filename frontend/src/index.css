@@ -97,8 +97,57 @@
 [data-theme='dark'] .bi-chart-title,
 [data-theme='dark'] .bi-filter-label,
 [data-theme='dark'] .grm-sidebar-nav-item,
-[data-theme='dark'] .sidebar-link {
+[data-theme='dark'] .sidebar-link,
+[data-theme='dark'] .grm-form-label,
+[data-theme='dark'] .hrm-page-subtitle,
+[data-theme='dark'] .hero-subtitle,
+[data-theme='dark'] .section-subtitle,
+[data-theme='dark'] .page-header__subtitle {
   color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .group-title,
+[data-theme='dark'] .hrm-page-title,
+[data-theme='dark'] .topbar-title,
+[data-theme='dark'] .page-header__title,
+[data-theme='dark'] .ida-hero__title,
+[data-theme='dark'] .section-title,
+[data-theme='dark'] .hero-greeting,
+[data-theme='dark'] .hero-greeting-bold,
+[data-theme='dark'] .hero-greeting-light,
+[data-theme='dark'] .info-card__title,
+[data-theme='dark'] .schedule-title {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .grm-stat-card,
+[data-theme='dark'] .hrm-kpi-card,
+[data-theme='dark'] .stat-card,
+[data-theme='dark'] .group-card,
+[data-theme='dark'] .info-card,
+[data-theme='dark'] .schedule-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .hrm-table,
+[data-theme='dark'] .history-table {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .hrm-th,
+[data-theme='dark'] .history-table th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme='dark'] .hrm-td,
+[data-theme='dark'] .history-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
 }
 
 [data-theme='dark'] .bi-kpi-value {

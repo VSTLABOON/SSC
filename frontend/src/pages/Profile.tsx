@@ -115,7 +115,7 @@ export default function Profile() {
 
           {/* Botón de editar datos */}
           <div className="hero-card__actions">
-            <button className="btn-edit" onClick={() => console.log('Editar datos click')}>
+            <button className="btn-edit" disabled title="Próximamente" onClick={() => console.log('Editar datos click')}>
               <span className="material-symbols-outlined">edit</span>
               Editar Datos
             </button>

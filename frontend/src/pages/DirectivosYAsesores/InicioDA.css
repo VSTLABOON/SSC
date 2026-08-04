@@ -278,7 +278,7 @@ a      { text-decoration: none; }
 .ida-hero__title {
   font-size: clamp(1.4rem, 3.5vw, 2rem);
   font-weight: 600;
-  color: #181d1a;
+  color: var(--color-text-main, #181d1a);
   line-height: 1.25;
   margin-bottom: 8px;
 }
