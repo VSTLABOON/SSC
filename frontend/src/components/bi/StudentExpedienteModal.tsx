@@ -66,6 +66,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
 }) => {
   const { plantelId } = useAuth();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [activeModalTab, setActiveModalTab] = useState<'diagnostico' | 'evolucion' | 'incidencias'>('diagnostico');
   const [isExporting, setIsExporting] = useState(false);
   const [incidents, setIncidents] = useState<StudentIncident[]>([]);
   const [periodos, setPeriodos] = useState<PeriodoEscolar[]>([]);
@@ -74,6 +75,21 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [modalFilter, setModalFilter] = useState<ModalFilterType>('all');
   const [sqlRiskScore, setSqlRiskScore] = useState<StudentRiskScoreResult | null>(null);
+
+  // Bloquear el scroll del body de la página mientras el modal está abierto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
 
   const handleExportPDF = async () => {
     if (!modalRef.current || !student) return;
@@ -306,15 +322,15 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
         onClick={e => e.stopPropagation()}
       >
         {/* Encabezado Principal del Expediente Humanizado */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '14px', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#eff6ff', color: '#204785', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '20px', flexShrink: 0, boxShadow: '0 2px 8px rgba(32,71,133,0.15)' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--color-brand-chambray, #204785)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '18px', flexShrink: 0, boxShadow: '0 2px 8px rgba(32,71,133,0.2)' }}>
               {initials}
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '19px', fontWeight: 800, color: '#0f172a' }}>{student.nombre_completo}</h3>
-              <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#64748b' }}>
-                Matrícula: <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{student.matricula}</code> • Grupo: <strong>{student.grupo_nombre}</strong>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main, #f8fafc)' }}>{student.nombre_completo}</h3>
+              <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)' }}>
+                Matrícula: <code style={{ background: 'var(--color-bg-app, #334155)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600, color: 'var(--color-text-main, #f8fafc)' }}>{student.matricula}</code> • Grupo: <strong>{student.grupo_nombre}</strong>
                 {student.carrera_nombre ? ` • ${student.carrera_nombre}` : ''}
               </p>
             </div>
@@ -322,237 +338,321 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', flexShrink: 0 }}
+            style={{ background: 'var(--color-bg-app, #334155)', border: 'none', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-main, #f8fafc)', flexShrink: 0 }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
           </button>
         </div>
 
-        {/* 1. SECCIÓN DE DIAGNÓSTICO NARRATIVO HUMANIZADO Y PREVENCIÓN DE DESERCIÓN */}
-        <div
-          style={{
-            background: humanDiagnostic.riskLevel === 'critical' ? '#fef2f2' : humanDiagnostic.riskLevel === 'warning' ? '#fffbeb' : '#f0fdf4',
-            border: `1px solid ${humanDiagnostic.riskLevel === 'critical' ? '#fca5a5' : humanDiagnostic.riskLevel === 'warning' ? '#fde68a' : '#86efac'}`,
-            borderRadius: '14px',
-            padding: '16px',
-            marginBottom: '20px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: humanDiagnostic.riskLevel === 'critical' ? '#991b1b' : humanDiagnostic.riskLevel === 'warning' ? '#92400e' : '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                {humanDiagnostic.riskLevel === 'critical' ? 'warning' : humanDiagnostic.riskLevel === 'warning' ? 'info' : 'verified'}
-              </span>
-              Diagnóstico Pedagógico y Salud Conductual
-            </h4>
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '9999px', backgroundColor: humanDiagnostic.riskLevel === 'critical' ? '#fee2e2' : humanDiagnostic.riskLevel === 'warning' ? '#fef3c7' : '#dcfce7', color: humanDiagnostic.riskLevel === 'critical' ? '#991b1b' : humanDiagnostic.riskLevel === 'warning' ? '#92400e' : '#166534' }}>
-              {humanDiagnostic.riskLevel === 'critical' ? 'Intervención Requerida' : humanDiagnostic.riskLevel === 'warning' ? 'Seguimiento Activo' : 'Estado Saludable'}
-            </span>
-          </div>
-
-          <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#1e293b', lineHeight: 1.45, fontWeight: 500 }}>
-            {humanDiagnostic.statusText}
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', paddingTop: '10px', borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
-            <div>
-              <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Fortaleza Destacada</span>
-              <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#0f172a', fontWeight: 600 }}>{humanDiagnostic.fortaleza}</p>
-            </div>
-            <div>
-              <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Recomendación para el Equipo</span>
-              <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#0f172a', fontWeight: 600 }}>{humanDiagnostic.recommendation}</p>
-            </div>
-            {sqlRiskScore && (
-              <div>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#204785', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '12px', color: '#10b981' }}>database</span>
-                  Índice de Riesgo (Motor SQL)
-                </span>
-                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#0f172a', fontWeight: 700 }}>
-                  {sqlRiskScore.score}% — Categoría: <span style={{ textTransform: 'capitalize' }}>{sqlRiskScore.categoria}</span> (Caída EWMA: -{sqlRiskScore.recent_drop} pts)
-                </p>
-              </div>
-            )}
-          </div>
+        {/* NAVEGACIÓN POR PESTAÑAS PRINCIPALES (Evita amontonamientos y fija la altura) */}
+        <div style={{ display: 'flex', gap: '6px', background: 'var(--color-bg-app, #0f172a)', padding: '4px', borderRadius: '12px', marginBottom: '16px', border: '1px solid var(--color-border-subtle, #334155)' }}>
+          <button
+            type="button"
+            onClick={() => setActiveModalTab('diagnostico')}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              backgroundColor: activeModalTab === 'diagnostico' ? 'var(--color-brand-chambray, #204785)' : 'transparent',
+              color: activeModalTab === 'diagnostico' ? '#ffffff' : 'var(--color-text-sub, #cbd5e1)',
+              transition: 'all 0.16s ease',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>psychology</span>
+            Diagnóstico
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveModalTab('evolucion')}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              backgroundColor: activeModalTab === 'evolucion' ? 'var(--color-brand-chambray, #204785)' : 'transparent',
+              color: activeModalTab === 'evolucion' ? '#ffffff' : 'var(--color-text-sub, #cbd5e1)',
+              transition: 'all 0.16s ease',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>show_chart</span>
+            Evolución
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveModalTab('incidencias')}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              backgroundColor: activeModalTab === 'incidencias' ? 'var(--color-brand-chambray, #204785)' : 'transparent',
+              color: activeModalTab === 'incidencias' ? '#ffffff' : 'var(--color-text-sub, #cbd5e1)',
+              transition: 'all 0.16s ease',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>format_list_bulleted</span>
+            Incidencias ({finalFilteredIncidents.length})
+          </button>
         </div>
 
-        {/* 2. EVOLUCIÓN CONDUCTUAL GRANULAR Y PICOS / BAJAS (RECHARTS) */}
-        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '14px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
-            <div>
-              <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#204785', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>show_chart</span>
-                Línea de Tiempo de Evolución Conductual (Picos y Bajas)
-              </h4>
-              <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#64748b' }}>
-                Permite observar caídas temporales o tendencias de cambio antes de que afecten la permanencia escolar.
-              </p>
-            </div>
-
-            {/* Selector de Escala de Tiempo Granular */}
-            <div className="dedicated-tabs-container" style={{ background: '#ffffff', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-              {(['semanal', 'mensual', 'bimestral', 'semestral'] as TimeGranularity[]).map(g => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setGranularity(g)}
-                  className={`dedicated-tab-btn ${granularity === g ? 'dedicated-tab-btn--active' : ''}`}
-                  style={{ padding: '4px 10px', fontSize: '11px', textTransform: 'capitalize' }}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Gráfica de Área con Tendencia en Recharts */}
-          <div style={{ height: '180px', width: '100%', marginTop: '8px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trajectoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPointsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'} stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
-                <YAxis domain={[0, 100]} stroke="#64748b" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', border: 'none', color: '#ffffff', fontSize: '12px' }}
-                  formatter={(val: any) => [`${val ?? 0} pts`, 'Puntaje']}
-                />
-                <ReferenceLine y={70} stroke="#dc2626" strokeDasharray="3 3" label={{ value: 'Límite Crítico (70 pts)', fill: '#dc2626', fontSize: 10 }} />
-                <Area
-                  type="monotone"
-                  dataKey="puntos"
-                  stroke={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'}
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorPointsGrad)"
-                  dot={{ r: 4, fill: '#ffffff', strokeWidth: 2 }}
-                  activeDot={{ r: 6 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 3. SELECTOR DE PERIODO ESCOLAR Y PASTILLAS */}
-        <div style={{ background: '#ffffff', padding: '14px', borderRadius: '14px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 700, color: '#204785', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>calendar_month</span>
-              Filtrar por Periodo Escolar Completo:
-            </label>
-            <select
-              value={selectedPeriodoId}
-              onChange={e => setSelectedPeriodoId(e.target.value)}
+        {/* CONTENEDOR CON SCROLL INTERNO CONTROLADO */}
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', maxHeight: '55vh' }}>
+          {/* PESTAÑA 1: DIAGNÓSTICO NARRATIVO Y SALUD CONDUCTUAL */}
+          {activeModalTab === 'diagnostico' && (
+            <div
               style={{
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#0f172a',
-                backgroundColor: '#ffffff',
-                cursor: 'pointer',
+                background: humanDiagnostic.riskLevel === 'critical' ? 'var(--color-bg-critical, #450a0a)' : humanDiagnostic.riskLevel === 'warning' ? 'var(--color-bg-warning, #451a03)' : 'var(--color-bg-healthy, #064e3b)',
+                border: `1px solid ${humanDiagnostic.riskLevel === 'critical' ? '#ef4444' : humanDiagnostic.riskLevel === 'warning' ? '#f59e0b' : '#10b981'}`,
+                borderRadius: '14px',
+                padding: '18px',
+                marginBottom: '16px',
               }}
             >
-              <option value="all">Historico Consolidado (Todos los Periodos)</option>
-              {periodos.map(p => (
-                <option key={p.id} value={p.id}>
-                  Periodo: {p.nombre} {p.activo ? '(Activo Actualmente)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: humanDiagnostic.riskLevel === 'critical' ? '#f87171' : humanDiagnostic.riskLevel === 'warning' ? '#fbbf24' : '#4ade80', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                    {humanDiagnostic.riskLevel === 'critical' ? 'warning' : humanDiagnostic.riskLevel === 'warning' ? 'info' : 'verified'}
+                  </span>
+                  Diagnóstico Pedagógico y Salud Conductual
+                </h4>
+                <span style={{ fontSize: '11px', fontWeight: 800, padding: '3px 10px', borderRadius: '9999px', backgroundColor: humanDiagnostic.riskLevel === 'critical' ? '#7f1d1d' : humanDiagnostic.riskLevel === 'warning' ? '#78350f' : '#065f46', color: humanDiagnostic.riskLevel === 'critical' ? '#fca5a5' : humanDiagnostic.riskLevel === 'warning' ? '#fde68a' : '#a7f3d0' }}>
+                  {humanDiagnostic.riskLevel === 'critical' ? 'Intervención Requerida' : humanDiagnostic.riskLevel === 'warning' ? 'Seguimiento Activo' : 'Estado Saludable'}
+                </span>
+              </div>
 
-          {/* Pastillas de Organización por Tipo de Incidencia */}
-          <div className="dedicated-tabs-container" style={{ background: '#f1f5f9', padding: '4px', borderRadius: '12px', gap: '4px' }}>
-            <button
-              type="button"
-              className={`dedicated-tab-btn ${modalFilter === 'all' ? 'dedicated-tab-btn--active' : ''}`}
-              onClick={() => setModalFilter('all')}
-              style={{ padding: '6px 12px', fontSize: '12px' }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>list_alt</span>
-              Todos ({periodFilteredIncidents.length})
-            </button>
-            <button
-              type="button"
-              className={`dedicated-tab-btn ${modalFilter === 'verde' ? 'dedicated-tab-btn--active' : ''}`}
-              onClick={() => setModalFilter('verde')}
-              style={{ padding: '6px 12px', fontSize: '12px' }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#10b981' }}>check_circle</span>
-              Positivos ({positiveCount})
-            </button>
-            <button
-              type="button"
-              className={`dedicated-tab-btn ${modalFilter === 'naranja' ? 'dedicated-tab-btn--active' : ''}`}
-              onClick={() => setModalFilter('naranja')}
-              style={{ padding: '6px 12px', fontSize: '12px' }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#f59e0b' }}>warning</span>
-              Leves ({warningCount})
-            </button>
-            <button
-              type="button"
-              className={`dedicated-tab-btn ${modalFilter === 'rojo' ? 'dedicated-tab-btn--active' : ''}`}
-              onClick={() => setModalFilter('rojo')}
-              style={{ padding: '6px 12px', fontSize: '12px' }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#ef4444' }}>error</span>
-              Críticos ({criticalCount})
-            </button>
-          </div>
-        </div>
+              <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#f8fafc', lineHeight: 1.5, fontWeight: 500 }}>
+                {humanDiagnostic.statusText}
+              </p>
 
-        {/* 4. LISTADO HISTÓRICO CONTEXTUALIZADO DE INCIDENCIAS */}
-        <div>
-          {loading ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
-              <div className="skeleton-box" style={{ height: '50px', marginBottom: '10px' }} />
-              <div className="skeleton-box" style={{ height: '50px' }} />
-            </div>
-          ) : finalFilteredIncidents.length === 0 ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              No se encontraron registros en el periodo o categoría seleccionada.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {finalFilteredIncidents.map(inc => (
-                <div
-                  key={inc.id}
-                  style={{
-                    padding: '14px 16px',
-                    borderRadius: '12px',
-                    background: 'var(--color-bg-card, #ffffff)',
-                    border: '1px solid var(--color-border-subtle, #e2e8f0)',
-                    borderLeft: `4px solid ${inc.categorias_incidencia?.color_semaforo === 'rojo' ? '#ef4444' : inc.categorias_incidencia?.color_semaforo === 'naranja' ? '#f59e0b' : '#10b981'}`,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-text-main, #0f172a)' }}>
-                      {inc.categorias_incidencia?.nombre || 'Incidencia General'}
-                    </span>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-sub, #64748b)' }}>
-                      {new Date(inc.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </span>
-                  </div>
-                  <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'var(--color-text-sub, #475569)', lineHeight: 1.4 }}>
-                    {inc.descripcion}
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', color: 'var(--color-text-sub, #64748b)' }}>
-                    <span>Lugar: {inc.lugar || 'No especificado'}</span>
-                    <span style={{ fontWeight: 600, color: inc.impacto_puntos > 0 ? '#10b981' : '#ef4444' }}>
-                      Impacto: {inc.impacto_puntos > 0 ? `+${inc.impacto_puntos}` : inc.impacto_puntos} pts
-                    </span>
-                  </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', paddingTop: '12px', borderTop: '1px dashed rgba(255,255,255,0.2)' }}>
+                <div>
+                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fortaleza Destacada</span>
+                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#ffffff', fontWeight: 700 }}>{humanDiagnostic.fortaleza}</p>
                 </div>
-              ))}
+                <div>
+                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Recomendación para el Equipo</span>
+                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#ffffff', fontWeight: 700 }}>{humanDiagnostic.recommendation}</p>
+                </div>
+                {sqlRiskScore && (
+                  <div>
+                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#a2f4c7', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#10b981' }}>database</span>
+                      Índice de Riesgo (Motor SQL)
+                    </span>
+                    <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#ffffff', fontWeight: 700 }}>
+                      {sqlRiskScore.score}% — Categoría: <span style={{ textTransform: 'capitalize' }}>{sqlRiskScore.categoria}</span> (Caída EWMA: -{sqlRiskScore.recent_drop} pts)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* PESTAÑA 2: EVOLUCIÓN CONDUCTUAL GRANULAR Y GRÁFICA */}
+          {activeModalTab === 'evolucion' && (
+            <div style={{ background: 'var(--color-bg-app, #1e293b)', padding: '18px', borderRadius: '14px', border: '1px solid var(--color-border-subtle, #334155)', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: 'var(--color-text-main, #f8fafc)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#60a5fa' }}>show_chart</span>
+                    Línea de Tiempo de Evolución Conductual
+                  </h4>
+                  <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--color-text-sub, #cbd5e1)' }}>
+                    Permite observar caídas temporales o tendencias de cambio antes de que afecten la permanencia escolar.
+                  </p>
+                </div>
+
+                {/* Selector de Escala de Tiempo Granular */}
+                <div style={{ background: 'var(--color-bg-card, #0f172a)', padding: '3px', borderRadius: '8px', border: '1px solid var(--color-border-subtle, #475569)', display: 'flex', gap: '2px' }}>
+                  {(['semanal', 'mensual', 'bimestral', 'semestral'] as TimeGranularity[]).map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setGranularity(g)}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        textTransform: 'capitalize',
+                        borderRadius: '6px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        backgroundColor: granularity === g ? 'var(--color-brand-chambray, #204785)' : 'transparent',
+                        color: granularity === g ? '#ffffff' : 'var(--color-text-sub, #cbd5e1)',
+                      }}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Gráfica de Área con Tendencia en Recharts */}
+              <div style={{ height: '200px', width: '100%', marginTop: '8px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trajectoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorPointsGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'} stopOpacity={0.4} />
+                        <stop offset="95%" stopColor={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'} stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle, #334155)" />
+                    <XAxis dataKey="label" stroke="var(--color-text-sub, #94a3b8)" fontSize={11} tickLine={false} />
+                    <YAxis domain={[0, 100]} stroke="var(--color-text-sub, #94a3b8)" fontSize={11} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', border: '1px solid #334155', color: '#ffffff', fontSize: '12px' }}
+                      formatter={(val: any) => [`${val ?? 0} pts`, 'Puntaje']}
+                    />
+                    <ReferenceLine y={70} stroke="#dc2626" strokeDasharray="3 3" label={{ value: 'Límite Crítico (70 pts)', fill: '#ef4444', fontSize: 10 }} />
+                    <Area
+                      type="monotone"
+                      dataKey="puntos"
+                      stroke={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'}
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorPointsGrad)"
+                      dot={{ r: 4, fill: '#ffffff', strokeWidth: 2 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* PESTAÑA 3: HISTORIAL FILTRABLE DE INCIDENCIAS */}
+          {activeModalTab === 'incidencias' && (
+            <div>
+              {/* SELECTOR DE PERIODO ESCOLAR Y PASTILLAS */}
+              <div style={{ background: 'var(--color-bg-app, #1e293b)', padding: '14px', borderRadius: '14px', border: '1px solid var(--color-border-subtle, #334155)', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-main, #f8fafc)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#60a5fa' }}>calendar_month</span>
+                    Filtrar por Periodo Escolar:
+                  </label>
+                  <select
+                    value={selectedPeriodoId}
+                    onChange={e => setSelectedPeriodoId(e.target.value)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border-subtle, #475569)',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: 'var(--color-text-main, #f8fafc)',
+                      backgroundColor: 'var(--color-bg-card, #0f172a)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="all">Historico Consolidado (Todos los Periodos)</option>
+                    {periodos.map(p => (
+                      <option key={p.id} value={p.id}>
+                        Periodo: {p.nombre} {p.activo ? '(Activo Actualmente)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Pastillas de Organización por Tipo de Incidencia */}
+                <div style={{ display: 'flex', gap: '6px', background: 'var(--color-bg-card, #0f172a)', padding: '4px', borderRadius: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setModalFilter('all')}
+                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'all' ? 'var(--color-brand-chambray, #204785)' : 'transparent', color: modalFilter === 'all' ? '#ffffff' : 'var(--color-text-sub, #cbd5e1)' }}
+                  >
+                    Todos ({periodFilteredIncidents.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalFilter('verde')}
+                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'verde' ? '#15803d' : 'transparent', color: modalFilter === 'verde' ? '#ffffff' : '#4ade80' }}
+                  >
+                    Positivos ({positiveCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalFilter('naranja')}
+                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'naranja' ? '#b45309' : 'transparent', color: modalFilter === 'naranja' ? '#ffffff' : '#fbbf24' }}
+                  >
+                    Leves ({warningCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalFilter('rojo')}
+                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'rojo' ? '#b91c1c' : 'transparent', color: modalFilter === 'rojo' ? '#ffffff' : '#f87171' }}
+                  >
+                    Críticos ({criticalCount})
+                  </button>
+                </div>
+              </div>
+
+              {/* LISTADO HISTÓRICO CONTEXTUALIZADO DE INCIDENCIAS */}
+              {loading ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-sub, #cbd5e1)' }}>
+                  <div className="skeleton-box" style={{ height: '50px', marginBottom: '10px' }} />
+                  <div className="skeleton-box" style={{ height: '50px' }} />
+                </div>
+              ) : finalFilteredIncidents.length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-sub, #cbd5e1)', background: 'var(--color-bg-app, #1e293b)', borderRadius: '12px', border: '1px solid var(--color-border-subtle, #334155)' }}>
+                  No se encontraron registros en el periodo o categoría seleccionada.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {finalFilteredIncidents.map(inc => (
+                    <div
+                      key={inc.id}
+                      style={{
+                        padding: '14px 16px',
+                        borderRadius: '12px',
+                        background: 'var(--color-bg-card, #1e293b)',
+                        border: '1px solid var(--color-border-subtle, #334155)',
+                        borderLeft: `4px solid ${inc.categorias_incidencia?.color_semaforo === 'rojo' ? '#ef4444' : inc.categorias_incidencia?.color_semaforo === 'naranja' ? '#f59e0b' : '#10b981'}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-text-main, #f8fafc)' }}>
+                          {inc.categorias_incidencia?.nombre || 'Incidencia General'}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--color-text-sub, #cbd5e1)' }}>
+                          {new Date(inc.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', lineHeight: 1.4 }}>
+                        {inc.descripcion}
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', color: 'var(--color-text-sub, #94a3b8)' }}>
+                        <span>Lugar: {inc.lugar || 'No especificado'}</span>
+                        <span style={{ fontWeight: 700, color: inc.impacto_puntos > 0 ? '#4ade80' : '#f87171' }}>
+                          Impacto: {inc.impacto_puntos > 0 ? `+${inc.impacto_puntos}` : inc.impacto_puntos} pts
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
