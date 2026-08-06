@@ -12,35 +12,66 @@ interface BottomNavItem {
 
 export const BottomNav: React.FC = () => {
   const [isFabOpen, setIsFabOpen] = useState(false);
-  const { rol } = useAuth();
+  const { rol, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isDocente = rol === 'docente';
-  const isDirectivoOrOrientador = rol === 'directivo' || rol === 'orientador';
+  const isOrientador = rol === 'orientador';
+  const isDirectivo = rol === 'directivo';
+  const isAlumno = rol === 'alumno';
+  const isPadre = rol === 'padre';
 
-  // Configuración simétrica de items de navegación por rol (2 a la izquierda, FAB al centro, 2 a la derecha)
-  const leftItems: BottomNavItem[] = isDocente
-    ? [
-        { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/maestro/inicio' },
-        { id: 'grupos', label: 'Grupos', icon: 'groups', path: '/maestro/clases' },
-      ]
-    : [
-        { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/director/inicio' },
-        { id: 'reporte', label: 'Generar', icon: 'assessment', path: '/director/reporte' },
-      ];
+  // Configuración simétrica de items de navegación para CADA ROL
+  let leftItems: BottomNavItem[] = [];
+  let rightItems: BottomNavItem[] = [];
 
-  const rightItems: BottomNavItem[] = isDocente
-    ? [
-        { id: 'reporte', label: 'Reporte', icon: 'assessment', path: '/maestro/reporte' },
-        { id: 'historial', label: 'Historial', icon: 'history', path: '/maestro/historial' },
-      ]
-    : [
-        { id: 'historial', label: 'Historial', icon: 'history', path: '/director/historial' },
-        ...(rol === 'directivo'
-          ? [{ id: 'usuarios', label: 'Usuarios', icon: 'manage_accounts', path: '/director/usuarios' }]
-          : []),
-      ];
+  if (isDocente) {
+    leftItems = [
+      { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/maestro/inicio' },
+      { id: 'grupos', label: 'Grupos', icon: 'groups', path: '/maestro/clases' },
+    ];
+    rightItems = [
+      { id: 'reporte', label: 'Reporte', icon: 'assessment', path: '/maestro/reporte' },
+      { id: 'historial', label: 'Historial', icon: 'history', path: '/maestro/historial' },
+    ];
+  } else if (isOrientador) {
+    leftItems = [
+      { id: 'inicio', label: 'Inicio', icon: 'radar', path: '/orientador/inicio' },
+      { id: 'reporte', label: 'Reporte', icon: 'edit_note', path: '/orientador/reporte' },
+    ];
+    rightItems = [
+      { id: 'historial', label: 'Bitácora', icon: 'history', path: '/orientador/historial' },
+    ];
+  } else if (isAlumno) {
+    leftItems = [
+      { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/alumno/inicio' },
+      { id: 'horario', label: 'Horario', icon: 'schedule', path: '/alumno/horario' },
+    ];
+    rightItems = [
+      { id: 'historial', label: 'Historial', icon: 'history', path: '/alumno/historial' },
+      { id: 'perfil', label: 'Perfil', icon: 'person', path: '/alumno/perfil' },
+    ];
+  } else if (isPadre) {
+    leftItems = [
+      { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/padre/inicio' },
+      { id: 'horario', label: 'Horario', icon: 'schedule', path: '/padre/horario' },
+    ];
+    rightItems = [
+      { id: 'historial', label: 'Historial', icon: 'history', path: '/padre/historial' },
+      { id: 'perfil', label: 'Perfil', icon: 'person', path: '/padre/perfil' },
+    ];
+  } else {
+    // Directivo por defecto
+    leftItems = [
+      { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/director/inicio' },
+      { id: 'reporte', label: 'Generar', icon: 'assessment', path: '/director/reporte' },
+    ];
+    rightItems = [
+      { id: 'historial', label: 'Historial', icon: 'history', path: '/director/historial' },
+      { id: 'usuarios', label: 'Usuarios', icon: 'manage_accounts', path: '/director/usuarios' },
+    ];
+  }
 
   function triggerHaptic() {
     try {
@@ -81,20 +112,40 @@ export const BottomNav: React.FC = () => {
               </>
             )}
 
-            {isDirectivoOrOrientador && (
+            {isOrientador && (
+              <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/orientador/reporte')}>
+                <span className="material-symbols-outlined fab-action-icon">add_task</span>
+                Generar Reporte Conductual
+              </button>
+            )}
+
+            {isDirectivo && (
               <>
                 <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/reporte')}>
                   <span className="material-symbols-outlined fab-action-icon">add_task</span>
                   Generar Reporte Conductual
                 </button>
-                {rol === 'directivo' && (
-                  <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/usuarios')}>
-                    <span className="material-symbols-outlined fab-action-icon">person_add</span>
-                    Gestión de Usuarios
-                  </button>
-                )}
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/usuarios')}>
+                  <span className="material-symbols-outlined fab-action-icon">person_add</span>
+                  Gestión de Usuarios
+                </button>
               </>
             )}
+
+            <div style={{ height: '1px', background: 'var(--color-border-subtle, #e2e8f0)', margin: '6px 0' }} />
+            <button
+              type="button"
+              className="fab-action-btn"
+              style={{ color: '#ef4444', fontWeight: 600 }}
+              onClick={async () => {
+                setIsFabOpen(false);
+                await signOut();
+                navigate('/login');
+              }}
+            >
+              <span className="material-symbols-outlined fab-action-icon" style={{ color: '#ef4444' }}>logout</span>
+              Cerrar Sesión
+            </button>
           </div>
         </div>
       )}

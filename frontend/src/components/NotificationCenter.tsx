@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { resolverRutaInicio } from '../constants/routes';
 
 interface NotificationItem {
   id: string;
@@ -14,7 +15,7 @@ interface NotificationItem {
 
 export const NotificationCenter: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { session } = useAuth();
+  const { session, rol } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
@@ -37,7 +38,7 @@ export const NotificationCenter: React.FC = () => {
           message: item.mensaje || '',
           time: new Date(item.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
           type: item.tipo === 'alerta_conductual' ? 'critical' : 'warning',
-          link: '/director/inicio',
+          link: resolverRutaInicio(rol),
         }));
         setNotifications(mapped);
       }

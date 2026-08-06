@@ -30,7 +30,7 @@
   --color-bg-app: #0f172a;
   --color-bg-card: #1e293b;
   --color-text-main: #f8fafc;
-  --color-text-sub: #94a3b8;
+  --color-text-sub: #cbd5e1;
   --color-border-subtle: #334155;
   --color-brand-chambray: #60a5fa;
   --color-brand-primary: #10b981;
@@ -40,10 +40,10 @@
   --c-mystic: #0f172a;
   --c-white: #1e293b;
   --c-on-surface: #f8fafc;
-  --c-on-surface-var: #cbd5e1;
-  --c-secondary: #94a3b8;
-  --c-outline: #475569;
-  --c-outline-variant: #334155;
+  --c-on-surface-var: #e2e8f0;
+  --c-secondary: #cbd5e1;
+  --c-outline: #94a3b8;
+  --c-outline-variant: #475569;
   --c-surface-low: #0f172a;
   --c-surface-high: #1e293b;
   --c-surface-cont: #334155;
@@ -63,6 +63,29 @@
 [data-theme='dark'] .bi-dashboard {
   background-color: #0f172a !important;
   color: #f8fafc !important;
+}
+
+/* Forzar contraste legible en elementos de texto en modo oscuro */
+[data-theme='dark'] p,
+[data-theme='dark'] label,
+[data-theme='dark'] small,
+[data-theme='dark'] .text-sub,
+[data-theme='dark'] .subtext,
+[data-theme='dark'] .teacher-card-role,
+[data-theme='dark'] .teacher-card-greeting,
+[data-theme='dark'] .op-card p,
+[data-theme='dark'] .stat-label,
+[data-theme='dark'] .grm-stat-label,
+[data-theme='dark'] .bi-kpi-subtext,
+[data-theme='dark'] .bi-kpi-title,
+[data-theme='dark'] .bi-chart-title,
+[data-theme='dark'] .bi-filter-label,
+[data-theme='dark'] .grm-form-label,
+[data-theme='dark'] .hrm-page-subtitle,
+[data-theme='dark'] .hero-subtitle,
+[data-theme='dark'] .section-subtitle,
+[data-theme='dark'] .page-header__subtitle {
+  color: #cbd5e1 !important;
 }
 
 [data-theme='dark'] .grm-sidebar,
@@ -86,7 +109,8 @@
 [data-theme='dark'] .bi-risk-card,
 [data-theme='dark'] .app-modal-box,
 [data-theme='dark'] .grm-modal-box,
-[data-theme='dark'] .fab-actions-menu {
+[data-theme='dark'] .fab-actions-menu,
+[data-theme='dark'] .op-card {
   background-color: #1e293b !important;
   border-color: #334155 !important;
   color: #f8fafc !important;

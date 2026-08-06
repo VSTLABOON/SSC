@@ -73,6 +73,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  // ── Temporizador Estricto de Inactividad (15 Minutos) ──────────────────────
+  useEffect(() => {
+    if (!session) return;
+
+    const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutos
+    let timer: ReturnType<typeof setTimeout>;
+
+    const handleInactivity = async () => {
+      console.warn('Cierre de sesión automático ejecutado por 15 minutos de inactividad.');
+      await supabase.auth.signOut();
+    };
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(handleInactivity, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+    events.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach(evt => window.removeEventListener(evt, resetTimer));
+    };
+  }, [session]);
+
   async function signOut() {
     await supabase.auth.signOut();
   }
