@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { exportElementToPDF } from '../../services/pdfExportService';
 import type {
   StudentRiskAnalysis,
   GroupExecutiveReport,
@@ -30,6 +31,9 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
   groupData,
   plantelData,
 }) => {
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
   // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
   useEffect(() => {
     if (!isOpen) return;
@@ -41,6 +45,38 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
   useEscapeToClose(onClose);
 
   if (!isOpen) return null;
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current) return;
+    setIsExporting(true);
+    try {
+      const title =
+        reportType === 'alumno'
+          ? `Ficha Conductual - ${studentData?.nombre || 'Alumno'}`
+          : reportType === 'grupo'
+          ? `Reporte de Clima Escolar - Grupo ${groupData?.groupName || ''}`
+          : `Reporte Ejecutivo Directivo - Plantel Puebla I`;
+
+      const filename =
+        reportType === 'alumno'
+          ? `Ficha_Conductual_${studentData?.matricula || 'Alumno'}.pdf`
+          : reportType === 'grupo'
+          ? `Reporte_Grupo_${groupData?.groupName || 'Grupo'}.pdf`
+          : `Reporte_Ejecutivo_Plantel.pdf`;
+
+      await exportElementToPDF(reportRef.current, {
+        title,
+        filename,
+        plantelNombre: 'CONALEP Plantel Puebla I',
+        periodoNombre: 'Semestre A-2026',
+        generadoPor: 'Directivo Autorizado',
+      });
+    } catch (err) {
+      console.error('Error al generar PDF:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const modalJSX = (
     <div
@@ -63,6 +99,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
       onClick={onClose}
     >
       <div
+        ref={reportRef}
         className="modal-box-animated"
         style={{
           backgroundColor: '#ffffff',
@@ -287,11 +324,12 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
           <button
             type="button"
             className="bi-btn-reset"
-            onClick={() => window.print()}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#204785', color: '#ffffff' }}
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#00492f', color: '#ffffff', opacity: isExporting ? 0.7 : 1 }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>print</span>
-            Imprimir Reporte Ejecutivo PDF
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+            {isExporting ? 'Generando PDF...' : 'Descargar Reporte PDF'}
           </button>
           <button
             type="button"

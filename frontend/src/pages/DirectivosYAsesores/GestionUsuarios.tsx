@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import './GestionUsuarios.css';
 import InlineAlert from '../../components/InlineAlert';
+import BulkUserImport from '../../components/BulkUserImport';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +60,9 @@ export default function GestionUsuarios() {
 
   // Feedback inline de tabla
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  // Modal de alta masiva
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
   // ── Carga de usuarios ──────────────────────────────────────────────────────
   const fetchUsuarios = useCallback(async () => {
@@ -239,6 +243,10 @@ export default function GestionUsuarios() {
         <button className="gu-invite-btn" onClick={() => { setModalOpen(true); setInvError(null); }}>
           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span>
           Invitar usuario
+        </button>
+        <button className="gu-invite-btn" style={{ background: 'var(--c-chambray)' }} onClick={() => setBulkModalOpen(true)}>
+          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>group_add</span>
+          Alta Masiva
         </button>
       </div>
 
@@ -446,6 +454,14 @@ export default function GestionUsuarios() {
           </div>
         </div>
       )}
+
+      {/* Modal Alta Masiva */}
+      <BulkUserImport
+        isOpen={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        onComplete={() => cargarUsuarios()}
+        plantelId={plantelId || ''}
+      />
     </div>
   );
 }

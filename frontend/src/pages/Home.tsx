@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getPerfilAlumno } from '../services/alumnos';
 import { getIncidenciasDelAlumno } from '../services/incidencias';
+import { exportElementToPDF } from '../services/pdfExportService';
 import './Home.css';
 
 interface IncidentFromDB {
@@ -82,11 +83,33 @@ interface AlumnoProfile {
 
 export default function Home() {
   const { session, rol } = useAuth();
+  const pageRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [incidencias, setIncidencias] = useState<IncidentFromDB[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [hijos, setHijos] = useState<Array<{ alumno_id: string; nombre: string; grupo: string }>>([]);
   const [selectedHijoId, setSelectedHijoId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
+
+  const handleExportPDF = async () => {
+    if (!pageRef.current) return;
+    setIsExporting(true);
+    try {
+      const userObj = alumno?.usuarios as { nombre?: string; apellido?: string } | undefined;
+      const nombreAlumno = userObj?.nombre ? `${userObj.nombre} ${userObj.apellido || ''}` : 'Alumno';
+      await exportElementToPDF(pageRef.current, {
+        title: `Ficha Conductual - ${nombreAlumno}`,
+        filename: `Ficha_Conductual_${alumno?.matricula || 'Alumno'}.pdf`,
+        plantelNombre: 'CONALEP Plantel Puebla I',
+        periodoNombre: 'Semestre A-2026',
+        generadoPor: rol === 'padre' ? 'Tutor Legal' : 'Alumno',
+      });
+    } catch (err) {
+      console.error('Error al generar PDF:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -166,7 +189,7 @@ export default function Home() {
   const group = (Array.isArray(alumno?.grupos) ? alumno?.grupos[0] : alumno?.grupos) as { nombre?: string } | null;
 
   return (
-    <div className="home-canvas-only">
+    <div className="home-canvas-only" ref={pageRef}>
       {/* Selector de Hijo si el tutor tiene 2 o más estudiantes vinculados */}
       {rol === 'padre' && hijos.length > 1 && (
         <div style={{ marginBottom: '16px', background: 'var(--color-bg-card, #ffffff)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--color-border-subtle, #e2e8f0)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
@@ -202,9 +225,9 @@ export default function Home() {
           </p>
         </div>
         <div className="hero-actions">
-          <button type="button" className="btn-download" onClick={() => window.print()} title="Imprimir / Guardar Ficha Conductual en PDF">
+          <button type="button" className="btn-download" onClick={handleExportPDF} disabled={isExporting} title="Descargar Ficha Conductual en PDF">
             <Icon name="download" />
-            <span className="btn-download-label-full">Descargar Reporte PDF</span>
+            <span className="btn-download-label-full">{isExporting ? 'Generando PDF...' : 'Descargar Reporte PDF'}</span>
             <span className="btn-download-label-short">Reporte</span>
           </button>
           <div className="cycle-badge">

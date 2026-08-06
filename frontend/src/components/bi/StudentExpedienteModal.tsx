@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { exportElementToPDF } from '../../services/pdfExportService';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -64,6 +65,8 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   sendingAlertId,
 }) => {
   const { plantelId } = useAuth();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const [incidents, setIncidents] = useState<StudentIncident[]>([]);
   const [periodos, setPeriodos] = useState<PeriodoEscolar[]>([]);
   const [selectedPeriodoId, setSelectedPeriodoId] = useState<string>('all');
@@ -71,6 +74,24 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [modalFilter, setModalFilter] = useState<ModalFilterType>('all');
   const [sqlRiskScore, setSqlRiskScore] = useState<StudentRiskScoreResult | null>(null);
+
+  const handleExportPDF = async () => {
+    if (!modalRef.current || !student) return;
+    setIsExporting(true);
+    try {
+      await exportElementToPDF(modalRef.current, {
+        title: `Expediente Conductual - ${student.nombre_completo}`,
+        filename: `Expediente_${student.matricula || student.nombre_completo}.pdf`,
+        plantelNombre: 'CONALEP Plantel Puebla I',
+        periodoNombre: 'Semestre A-2026',
+        generadoPor: 'Orientador / Directivo',
+      });
+    } catch (err) {
+      console.error('Error al exportar expediente a PDF:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen && student?.alumno_id) {
@@ -266,6 +287,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
       onClick={onClose}
     >
       <div
+        ref={modalRef}
         className="modal-box-animated"
         style={{
           backgroundColor: '#ffffff',
@@ -538,12 +560,13 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
           <button
             type="button"
             className="bi-btn-reset"
-            onClick={() => window.print()}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            title="Imprimir expediente del alumno en PDF"
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#00492f', color: '#ffffff', opacity: isExporting ? 0.7 : 1 }}
+            title="Descargar expediente del alumno en PDF"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>print</span>
-            Imprimir Ficha PDF
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>download</span>
+            {isExporting ? 'Generando PDF...' : 'Descargar PDF'}
           </button>
 
           <button
