@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { exportElementToPDF } from '../../services/pdfExportService';
+import { exportElementToPDF, exportStudentExpedientePDF } from '../../services/pdfExportService';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -92,15 +92,31 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   }, [isOpen]);
 
   const handleExportPDF = async () => {
-    if (!modalRef.current || !student) return;
+    if (!student) return;
     setIsExporting(true);
     try {
-      await exportElementToPDF(modalRef.current, {
-        title: `Expediente Conductual - ${student.nombre_completo}`,
-        filename: `Expediente_${student.matricula || student.nombre_completo}.pdf`,
-        plantelNombre: 'CONALEP Plantel Puebla I',
-        periodoNombre: 'Semestre A-2026',
-        generadoPor: 'Orientador / Directivo',
+      await exportStudentExpedientePDF({
+        student: {
+          nombre_completo: student.nombre_completo,
+          matricula: student.matricula,
+          grupo_nombre: student.grupo_nombre,
+          carrera_nombre: student.carrera_nombre,
+        },
+        diagnostic: {
+          riskLevel: humanDiagnostic.riskLevel,
+          statusText: humanDiagnostic.statusText,
+          fortaleza: humanDiagnostic.fortaleza,
+          recommendation: humanDiagnostic.recommendation,
+        },
+        incidents: incidents.map(inc => ({
+          created_at: inc.created_at,
+          descripcion: inc.descripcion,
+          lugar: inc.lugar,
+          impacto_puntos: inc.impacto_puntos,
+          categoria_nombre: inc.categorias_incidencia?.nombre,
+          color_semaforo: inc.categorias_incidencia?.color_semaforo,
+        })),
+        sqlRiskScore,
       });
     } catch (err) {
       console.error('Error al exportar expediente a PDF:', err);

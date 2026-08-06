@@ -35,9 +35,17 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
 
   // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
   useEffect(() => {
-    if (!isOpen) return;
-    document.body.classList.add('no-scroll');
-    return () => document.body.classList.remove('no-scroll');
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
   }, [isOpen]);
 
   // Escuchar tecla Escape con guard para campos editables
@@ -82,9 +90,8 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
 
   if (!isOpen || !target) return null;
 
-  async function handleSendMessage(e?: React.FormEvent) {
-    if (e) e.preventDefault();
-    const q = inputQuery.trim();
+  async function handleSendQueryText(queryText: string) {
+    const q = queryText.trim();
     if (!q || !target) return;
 
     const userMsg: ChatMessage = {
@@ -113,6 +120,11 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
 
     setMessages(prev => [...prev, aiMsg]);
     setIsThinking(false);
+  }
+
+  async function handleSendMessage(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    await handleSendQueryText(inputQuery);
   }
 
   const modalJSX = (
@@ -157,16 +169,16 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         {/* Header del Agente IA */}
         <div style={{ background: 'var(--color-brand-chambray, #204785)', color: '#ffffff', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#a2f4c7' }}>smart_toy</span>
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#a2f4c7', fontWeight: 700 }}>
-                  Agente IA • Groq Llama 3.3 70B
+                <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#a2f4c7', fontWeight: 800 }}>
+                  Asistente IA • Inteligencia Conductual
                 </span>
                 <span style={{ fontSize: '9px', background: '#10b981', color: '#ffffff', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
-                  Grounded en BD Real
+                  En Línea
                 </span>
               </div>
               <h3 style={{ margin: '2px 0 0', fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
@@ -190,8 +202,8 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
             {target.subtitle}
           </div>
           <span style={{ fontSize: '11px', color: 'var(--color-text-main, #f8fafc)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>database</span>
-            Fuente: PostgreSQL RPC (Datos Reales)
+            <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>verified</span>
+            Análisis sobre Datos en Tiempo Real
           </span>
         </div>
 
@@ -216,7 +228,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
                   <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
                     {m.sender === 'user' ? 'person' : 'smart_toy'}
                   </span>
-                  {m.sender === 'user' ? 'Directivo' : 'Agente IA (Grounded)'}
+                  {m.sender === 'user' ? 'Usuario' : 'Asistente IA'}
                 </span>
                 <span style={{ fontSize: '10px', opacity: 0.7, color: 'var(--color-text-sub, #cbd5e1)' }}>{m.timestamp}</span>
               </div>
@@ -229,16 +241,46 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
           {isThinking && (
             <div style={{ alignSelf: 'flex-start', backgroundColor: 'var(--color-bg-card, #1e293b)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #334155)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--color-brand-chambray, #60a5fa)', animation: 'spin 1s linear infinite' }}>sync</span>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', fontWeight: 600 }}>Sintetizando consulta con Groq / Llama 3.3 sobre datos reales de la BD...</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', fontWeight: 600 }}>El Asistente está consultando la información...</span>
             </div>
           )}
+        </div>
+
+        {/* Botones de Sugerencia Rápida */}
+        <div style={{ padding: '8px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '6px', overflowX: 'auto' }}>
+          {[
+            '¿Qué acciones recomiendas hoy?',
+            '¿Cuáles son los grupos con mayor riesgo?',
+            '¿Cómo podemos prevenir la deserción?',
+          ].map((promptText, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleSendQueryText(promptText)}
+              disabled={isThinking}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '9999px',
+                border: '1px solid var(--color-border-subtle, #475569)',
+                background: 'var(--color-bg-app, #0f172a)',
+                color: 'var(--color-text-sub, #cbd5e1)',
+                fontSize: '11px',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              💡 {promptText}
+            </button>
+          ))}
         </div>
 
         {/* Chat Input Bar */}
         <form onSubmit={handleSendMessage} style={{ padding: '12px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '10px', alignItems: 'center' }}>
           <input
             type="text"
-            placeholder="Pregunta al Agente IA sobre esta gráfica..."
+            placeholder="Escribe tu duda sobre estos datos..."
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
             style={{
@@ -271,7 +313,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
             }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>send</span>
-            Consultar
+            Enviar
           </button>
         </form>
       </div>

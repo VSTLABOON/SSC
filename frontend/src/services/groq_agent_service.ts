@@ -35,26 +35,29 @@ function generateDeterministicGroundedReply(payload: GroqAgentPayload): string {
 
   if (payload.userQuery) {
     const q = payload.userQuery.toLowerCase();
-    if (q.includes('deser') || q.includes('riesgo')) {
-      return `📊 Análisis de Riesgo (Basado 100% en Base de Datos):
-Según los registros activos de la BD en ${title}, la tasa de atención prioritaria es de ${data.conteo_rojo || 0} alumnos en Semáforo Rojo y ${data.conteo_naranja || 0} en Naranja.
-Intervenir en las primeras 2 semanas de detección en la BD reduce el riesgo de deserción en un 85%.`;
+    if (q.includes('deser') || q.includes('riesgo') || q.includes('atencion')) {
+      return `📌 **Diagnóstico de Riesgo y Prevención:**
+
+Actualmente tenemos **${data.conteo_rojo || 0} alumnos en Semáforo Rojo** (Atención Prioritaria) y **${data.conteo_naranja || 0} en Naranja** (Prevención) en ${title}.
+
+💡 **Recomendación Directiva:**
+Coordinar con la tutoría del plantel una sesión de acompañamiento en las primeras 2 semanas para los estudiantes en Semáforo Rojo. La intervención temprana reduce el riesgo de deserción hasta en un 85%.`;
     }
-    return `📊 Respuesta basada en datos reales de la BD para "${title}":
-Promedio ISC: ${data.promedio_puntos ?? 100} pts | Alumnos Verde: ${data.conteo_verde || 0} | Naranja: ${data.conteo_naranja || 0} | Rojo: ${data.conteo_rojo || 0}.
-Todos los valores son calculados en tiempo real desde la tabla public.incidencias y RPCs PostgreSQL.`;
+    return `📌 **Consulta sobre ${title}:**
+
+• **Promedio del Plantel:** ${data.promedio_puntos ?? 100} / 100 pts.
+• **Alumnos en Estado Saludable:** ${data.conteo_verde || 0} estudiantes (${Math.round(((data.conteo_verde || 0) / (data.total_alumnos || 1)) * 100)}%).
+• **En Prevención / Riesgo:** ${data.conteo_naranja || 0} Naranja | ${data.conteo_rojo || 0} Rojo.
+
+¿Te gustaría enfocar el análisis en algún grupo o periodo específico?`;
   }
 
-  return `📊 Resumen Ejecutivo Grounded (Base de Datos en Tiempo Real):
+  return `📊 **Síntesis Ejecutiva — ${title}**
 
-1. Estado Actual de la BD:
-• Promedio de Salud Conductual: ${data.promedio_puntos ?? 100} / 100 pts.
-• Matrícula Registrada: ${data.total_alumnos || 0} alumnos.
-• Distribución: ${data.conteo_verde || 0} Verde (Óptimo), ${data.conteo_naranja || 0} Naranja (Prevención), ${data.conteo_rojo || 0} Rojo (Atención Prioritaria).
+• **Promedio de Salud Conductual:** ${data.promedio_puntos ?? 100} / 100 pts.
+• **Distribución de Matrícula:** ${data.conteo_verde || 0} Saludables (Verde), ${data.conteo_naranja || 0} En Seguimiento (Naranja), ${data.conteo_rojo || 0} Atención Prioritaria (Rojo).
+• **Incidencias Registradas:** ${data.total_incidencias || 0} reportes acumulados.
 
-2. Hallazgo Clave en BD:
-Se registran ${data.total_incidencias || 0} reportes acumulados en el periodo evaluado. El ${Math.round(((data.conteo_verde || 0) / (data.total_alumnos || 1)) * 100)}% de los alumnos se mantiene en Semáforo Verde sin afectación a su expediente.
-
-3. Recomendación Directiva:
-Focalizar las tutorías de orientación en los ${data.conteo_rojo || 0} estudiantes con Semáforo Rojo identificados en la tabla de riesgo.`;
+💡 **Siguiente Paso Recomendado:**
+Revisar el listado de alumnos en Semáforo Rojo para programar citas de orientación conductual este semestre.`;
 }
