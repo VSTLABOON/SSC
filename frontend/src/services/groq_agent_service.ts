@@ -30,34 +30,49 @@ export async function queryGroqAgent(payload: GroqAgentPayload): Promise<string>
 }
 
 function generateDeterministicGroundedReply(payload: GroqAgentPayload): string {
-  const data = JSON.parse(payload.dbContextJson || '{}');
+  const fullData = JSON.parse(payload.dbContextJson || '{}');
+  const kpis = fullData._seccion_KPIs || fullData;
   const title = payload.kpiOrChartTitle;
+
+  const totalAlumnos = kpis.total_alumnos ?? kpis.total_matricula ?? 0;
+  const promedio = kpis.promedio_isc ?? kpis.promedio_puntos ?? 100;
+  const verde = kpis.semaforo_verde ?? kpis.conteo_verde ?? 0;
+  const naranja = kpis.semaforo_naranja ?? kpis.conteo_naranja ?? 0;
+  const rojo = kpis.semaforo_rojo ?? kpis.conteo_rojo ?? 0;
+  const incidencias = kpis.total_incidencias_periodo ?? kpis.total_incidencias ?? 0;
 
   if (payload.userQuery) {
     const q = payload.userQuery.toLowerCase();
     if (q.includes('deser') || q.includes('riesgo') || q.includes('atencion')) {
-      return `📌 **Diagnóstico de Riesgo y Prevención:**
+      return `📌 **Diagnóstico de Riesgo Conductual y Prevención Escolar:**
 
-Actualmente tenemos **${data.conteo_rojo || 0} alumnos en Semáforo Rojo** (Atención Prioritaria) y **${data.conteo_naranja || 0} en Naranja** (Prevención) en ${title}.
+• **Alumnos en Atención Prioritaria (Rojo):** ${rojo} estudiantes.
+• **Alumnos en Seguimiento Preventivo (Naranja):** ${naranja} estudiantes.
+• **Total Matrícula Evaluada:** ${totalAlumnos} alumnos.
 
 💡 **Recomendación Directiva:**
-Coordinar con la tutoría del plantel una sesión de acompañamiento en las primeras 2 semanas para los estudiantes en Semáforo Rojo. La intervención temprana reduce el riesgo de deserción hasta en un 85%.`;
+Se sugiere priorizar las sesiones de acompañamiento y tutoría conductual para los ${rojo} estudiantes en Semáforo Rojo en las primeras 2 semanas del periodo, a fin de prevenir la deserción escolar.`;
     }
     return `📌 **Consulta sobre ${title}:**
 
-• **Promedio del Plantel:** ${data.promedio_puntos ?? 100} / 100 pts.
-• **Alumnos en Estado Saludable:** ${data.conteo_verde || 0} estudiantes (${Math.round(((data.conteo_verde || 0) / (data.total_alumnos || 1)) * 100)}%).
-• **En Prevención / Riesgo:** ${data.conteo_naranja || 0} Naranja | ${data.conteo_rojo || 0} Rojo.
+• **Promedio de Salud Conductual:** ${promedio} / 100 pts.
+• **Estado Saludable (Verde):** ${verde} alumnos.
+• **En Prevención / Atención Prioritaria:** ${naranja} Naranja | ${rojo} Rojo.
+• **Volumen de Incidencias:** ${incidencias} reportes acumulados.
 
-¿Te gustaría enfocar el análisis en algún grupo o periodo específico?`;
+¿Deseas profundizar en algún grupo o periodo específico?`;
   }
 
-  return `📊 **Síntesis Ejecutiva — ${title}**
+  return `📊 **Síntesis Ejecutiva Grounded — ${title}**
 
-• **Promedio de Salud Conductual:** ${data.promedio_puntos ?? 100} / 100 pts.
-• **Distribución de Matrícula:** ${data.conteo_verde || 0} Saludables (Verde), ${data.conteo_naranja || 0} En Seguimiento (Naranja), ${data.conteo_rojo || 0} Atención Prioritaria (Rojo).
-• **Incidencias Registradas:** ${data.total_incidencias || 0} reportes acumulados.
+• **Estado Actual de la BD:**
+  - Promedio de Salud Conductual: ${promedio} / 100 pts.
+  - Matrícula Evaluada: ${totalAlumnos} alumnos.
+  - Distribución Semafórica: ${verde} Verde (Óptimo), ${naranja} Naranja (Prevención), ${rojo} Rojo (Atención Prioritaria).
 
-💡 **Siguiente Paso Recomendado:**
-Revisar el listado de alumnos en Semáforo Rojo para programar citas de orientación conductual este semestre.`;
+• **Hallazgo Clave:**
+  Se registran ${incidencias} reportes acumulados en el periodo. El ${totalAlumnos > 0 ? Math.round((verde / totalAlumnos) * 100) : 0}% de los alumnos se mantiene en Semáforo Verde.
+
+• **Recomendación Directiva:**
+  Focalizar las tutorías de orientación en los ${rojo + naranja} estudiantes identificados en Semáforo Naranja y Rojo en el cuadro de riesgo.`;
 }

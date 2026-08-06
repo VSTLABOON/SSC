@@ -228,7 +228,7 @@ export default function HistorialReportesM() {
                 <th>Grupo</th>
                 <th>Carrera</th>
                 <th>Reportes Totales</th>
-                <th className="hrm-th-right">Ver Expediente Modal</th>
+                <th style={{ textAlign: 'center' }}>Expediente</th>
               </tr>
             </thead>
             <tbody>
@@ -253,8 +253,21 @@ export default function HistorialReportesM() {
                         {s.reportCount} {s.reportCount === 1 ? 'Reporte' : 'Reportes'}
                       </span>
                     </td>
-                    <td className="hrm-td-action">
-                      <span className="material-symbols-outlined hrm-chevron">visibility</span>
+                    <td style={{ textAlign: 'center' }}>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{
+                          fontSize: '22px',
+                          color: '#60a5fa',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        title="Ver Expediente"
+                      >
+                        visibility
+                      </span>
                     </td>
                   </tr>
                 ))

@@ -1293,3 +1293,83 @@ input {
   border: 2px dashed rgba(239, 68, 68, 0.6);
   background-color: transparent !important;
 }
+
+/* ── Dark Mode Overrides para AsignacionEstatus ─────────────────────────── */
+[data-theme='dark'] .im-body {
+  --mystic: #0f172a;
+  --surface-bright: #1e293b;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --surface-container: #1e293b;
+  --surface-container-high: #334155;
+  --surface-container-low: #0f172a;
+  --surface-container-lowest: #1e293b;
+  --on-background: #f8fafc;
+  --on-surface: #f8fafc;
+  --on-surface-variant: #cbd5e1;
+  --outline: #475569;
+  --outline-variant: #334155;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .attendance-card,
+[data-theme='dark'] .im-student-card,
+[data-theme='dark'] .student-card-mobile,
+[data-theme='dark'] .im-card,
+[data-theme='dark'] .attendance-row,
+[data-theme='dark'] .summary-card,
+[data-theme='dark'] .instruction-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .search-filter-card,
+[data-theme='dark'] .im-search-box,
+[data-theme='dark'] .filter-pill,
+[data-theme='dark'] .attendance-summary-header,
+[data-theme='dark'] .section-header,
+[data-theme='dark'] .card-section {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .im-search-input,
+[data-theme='dark'] .obs-input,
+[data-theme='dark'] input[type="text"] {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .filter-pill {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .filter-pill--active {
+  background-color: #204785 !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .im-section-label,
+[data-theme='dark'] .student-header__label,
+[data-theme='dark'] .attendance-th,
+[data-theme='dark'] .stat-label,
+[data-theme='dark'] .section-subtitle,
+[data-theme='dark'] .obs-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .student-name,
+[data-theme='dark'] .student-header__name,
+[data-theme='dark'] .attendance-summary-title,
+[data-theme='dark'] h1,
+[data-theme='dark'] h2,
+[data-theme='dark'] h3,
+[data-theme='dark'] h4 {
+  color: #f8fafc !important;
+}

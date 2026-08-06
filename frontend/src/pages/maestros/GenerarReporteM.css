@@ -936,3 +936,26 @@ a      { text-decoration: none; }
   cursor: not-allowed;
   pointer-events: none;
 }
+
+/* ── Dark Mode Overrides for GenerarReporteM ────────────────────────────── */
+[data-theme='dark'] .grm-modal-footer {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+
+[data-theme='dark'] .grm-btn-cancel {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .grm-tab-btn {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .grm-tab-btn--active {
+  background: #204785 !important;
+  color: #ffffff !important;
+}

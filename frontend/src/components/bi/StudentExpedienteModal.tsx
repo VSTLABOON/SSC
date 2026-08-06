@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { exportElementToPDF, exportStudentExpedientePDF } from '../../services/pdfExportService';
+import { exportStudentExpedientePDF } from '../../services/pdfExportService';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -229,6 +229,17 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
     return trajectoryData[trajectoryData.length - 1].puntos;
   }, [trajectoryData]);
 
+  // Cálculo Dinámico de Dominio Y para que la curva tenga respiro y no se vea encajonada
+  const dynamicYDomain = useMemo(() => {
+    if (!trajectoryData || trajectoryData.length === 0) return [0, 110];
+    const pts = trajectoryData.map(d => d.puntos);
+    const minPts = Math.min(...pts);
+    const maxPts = Math.max(...pts);
+    const yMin = Math.max(0, Math.floor((Math.min(minPts, 65) - 10) / 10) * 10);
+    const yMax = Math.min(120, Math.ceil((Math.max(maxPts, 105) + 5) / 10) * 10);
+    return [yMin, yMax];
+  }, [trajectoryData]);
+
   const periodSemaforo = useMemo(() => {
     if (periodPuntos >= 90) return 'verde';
     if (periodPuntos >= 70) return 'naranja';
@@ -245,7 +256,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
     const positiveIncidents = periodFilteredIncidents.filter(i => i.impacto_puntos > 0);
 
     let statusText = '';
-    let riskLevel: 'ok' | 'warning' | 'critical' = 'ok';
+    let riskLevel: 'healthy' | 'warning' | 'critical' = 'healthy';
     let recommendation = '';
 
     if (currentPoints < 70 || drop >= 25) {
@@ -257,7 +268,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
       statusText = `Seguimiento Preventivo Continuo: El alumno muestra variaciones puntuales en su salud conductual (${currentPoints} pts). Su desempeño es recuperable con diálogo directo.`;
       recommendation = 'Acción recomendada: Acordar metas semanales de puntualidad y convivencia dentro del aula.';
     } else {
-      riskLevel = 'ok';
+      riskLevel = 'healthy';
       statusText = `Trayectoria Sobresaliente y Estabilidad: Mantiene un desempeño conductual alto (${currentPoints} pts) con constancia a lo largo del tiempo.`;
       recommendation = 'Acción recomendada: Felicitar al estudiante para reforzar su liderazgo positivo.';
     }
@@ -453,23 +464,23 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
                   </span>
                   Diagnóstico Pedagógico y Salud Conductual
                 </h4>
-                <span style={{ fontSize: '11px', fontWeight: 800, padding: '3px 10px', borderRadius: '9999px', backgroundColor: humanDiagnostic.riskLevel === 'critical' ? '#7f1d1d' : humanDiagnostic.riskLevel === 'warning' ? '#78350f' : '#065f46', color: humanDiagnostic.riskLevel === 'critical' ? '#fca5a5' : humanDiagnostic.riskLevel === 'warning' ? '#fde68a' : '#a7f3d0' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, padding: '4px 12px', borderRadius: '9999px', backgroundColor: humanDiagnostic.riskLevel === 'critical' ? '#7f1d1d' : humanDiagnostic.riskLevel === 'warning' ? '#78350f' : '#065f46', color: humanDiagnostic.riskLevel === 'critical' ? '#fca5a5' : humanDiagnostic.riskLevel === 'warning' ? '#fde68a' : '#a7f3d0', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {humanDiagnostic.riskLevel === 'critical' ? 'Intervención Requerida' : humanDiagnostic.riskLevel === 'warning' ? 'Seguimiento Activo' : 'Estado Saludable'}
                 </span>
               </div>
 
-              <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#f8fafc', lineHeight: 1.5, fontWeight: 500 }}>
+              <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#f8fafc', lineHeight: 1.6, fontWeight: 500 }}>
                 {humanDiagnostic.statusText}
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', paddingTop: '12px', borderTop: '1px dashed rgba(255,255,255,0.2)' }}>
                 <div>
                   <span style={{ fontSize: '10px', fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fortaleza Destacada</span>
-                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#ffffff', fontWeight: 700 }}>{humanDiagnostic.fortaleza}</p>
+                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#ffffff', fontWeight: 700, lineHeight: 1.4 }}>{humanDiagnostic.fortaleza}</p>
                 </div>
                 <div>
                   <span style={{ fontSize: '10px', fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Recomendación para el Equipo</span>
-                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#ffffff', fontWeight: 700 }}>{humanDiagnostic.recommendation}</p>
+                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#ffffff', fontWeight: 700, lineHeight: 1.4 }}>{humanDiagnostic.recommendation}</p>
                 </div>
                 {sqlRiskScore && (
                   <div>
@@ -526,23 +537,35 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
               </div>
 
               {/* Gráfica de Área con Tendencia en Recharts */}
-              <div style={{ height: '200px', width: '100%', marginTop: '8px' }}>
+              <div style={{ height: '220px', width: '100%', marginTop: '8px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trajectoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={trajectoryData} margin={{ top: 15, right: 15, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorPointsGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'} stopOpacity={0.4} />
                         <stop offset="95%" stopColor={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'} stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle, #334155)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                     <XAxis dataKey="label" stroke="var(--color-text-sub, #94a3b8)" fontSize={11} tickLine={false} />
-                    <YAxis domain={[0, 100]} stroke="var(--color-text-sub, #94a3b8)" fontSize={11} tickLine={false} />
+                    <YAxis domain={dynamicYDomain} stroke="var(--color-text-sub, #94a3b8)" fontSize={11} tickLine={false} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', border: '1px solid #334155', color: '#ffffff', fontSize: '12px' }}
                       formatter={(val: any) => [`${val ?? 0} pts`, 'Puntaje']}
                     />
-                    <ReferenceLine y={70} stroke="#dc2626" strokeDasharray="3 3" label={{ value: 'Límite Crítico (70 pts)', fill: '#ef4444', fontSize: 10 }} />
+                    <ReferenceLine
+                      y={70}
+                      stroke="#ef4444"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      label={{
+                        value: 'Límite Crítico (70 pts)',
+                        fill: '#fca5a5',
+                        fontSize: 10,
+                        position: 'top',
+                        style: { fontWeight: 700 }
+                      }}
+                    />
                     <Area
                       type="monotone"
                       dataKey="puntos"
@@ -563,62 +586,70 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
           {activeModalTab === 'incidencias' && (
             <div>
               {/* SELECTOR DE PERIODO ESCOLAR Y PASTILLAS */}
-              <div style={{ background: 'var(--color-bg-app, #1e293b)', padding: '14px', borderRadius: '14px', border: '1px solid var(--color-border-subtle, #334155)', marginBottom: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ background: 'var(--color-bg-app, #1e293b)', padding: '16px', borderRadius: '14px', border: '1px solid var(--color-border-subtle, #334155)', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-main, #f8fafc)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#60a5fa' }}>calendar_month</span>
                     Filtrar por Periodo Escolar:
                   </label>
-                  <select
-                    value={selectedPeriodoId}
-                    onChange={e => setSelectedPeriodoId(e.target.value)}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--color-border-subtle, #475569)',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color: 'var(--color-text-main, #f8fafc)',
-                      backgroundColor: 'var(--color-bg-card, #0f172a)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="all">Historico Consolidado (Todos los Periodos)</option>
-                    {periodos.map(p => (
-                      <option key={p.id} value={p.id}>
-                        Periodo: {p.nombre} {p.activo ? '(Activo Actualmente)' : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative', minWidth: '240px' }}>
+                    <select
+                      value={selectedPeriodoId}
+                      onChange={e => setSelectedPeriodoId(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 32px 8px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--color-border-subtle, #475569)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: '#f8fafc',
+                        backgroundColor: '#0f172a',
+                        cursor: 'pointer',
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%3Acbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 10px center',
+                      }}
+                    >
+                      <option value="all">Histórico Consolidado (Todos los Periodos)</option>
+                      {periodos.map(p => (
+                        <option key={p.id} value={p.id}>
+                          Periodo: {p.nombre} {p.activo ? '(Activo)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* Pastillas de Organización por Tipo de Incidencia */}
-                <div style={{ display: 'flex', gap: '6px', background: 'var(--color-bg-card, #0f172a)', padding: '4px', borderRadius: '10px', flexWrap: 'wrap' }}>
+                {/* Pastillas de Organización por Tipo de Incidencia con Espaciado Adecuado */}
+                <div style={{ display: 'flex', gap: '8px', background: 'var(--color-bg-card, #0f172a)', padding: '6px', borderRadius: '10px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={() => setModalFilter('all')}
-                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'all' ? 'var(--color-brand-chambray, #204785)' : 'transparent', color: modalFilter === 'all' ? '#ffffff' : 'var(--color-text-sub, #cbd5e1)' }}
+                    style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '6px', border: '1px solid', borderColor: modalFilter === 'all' ? '#60a5fa' : 'transparent', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'all' ? 'var(--color-brand-chambray, #204785)' : 'rgba(255,255,255,0.04)', color: modalFilter === 'all' ? '#ffffff' : '#cbd5e1', transition: 'all 0.15s ease' }}
                   >
                     Todos ({periodFilteredIncidents.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setModalFilter('verde')}
-                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'verde' ? '#15803d' : 'transparent', color: modalFilter === 'verde' ? '#ffffff' : '#4ade80' }}
+                    style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '6px', border: '1px solid', borderColor: modalFilter === 'verde' ? '#34d399' : 'transparent', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'verde' ? '#047857' : 'rgba(16, 185, 129, 0.1)', color: modalFilter === 'verde' ? '#ffffff' : '#34d399', transition: 'all 0.15s ease' }}
                   >
                     Positivos ({positiveCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setModalFilter('naranja')}
-                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'naranja' ? '#b45309' : 'transparent', color: modalFilter === 'naranja' ? '#ffffff' : '#fbbf24' }}
+                    style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '6px', border: '1px solid', borderColor: modalFilter === 'naranja' ? '#fbbf24' : 'transparent', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'naranja' ? '#b45309' : 'rgba(245, 158, 11, 0.1)', color: modalFilter === 'naranja' ? '#ffffff' : '#fbbf24', transition: 'all 0.15s ease' }}
                   >
                     Leves ({warningCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setModalFilter('rojo')}
-                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'rojo' ? '#b91c1c' : 'transparent', color: modalFilter === 'rojo' ? '#ffffff' : '#f87171' }}
+                    style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '6px', border: '1px solid', borderColor: modalFilter === 'rojo' ? '#f87171' : 'transparent', cursor: 'pointer', fontWeight: 700, backgroundColor: modalFilter === 'rojo' ? '#b91c1c' : 'rgba(239, 68, 68, 0.1)', color: modalFilter === 'rojo' ? '#ffffff' : '#f87171', transition: 'all 0.15s ease' }}
                   >
                     Críticos ({criticalCount})
                   </button>
@@ -661,7 +692,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', color: 'var(--color-text-sub, #94a3b8)' }}>
                         <span>Lugar: {inc.lugar || 'No especificado'}</span>
-                        <span style={{ fontWeight: 700, color: inc.impacto_puntos > 0 ? '#4ade80' : '#f87171' }}>
+                        <span style={{ fontWeight: 700, color: inc.impacto_puntos > 0 ? '#34d399' : '#f87171' }}>
                           Impacto: {inc.impacto_puntos > 0 ? `+${inc.impacto_puntos}` : inc.impacto_puntos} pts
                         </span>
                       </div>
@@ -701,6 +732,16 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
               className="bi-btn-alert-tutor"
               disabled={isSending}
               onClick={() => onAlertTutor(student)}
+              style={
+                humanDiagnostic.riskLevel === 'healthy'
+                  ? {
+                      backgroundColor: 'var(--color-bg-app, #334155)',
+                      color: 'var(--color-text-sub, #cbd5e1)',
+                      border: '1px solid var(--color-border-subtle, #475569)',
+                      boxShadow: 'none',
+                    }
+                  : undefined
+              }
             >
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
                 {isSending ? 'sync' : 'notifications_active'}

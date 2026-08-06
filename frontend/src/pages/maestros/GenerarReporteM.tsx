@@ -54,6 +54,18 @@ export default function GenerarReporteM() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Bloquear el scroll del body mientras un modal esté abierto
+  useEffect(() => {
+    if (modalOpen || successModalOpen || warningModalOpen) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, [modalOpen, successModalOpen, warningModalOpen]);
+
   useEffect(() => {
     if (!session?.user?.id) return;
 
