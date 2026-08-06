@@ -49,12 +49,25 @@
   --spacing-margin-mobile:  16px;
   --spacing-margin-desktop: 40px;
   --container-max-width:    1280px;
-  --sidebar-width:          288px; /* idéntico al ancho del sidebar de Home (288px) */
+  --sidebar-width:          288px;
 
   --radius-sm:   2px;
   --radius-lg:   4px;
   --radius-xl:   8px;
   --radius-full: 12px;
+}
+
+[data-theme='dark'] {
+  --color-surface:                  #0f172a;
+  --color-surface-container:        #1e293b;
+  --color-surface-container-low:    #0f172a;
+  --color-surface-container-high:   #334155;
+  --color-surface-container-highest:#334155;
+  --color-surface-container-lowest: #1e293b;
+  --color-outline-variant:          #475569;
+  --color-on-surface:               #f8fafc;
+  --color-on-surface-variant:       #cbd5e1;
+  --color-background:               #0f172a;
 }
 
 /* =========================================================

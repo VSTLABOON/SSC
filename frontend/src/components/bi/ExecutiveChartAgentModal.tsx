@@ -127,7 +127,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         backgroundColor: 'rgba(15, 23, 42, 0.75)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
-        zIndex: 9999,
+        zIndex: 2000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -138,36 +138,38 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
       <div
         className="modal-box-animated"
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: 'var(--color-bg-card, #ffffff)',
+          color: 'var(--color-text-main, #0f172a)',
           borderRadius: '20px',
           maxWidth: '780px',
           width: '100%',
-          maxHeight: '90vh',
+          maxHeight: '85vh',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          zIndex: 10000,
+          zIndex: 2010,
           position: 'relative',
           overflow: 'hidden',
+          border: '1px solid var(--color-border-subtle, #e2e8f0)',
         }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header del Agente IA */}
-        <div style={{ background: '#204785', color: '#ffffff', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'var(--color-brand-chambray, #204785)', color: '#ffffff', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#a2f4c7' }}>smart_toy</span>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#a2f4c7' }}>smart_toy</span>
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#a2f4c7', fontWeight: 700 }}>
-                  Agente IA (Groq Llama 3.3 70B • Grounded en BD)
+                  Agente IA • Groq Llama 3.3 70B
                 </span>
                 <span style={{ fontSize: '9px', background: '#10b981', color: '#ffffff', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
-                  100% CERO ALUCINACIÓN
+                  Grounded en BD Real
                 </span>
               </div>
-              <h3 style={{ margin: '2px 0 0', fontSize: '17px', fontWeight: 800, color: '#ffffff' }}>
+              <h3 style={{ margin: '2px 0 0', fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
                 {target.title}
               </h3>
             </div>
@@ -182,68 +184,70 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         </div>
 
         {/* Subtitle Bar */}
-        <div style={{ background: 'var(--color-bg-card, #f8fafc)', padding: '8px 24px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)', fontSize: '12px', color: 'var(--color-text-sub, #64748b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+        <div style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '8px 20px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)', fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-brand-chambray, #204785)' }}>analytics</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-brand-chambray, #60a5fa)' }}>analytics</span>
             {target.subtitle}
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--color-text-main, #0f172a)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--color-text-main, #f8fafc)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>database</span>
             Fuente: PostgreSQL RPC (Datos Reales)
           </span>
         </div>
 
-        {/* Creador de Mensajes / Chat del Agente IA */}
-        <div ref={chatContainerRef} style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--color-bg-app, #f1f5f9)' }}>
+        {/* Chat del Agente IA */}
+        <div ref={chatContainerRef} style={{ flex: 1, padding: '16px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: 'var(--color-bg-app, #0f172a)' }}>
           {messages.map(m => (
             <div
               key={m.id}
               style={{
                 alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: m.sender === 'user' ? '75%' : '90%',
-                backgroundColor: m.sender === 'user' ? 'var(--color-brand-chambray, #204785)' : 'var(--color-bg-card, #ffffff)',
-                color: m.sender === 'user' ? '#ffffff' : 'var(--color-text-main, #0f172a)',
-                padding: '14px 18px',
-                borderRadius: m.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                border: m.sender === 'ai' ? '1px solid #e2e8f0' : 'none',
+                maxWidth: m.sender === 'user' ? '80%' : '92%',
+                backgroundColor: m.sender === 'user' ? 'var(--color-brand-chambray, #204785)' : 'var(--color-bg-card, #1e293b)',
+                color: m.sender === 'user' ? '#ffffff' : 'var(--color-text-main, #f8fafc)',
+                padding: '12px 16px',
+                borderRadius: m.sender === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                border: m.sender === 'ai' ? '1px solid var(--color-border-subtle, #334155)' : 'none',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', gap: '12px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: m.sender === 'user' ? '#a2f4c7' : '#204785', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: m.sender === 'user' ? '#a2f4c7' : 'var(--color-brand-chambray, #60a5fa)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
                     {m.sender === 'user' ? 'person' : 'smart_toy'}
                   </span>
                   {m.sender === 'user' ? 'Directivo' : 'Agente IA (Grounded)'}
                 </span>
-                <span style={{ fontSize: '10px', opacity: 0.7 }}>{m.timestamp}</span>
+                <span style={{ fontSize: '10px', opacity: 0.7, color: 'var(--color-text-sub, #cbd5e1)' }}>{m.timestamp}</span>
               </div>
-              <div style={{ fontSize: '13px', lineHeight: 1.55, whiteSpace: 'pre-line' }}>
+              <div style={{ fontSize: '13px', lineHeight: 1.55, whiteSpace: 'pre-line', color: m.sender === 'user' ? '#ffffff' : 'var(--color-text-main, #f8fafc)' }}>
                 {m.text}
               </div>
             </div>
           ))}
 
           {isThinking && (
-            <div style={{ alignSelf: 'flex-start', backgroundColor: '#ffffff', padding: '12px 18px', borderRadius: '18px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#204785', animation: 'spin 1s linear infinite' }}>sync</span>
-              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Sintetizando consulta con Groq / Llama 3.3 sobre datos reales de la BD...</span>
+            <div style={{ alignSelf: 'flex-start', backgroundColor: 'var(--color-bg-card, #1e293b)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #334155)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--color-brand-chambray, #60a5fa)', animation: 'spin 1s linear infinite' }}>sync</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', fontWeight: 600 }}>Sintetizando consulta con Groq / Llama 3.3 sobre datos reales de la BD...</span>
             </div>
           )}
         </div>
 
         {/* Chat Input Bar */}
-        <form onSubmit={handleSendMessage} style={{ padding: '14px 20px', background: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <form onSubmit={handleSendMessage} style={{ padding: '12px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '10px', alignItems: 'center' }}>
           <input
             type="text"
-            placeholder="Pregunta al Agente IA sobre esta gráfica (ej. ¿Qué recomendaciones me das?)..."
+            placeholder="Pregunta al Agente IA sobre esta gráfica..."
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
             style={{
               flex: 1,
               padding: '10px 14px',
               borderRadius: '10px',
-              border: '1px solid #cbd5e1',
+              border: '1px solid var(--color-border-subtle, #475569)',
+              background: 'var(--color-bg-app, #0f172a)',
+              color: 'var(--color-text-main, #f8fafc)',
               fontSize: '13px',
               outline: 'none',
             }}
@@ -252,7 +256,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
             type="submit"
             disabled={!inputQuery.trim() || isThinking}
             style={{
-              background: '#204785',
+              background: 'var(--color-brand-chambray, #204785)',
               color: '#ffffff',
               border: 'none',
               borderRadius: '10px',

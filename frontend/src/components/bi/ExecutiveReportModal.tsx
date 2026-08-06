@@ -90,7 +90,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
         backgroundColor: 'rgba(15, 23, 42, 0.75)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
-        zIndex: 9999,
+        zIndex: 2000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -102,32 +102,34 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
         ref={reportRef}
         className="modal-box-animated"
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: 'var(--color-bg-card, #ffffff)',
+          color: 'var(--color-text-main, #0f172a)',
           borderRadius: '20px',
           maxWidth: '820px',
           width: '100%',
-          maxHeight: '90vh',
+          maxHeight: '88vh',
           overflowY: 'auto',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          zIndex: 10000,
-          padding: '28px',
+          zIndex: 2010,
+          padding: '24px',
           position: 'relative',
+          border: '1px solid var(--color-border-subtle, #e2e8f0)',
         }}
         onClick={e => e.stopPropagation()}
       >
         {/* ENCABEZADO INSTITUCIONAL OFICIAL */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid #204785' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid var(--color-brand-chambray, #204785)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#eff6ff', color: '#204785', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '22px', flexShrink: 0 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#204785' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--color-bg-app, #eff6ff)', color: 'var(--color-brand-chambray, #204785)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '22px', flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--color-brand-chambray, #60a5fa)' }}>
                 {reportType === 'alumno' ? 'person' : reportType === 'grupo' ? 'groups' : 'domain'}
               </span>
             </div>
             <div>
-              <span style={{ fontSize: '11px', fontWeight: 800, color: '#00492f', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 CONALEP Plantel Puebla I • Sistema SSC
               </span>
-              <h3 style={{ margin: '2px 0 0', fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>
+              <h3 style={{ margin: '2px 0 0', fontSize: '20px', fontWeight: 800, color: 'var(--color-text-main, #f8fafc)' }}>
                 {reportType === 'alumno'
                   ? 'Ficha Narrativa de Salud Conductual'
                   : reportType === 'grupo'

@@ -278,7 +278,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
         backgroundColor: 'rgba(15, 23, 42, 0.75)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
-        zIndex: 9999,
+        zIndex: 2000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -290,16 +290,18 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
         ref={modalRef}
         className="modal-box-animated"
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: 'var(--color-bg-card, #ffffff)',
+          color: 'var(--color-text-main, #0f172a)',
           borderRadius: '20px',
           maxWidth: '780px',
           width: '100%',
-          maxHeight: '90vh',
+          maxHeight: '88vh',
           overflowY: 'auto',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          zIndex: 10000,
+          zIndex: 2010,
           padding: '24px',
           position: 'relative',
+          border: '1px solid var(--color-border-subtle, #e2e8f0)',
         }}
         onClick={e => e.stopPropagation()}
       >

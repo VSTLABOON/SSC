@@ -44,6 +44,20 @@
   --shadow-md: 0 4px 16px rgba(32,71,133,.14);
 }
 
+[data-theme='dark'] {
+  --c-mystic:           #0f172a;
+  --c-white:            #1e293b;
+  --c-on-surface:       #f8fafc;
+  --c-on-surface-var:   #cbd5e1;
+  --c-secondary:        #cbd5e1;
+  --c-outline:          #94a3b8;
+  --c-outline-variant:  #475569;
+  --c-surface-low:      #0f172a;
+  --c-surface-high:     #1e293b;
+  --c-surface-highest:  #334155;
+  --c-surface-cont:     #1e293b;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: var(--font);

@@ -110,10 +110,54 @@
 [data-theme='dark'] .app-modal-box,
 [data-theme='dark'] .grm-modal-box,
 [data-theme='dark'] .fab-actions-menu,
-[data-theme='dark'] .op-card {
+[data-theme='dark'] .op-card,
+[data-theme='dark'] .modal-box-animated {
   background-color: #1e293b !important;
   border-color: #334155 !important;
   color: #f8fafc !important;
+}
+
+/* ── MATRIZ GLOBAL DE CAPAS (Z-INDEX LAYER SYSTEM) ─────────────────────── */
+:root {
+  --z-canvas: 0;
+  --z-sticky: 10;
+  --z-topbar: 30;
+  --z-sidebar: 50;
+  --z-bottomnav: 100;
+  --z-fab-actions: 120;
+  --z-dropdown: 150;
+  --z-modal-backdrop: 2000;
+  --z-modal-box: 2010;
+  --z-toast: 9000;
+}
+
+/* ── PREVENIR OBSTRUCCIÓN DE CONTENIDO POR BOTTOMNAV EN MÓVIL ─────────────── */
+@media (max-width: 768px) {
+  body,
+  .ida-main,
+  .tl-main-content,
+  .home-page,
+  .page-canvas,
+  .bi-dashboard,
+  .gu-page,
+  .bui-content {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-modal-backdrop,
+  .gu-modal-overlay,
+  .bui-modal-overlay,
+  .modal-backdrop-animated {
+    z-index: var(--z-modal-backdrop) !important;
+  }
+
+  .app-modal-box,
+  .gu-modal,
+  .bui-modal,
+  .modal-box-animated {
+    z-index: var(--z-modal-box) !important;
+    max-height: calc(100vh - 32px) !important;
+  }
 }
 
 [data-theme='dark'] .bi-kpi-title,
