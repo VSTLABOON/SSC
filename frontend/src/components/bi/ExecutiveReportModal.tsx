@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
