@@ -780,3 +780,41 @@ a {
   color: var(--chambray);
   margin: 0;
 }
+
+/* ── Dark Mode Overrides para Clasespantalla ────────────────────────────── */
+[data-theme='dark'] .summary-footer {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .summary-item--bordered {
+  border-left-color: #334155 !important;
+  border-right-color: #334155 !important;
+}
+
+[data-theme='dark'] .summary-icon-circle {
+  background-color: #334155 !important;
+  color: #60a5fa !important;
+}
+
+[data-theme='dark'] .summary-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .summary-value {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .group-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .group-code-chip {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .link-gestionar {
+  color: #60a5fa !important;
+}
