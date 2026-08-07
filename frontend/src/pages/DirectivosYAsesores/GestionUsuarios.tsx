@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 import './GestionUsuarios.css';
 import InlineAlert from '../../components/InlineAlert';
 import BulkUserImport from '../../components/BulkUserImport';
@@ -64,14 +65,7 @@ export default function GestionUsuarios() {
   // Modal de alta masiva
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (modalOpen) {
-      document.body.classList.add('no-scroll');
-    } else {
-      document.body.classList.remove('no-scroll');
-    }
-    return () => document.body.classList.remove('no-scroll');
-  }, [modalOpen]);
+  useLockBodyScroll(modalOpen);
 
   // ── Carga de usuarios ──────────────────────────────────────────────────────
   const fetchUsuarios = useCallback(async () => {

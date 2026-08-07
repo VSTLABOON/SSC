@@ -188,7 +188,7 @@ export default function HistorialReportesM() {
   }
 
   return (
-    <div className="hrm-canvas-only">
+    <div className="hrm-canvas">
       {/* Heading and search */}
       <div className="hrm-page-header">
         <div className="hrm-page-header__text">

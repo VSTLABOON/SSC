@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 import { exportElementToPDF } from '../../services/pdfExportService';
 import type {
   StudentRiskAnalysis,
@@ -34,12 +35,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
   const reportRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.classList.add('no-scroll');
-    return () => document.body.classList.remove('no-scroll');
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
   // Escuchar tecla Escape con guard para campos editables
   useEscapeToClose(onClose);

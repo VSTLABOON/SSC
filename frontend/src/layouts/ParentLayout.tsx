@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NotificationCenter } from '../components/NotificationCenter';
 import '../pages/Home.css';
@@ -29,10 +30,7 @@ export default function ParentLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    document.body.classList.toggle('no-scroll', isSidebarOpen);
-    return () => document.body.classList.remove('no-scroll');
-  }, [isSidebarOpen]);
+  useLockBodyScroll(isSidebarOpen);
 
   useEffect(() => {
     setIsSidebarOpen(false);

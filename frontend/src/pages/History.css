@@ -376,7 +376,8 @@ body.no-scroll {
   }
 }
 
-.page-canvas {
+.page-canvas,
+.history-canvas {
   flex: 1;
   width: 100%;
   max-width: var(--container-max-width);
@@ -388,7 +389,8 @@ body.no-scroll {
 }
 
 @media (min-width: 768px) {
-  .page-canvas {
+  .page-canvas,
+  .history-canvas {
     padding: var(--spacing-margin-desktop);
   }
 }

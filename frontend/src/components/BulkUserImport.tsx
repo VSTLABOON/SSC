@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabaseClient';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './BulkUserImport.css';
 import InlineAlert from './InlineAlert';
 
@@ -47,10 +48,7 @@ export default function BulkUserImport({ isOpen, onClose, onComplete, plantelId 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    document.body.classList.add('no-scroll');
-    return () => document.body.classList.remove('no-scroll');
-  }, []);
+  useLockBodyScroll(isOpen);
 
   useEffect(() => {
     if (isOpen) {

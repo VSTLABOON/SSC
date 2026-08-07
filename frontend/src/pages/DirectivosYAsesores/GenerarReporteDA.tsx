@@ -200,7 +200,7 @@ export default function GenerarReporteDA() {
   }
 
   return (
-    <div className="grm-canvas-only">
+    <div className="grm-canvas">
       {/* Search and Stats */}
       <div className="grm-search-bar-row">
         <div className="grm-search-wrap">

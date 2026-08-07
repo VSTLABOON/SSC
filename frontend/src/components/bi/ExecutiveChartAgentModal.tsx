@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { queryGroqAgent } from '../../services/groq_agent_service';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 
 export interface ChartAgentTarget {
   type: 'kpi_isc' | 'kpi_semaforo' | 'kpi_riesgo' | 'kpi_incidencias' | 'chart_tendencia' | 'chart_categorias';
@@ -33,20 +34,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
   const [isThinking, setIsThinking] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
   // Escuchar tecla Escape con guard para campos editables
   useEscapeToClose(onClose);

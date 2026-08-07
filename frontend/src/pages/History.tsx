@@ -207,7 +207,7 @@ export default function History() {
   }
 
   return (
-    <div className="history-canvas-only">
+    <div className="page-canvas">
       {/* Encabezado de página */}
       <header className="page-header animate-fade-in">
         <div className="page-header__left">

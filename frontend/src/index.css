@@ -133,14 +133,12 @@
 
 /* ── PREVENIR OBSTRUCCIÓN DE CONTENIDO POR BOTTOMNAV EN MÓVIL ─────────────── */
 @media (max-width: 768px) {
-  body,
   .ida-main,
   .tl-main-content,
-  .home-page,
+  .grm-body,
   .page-canvas,
   .bi-dashboard,
-  .gu-page,
-  .bui-content {
+  .gu-page {
     padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important;
   }
 
@@ -269,17 +267,29 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
   background-color: var(--color-bg-app);
   color: var(--color-text-main);
   font-family: var(--sans);
+  overscroll-behavior-y: none;
 }
 
+html.no-scroll,
 body.no-scroll {
   overflow: hidden !important;
   touch-action: none;
   overscroll-behavior: none;
+}
+
+html.no-scroll .tl-main-content,
+html.no-scroll .grm-body,
+html.no-scroll .ida-main,
+html.no-scroll .page-canvas,
+html.no-scroll .hrm-canvas,
+html.no-scroll .grm-canvas {
+  overflow: hidden !important;
 }
 
 h1, h2, h3, h4 {

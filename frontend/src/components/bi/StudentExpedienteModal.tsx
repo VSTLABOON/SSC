@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 import { exportStudentExpedientePDF } from '../../services/pdfExportService';
 import {
   ResponsiveContainer,
@@ -76,20 +77,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   const [modalFilter, setModalFilter] = useState<ModalFilterType>('all');
   const [sqlRiskScore, setSqlRiskScore] = useState<StudentRiskScoreResult | null>(null);
 
-  // Bloquear el scroll del body de la página mientras el modal está abierto
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
   const handleExportPDF = async () => {
     if (!student) return;
@@ -152,12 +140,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
     }
   }, [isOpen, student, plantelId]);
 
-  // Bloquear el scroll del body mientras el modal está abierto para evitar traslapes
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.classList.add('no-scroll');
-    return () => document.body.classList.remove('no-scroll');
-  }, [isOpen]);
+
 
   // Escuchar tecla Escape con guard para campos editables
   useEscapeToClose(onClose);

@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode } from 'react';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,11 +9,7 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, children, className = '' }: ModalProps) {
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.classList.add('no-scroll');
-    return () => document.body.classList.remove('no-scroll');
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
   if (!isOpen) return null;
 

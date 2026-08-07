@@ -492,7 +492,7 @@ a {
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--chambray);
-  margin: 0;
+  margin: 0 0 8px 0;
 }
 
 .section-subtitle {
