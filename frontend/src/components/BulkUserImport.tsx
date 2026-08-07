@@ -48,6 +48,11 @@ export default function BulkUserImport({ isOpen, onClose, onComplete, plantelId 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    document.body.classList.add('no-scroll');
+    return () => document.body.classList.remove('no-scroll');
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       setStep(1);
       setRegistros([]);

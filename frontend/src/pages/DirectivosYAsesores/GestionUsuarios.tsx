@@ -64,6 +64,15 @@ export default function GestionUsuarios() {
   // Modal de alta masiva
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+    return () => document.body.classList.remove('no-scroll');
+  }, [modalOpen]);
+
   // ── Carga de usuarios ──────────────────────────────────────────────────────
   const fetchUsuarios = useCallback(async () => {
     if (!plantelId) return [];

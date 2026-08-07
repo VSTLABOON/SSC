@@ -4,6 +4,7 @@ export interface GroqAgentPayload {
   kpiOrChartTitle: string;
   dbContextJson: string; // Datos duros provenientes de los RPCs PostgreSQL fn_bi_get_kpis, fn_bi_get_trend, etc.
   userQuery?: string;
+  conversationHistory?: Array<{ sender: 'ai' | 'user'; text: string }>;
 }
 
 /**
@@ -14,15 +15,21 @@ export interface GroqAgentPayload {
 export async function queryGroqAgent(payload: GroqAgentPayload): Promise<string> {
   // 1. Invocación segura a la Supabase Edge Function 'groq-agent' (Servidor Deno aislado)
   try {
+    const { kpiOrChartTitle, dbContextJson, userQuery, conversationHistory } = payload;
     const { data, error } = await supabase.functions.invoke('groq-agent', {
-      body: payload,
+      body: { kpiOrChartTitle, dbContextJson, userQuery, conversationHistory },
     });
 
     if (!error && data?.reply) {
       return data.reply.trim();
     }
+
+    // Log detallado para diagnóstico en consola del navegador
+    if (error) {
+      console.warn('[SSC IA] Edge Function retornó error:', error);
+    }
   } catch (err) {
-    console.warn('Edge Function groq-agent no disponible o retornó error, activando motor determinístico local:', err);
+    console.warn('[SSC IA] Edge Function groq-agent no disponible, activando motor local:', err);
   }
 
   // 2. Fallback Determinístico Grounded en Datos Reales de PostgreSQL (Sin llamadas de red ni API keys)
@@ -48,11 +55,11 @@ function generateDeterministicGroundedReply(payload: GroqAgentPayload): string {
 
     // Intent 1: Acciones o Recomendaciones directivas
     if (q.includes('accion') || q.includes('recomiend') || q.includes('hacer') || q.includes('paso') || q.includes('plan')) {
-      return `💡 **Plan de Acción Recomendado para ${title}:**
+      return `Plan de Acción Recomendado para ${title}:
 
-1. **Atención Inmediata:** Focalizar entrevistas con tutores para los **${rojo} estudiantes en Semáforo Rojo** identificados en el mapa de riesgo.
-2. **Seguimiento Preventivo:** Acordar compromisos de aula y asistencia con los **${naranja} alumnos en Semáforo Naranja**.
-3. **Refuerzo Positivo:** Reconocer al **${totalAlumnos > 0 ? Math.round((verde / totalAlumnos) * 100) : 0}% (${verde} alumnos)** en Semáforo Verde para mantener el clima escolar óptimo.
+1. Atención Inmediata: Focalizar entrevistas con tutores para los ${rojo} estudiantes en Semáforo Rojo identificados en el mapa de riesgo.
+2. Seguimiento Preventivo: Acordar compromisos de aula y asistencia con los ${naranja} alumnos en Semáforo Naranja.
+3. Refuerzo Positivo: Reconocer al ${totalAlumnos > 0 ? Math.round((verde / totalAlumnos) * 100) : 0}% (${verde} alumnos) en Semáforo Verde para mantener el clima escolar óptimo.
 
 ¿Deseas exportar el reporte o consultar algún grupo en particular?`;
     }
@@ -65,64 +72,65 @@ function generateDeterministicGroundedReply(payload: GroqAgentPayload): string {
           topGruposMap.set(s.grupo, (topGruposMap.get(s.grupo) || 0) + 1);
         }
       });
-      const gruposList = Array.from(topGruposMap.entries()).map(([g, count]) => `• **Grupo ${g}:** ${count} alumno(s) en atención prioritaria.`).join('\n');
+      const gruposList = Array.from(topGruposMap.entries()).map(([g, count], i) => `${i + 1}. Grupo ${g}: ${count} alumno(s) en atención prioritaria.`).join('\n');
 
-      return `🏫 **Análisis por Grupos y Cuadro de Riesgo — ${title}:**
+      return `Análisis por Grupos y Cuadro de Riesgo (${title}):
 
-${gruposList || `• Actualmente se evalúan ${totalAlumnos} alumnos distribuidos en el plantel.`}
+${gruposList || `Actualmente se evalúan ${totalAlumnos} alumnos distribuidos en el plantel.`}
 
-• **Total en Riesgo Relevante:** ${rojo} estudiantes en Rojo | ${naranja} en Naranja.
+Total en Riesgo Relevante: ${rojo} estudiantes en Rojo | ${naranja} en Naranja.
 
-💡 **Siguiente Paso:** Puedes hacer clic en la tabla de riesgo de abajo para ver la ficha detallada de cada estudiante.`;
+Siguiente Paso: Puedes hacer clic en la tabla de riesgo de abajo para ver la ficha detallada de cada estudiante.`;
     }
 
     // Intent 3: Categorías o Motivos de incidencias frecuentes
     if (q.includes('categoria') || q.includes('motivo') || q.includes('incidencia') || q.includes('frecuent') || q.includes('reporte')) {
       const catList = categorias.length > 0
-        ? categorias.slice(0, 4).map((c: any) => `• **${c.categoria}:** ${c.total} registro(s) (${c.severidad})`).join('\n')
-        : '• Se mantiene un registro balanceado de incidencias conductuales en el sistema.';
+        ? categorias.slice(0, 4).map((c: any, i: number) => `${i + 1}. ${c.categoria}: ${c.total} registro(s) (${c.severidad})`).join('\n')
+        : 'Se mantiene un registro balanceado de incidencias conductuales en el sistema.';
 
-      return `📋 **Desglose de Categorías de Incidencias — ${title}:**
+      return `Desglose de Categorías de Incidencias (${title}):
 
 ${catList}
 
-• **Volumen Acumulado:** ${incidencias} reportes registrados en el periodo.
+Volumen Acumulado: ${incidencias} reportes registrados en el periodo.
 
-💡 **Recomendación:** Monitorear las categorías con mayor frecuencia para implementar talleres de prevención específicos.`;
+Recomendación: Monitorear las categorías con mayor frecuencia para implementar talleres de prevención específicos.`;
     }
 
     // Intent 4: Prevención y deserción escolar
     if (q.includes('deser') || q.includes('riesgo') || q.includes('atencion') || q.includes('preven') || q.includes('abando') || q.includes('tutor')) {
-      return `📌 **Diagnóstico de Riesgo Conductual y Prevención de Deserción Escolar:**
+      return `Diagnóstico de Riesgo Conductual y Prevención de Deserción Escolar:
 
-• **Semáforo Rojo (Atención Prioritaria):** ${rojo} estudiantes.
-• **Semáforo Naranja (Seguimiento Preventivo):** ${naranja} estudiantes.
-• **Semáforo Verde (Desempeño Saludable):** ${verde} estudiantes.
+1. Semáforo Rojo (Atención Prioritaria): ${rojo} estudiantes.
+2. Semáforo Naranja (Seguimiento Preventivo): ${naranja} estudiantes.
+3. Semáforo Verde (Desempeño Saludable): ${verde} estudiantes.
 
-💡 **Estrategia Directiva:**
+Estrategia Directiva:
 La canalización temprana con Orientación Educativa dentro de los primeros 10 días tras un reporte rojo reduce el riesgo de abandono escolar hasta en un 85%.`;
     }
 
     // Dynamic Intent Fallback para preguntas abiertas
-    return `🔍 **Respuesta Personalizada sobre "${payload.userQuery}" (${title}):**
+    return `Respuesta sobre "${payload.userQuery}" (${title}):
 
-• **Promedio Actual:** ${promedio} / 100 pts.
-• **Resumen de Matrícula:** ${verde} Verde | ${naranja} Naranja | ${rojo} Rojo (Total: ${totalAlumnos} alumnos).
-• **Incidencias Totales:** ${incidencias} reportes acumulados.
+1. Promedio Actual: ${promedio} / 100 pts.
+2. Resumen de Matrícula: ${verde} Verde | ${naranja} Naranja | ${rojo} Rojo (Total: ${totalAlumnos} alumnos).
+3. Incidencias Totales: ${incidencias} reportes acumulados.
 
-💡 **Análisis:** Sobre tu duda ("${payload.userQuery}"), la información indica ${rojo} casos prioritarios y ${naranja} preventivos. Te sugerimos revisar las recomendaciones del sistema en la sección de riesgo.`;
+Análisis: Sobre tu duda ("${payload.userQuery}"), la información indica ${rojo} casos prioritarios y ${naranja} preventivos. Te sugerimos revisar las recomendaciones del sistema en la sección de riesgo.`;
   }
 
-  return `📊 **Síntesis Ejecutiva Grounded — ${title}**
+  return `Síntesis Ejecutiva (${title})
 
-• **Estado Actual de la BD:**
-  - Promedio de Salud Conductual: ${promedio} / 100 pts.
-  - Matrícula Evaluada: ${totalAlumnos} alumnos.
-  - Distribución Semafórica: ${verde} Verde (Óptimo), ${naranja} Naranja (Prevención), ${rojo} Rojo (Atención Prioritaria).
+Estado Actual de la BD:
+1. Promedio de Salud Conductual: ${promedio} / 100 pts.
+2. Matrícula Evaluada: ${totalAlumnos} alumnos.
+3. Distribución Semafórica: ${verde} Verde (Óptimo), ${naranja} Naranja (Prevención), ${rojo} Rojo (Atención Prioritaria).
 
-• **Hallazgo Clave:**
-  Se registran ${incidencias} reportes acumulados en el periodo. El ${totalAlumnos > 0 ? Math.round((verde / totalAlumnos) * 100) : 0}% de los alumnos se mantiene en Semáforo Verde.
+Hallazgo Clave:
+Se registran ${incidencias} reportes acumulados en el periodo. El ${totalAlumnos > 0 ? Math.round((verde / totalAlumnos) * 100) : 0}% de los alumnos se mantiene en Semáforo Verde.
 
-• **Recomendación Directiva:**
-  Focalizar las tutorías de orientación en los ${rojo + naranja} estudiantes identificados en Semáforo Naranja y Rojo en el cuadro de riesgo.`;
+Recomendación Directiva:
+Focalizar las tutorías de orientación en los ${rojo + naranja} estudiantes identificados en Semáforo Naranja y Rojo en el cuadro de riesgo.`;
 }
+

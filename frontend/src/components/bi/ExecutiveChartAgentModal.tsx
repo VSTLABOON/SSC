@@ -105,10 +105,15 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
     setInputQuery('');
     setIsThinking(true);
 
+    // Construir historial conversacional para contexto del agente IA
+    const history = messages.map(m => ({ sender: m.sender, text: m.text }));
+    history.push({ sender: 'user' as const, text: q });
+
     const aiReplyText = await queryGroqAgent({
       kpiOrChartTitle: target.title,
       dbContextJson: JSON.stringify(target.dataSummary, null, 2),
       userQuery: q,
+      conversationHistory: history,
     });
 
     const aiMsg: ChatMessage = {
@@ -167,7 +172,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         onClick={e => e.stopPropagation()}
       >
         {/* Header del Agente IA */}
-        <div style={{ background: 'var(--color-brand-chambray, #204785)', color: '#ffffff', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ background: 'var(--color-brand-chambray, #204785)', color: '#ffffff', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#a2f4c7' }}>smart_toy</span>
@@ -196,7 +201,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         </div>
 
         {/* Subtitle Bar */}
-        <div style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '8px 20px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)', fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
+        <div style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '8px 20px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)', fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-brand-chambray, #60a5fa)' }}>analytics</span>
             {target.subtitle}
@@ -208,7 +213,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         </div>
 
         {/* Chat del Agente IA */}
-        <div ref={chatContainerRef} style={{ flex: 1, padding: '16px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: 'var(--color-bg-app, #0f172a)' }}>
+        <div ref={chatContainerRef} style={{ flex: 1, minHeight: 0, padding: '16px 20px', overflowY: 'auto', overscrollBehavior: 'contain', display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: 'var(--color-bg-app, #0f172a)' }}>
           {messages.map(m => (
             <div
               key={m.id}
@@ -247,7 +252,7 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
         </div>
 
         {/* Botones de Sugerencia Rápida */}
-        <div style={{ padding: '8px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '6px', overflowX: 'auto' }}>
+        <div style={{ padding: '8px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '6px', overflowX: 'auto', flexShrink: 0 }}>
           {[
             '¿Qué acciones recomiendas hoy?',
             '¿Cuáles son los grupos con mayor riesgo?',
@@ -271,13 +276,13 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
                 transition: 'all 0.15s ease',
               }}
             >
-              💡 {promptText}
+              {promptText}
             </button>
           ))}
         </div>
 
         {/* Chat Input Bar */}
-        <form onSubmit={handleSendMessage} style={{ padding: '12px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <form onSubmit={handleSendMessage} style={{ padding: '12px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
           <input
             type="text"
             placeholder="Escribe tu duda sobre estos datos..."
