@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { ThemeToggle } from '../components/ThemeToggle';
 import '../pages/Home.css';
 
@@ -28,8 +27,6 @@ export default function StudentLayout() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  useLockBodyScroll(isSidebarOpen);
 
   // Cerrar sidebar al cambiar de ruta
   useEffect(() => {

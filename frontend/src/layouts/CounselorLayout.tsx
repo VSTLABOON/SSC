@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import '../pages/DirectivosYAsesores/InicioDA.css';
 import foto_maestro from '../assets/imagenes/foto_maestro.jpg';
 import SCTechlogo from '../assets/imagenes/SCTechlogo.png';
@@ -47,7 +46,7 @@ export default function CounselorLayout() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useLockBodyScroll(isSidebarOpen);
+
 
   useEffect(() => {
     setIsSidebarOpen(false);

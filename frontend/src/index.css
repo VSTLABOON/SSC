@@ -273,22 +273,9 @@ body {
   background-color: var(--color-bg-app);
   color: var(--color-text-main);
   font-family: var(--sans);
-  overscroll-behavior-y: none;
 }
 
-html.no-scroll,
 body.no-scroll {
-  overflow: hidden !important;
-  touch-action: none;
-  overscroll-behavior: none;
-}
-
-html.no-scroll .tl-main-content,
-html.no-scroll .grm-body,
-html.no-scroll .ida-main,
-html.no-scroll .page-canvas,
-html.no-scroll .hrm-canvas,
-html.no-scroll .grm-canvas {
   overflow: hidden !important;
 }
 

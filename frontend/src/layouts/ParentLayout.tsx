@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NotificationCenter } from '../components/NotificationCenter';
 import '../pages/Home.css';
@@ -14,10 +13,10 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: 'inicio', icon: 'family_restroom', label: 'Mis Tutelados', path: '/padre/inicio' },
-  { id: 'perfil', icon: 'badge', label: 'Perfil del Alumno', path: '/padre/perfil' },
-  { id: 'horario', icon: 'schedule', label: 'Horario Escolar', path: '/padre/horario' },
-  { id: 'historial', icon: 'history', label: 'Historial de Reportes', path: '/padre/historial' },
+  { id: 'home', icon: 'home', label: 'Inicio', path: '/padre/inicio' },
+  { id: 'profile', icon: 'person', label: 'Perfil Tutelado', path: '/padre/perfil' },
+  { id: 'schedule', icon: 'schedule', label: 'Horario Tutelado', path: '/padre/horario' },
+  { id: 'history', icon: 'calendar_today', label: 'Historial Conductual', path: '/padre/historial' },
 ];
 
 const Icon = ({ name, className = '', style }: { name: string; className?: string; style?: React.CSSProperties }) => (
@@ -29,8 +28,6 @@ export default function ParentLayout() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  useLockBodyScroll(isSidebarOpen);
 
   useEffect(() => {
     setIsSidebarOpen(false);
