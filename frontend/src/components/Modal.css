@@ -1,7 +1,7 @@
 .app-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: var(--z-modal-backdrop, 2000);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,6 +9,8 @@
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   animation: backdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -22,6 +24,7 @@
   -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-lg, 16px);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
-  z-index: 2010;
+  z-index: var(--z-modal-box, 2010);
   animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+

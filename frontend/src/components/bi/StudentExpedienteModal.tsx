@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useEffect, useState, useMemo } from 'react';
+
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
+import { Modal } from '../Modal';
+import '../Modal.css';
 import { exportStudentExpedientePDF } from '../../services/pdfExportService';
+
 import {
   ResponsiveContainer,
   AreaChart,
@@ -66,8 +68,9 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   sendingAlertId,
 }) => {
   const { plantelId } = useAuth();
-  const modalRef = useRef<HTMLDivElement>(null);
   const [activeModalTab, setActiveModalTab] = useState<'diagnostico' | 'evolucion' | 'incidencias'>('diagnostico');
+
+
   const [isExporting, setIsExporting] = useState(false);
   const [incidents, setIncidents] = useState<StudentIncident[]>([]);
   const [periodos, setPeriodos] = useState<PeriodoEscolar[]>([]);
@@ -77,7 +80,6 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
   const [modalFilter, setModalFilter] = useState<ModalFilterType>('all');
   const [sqlRiskScore, setSqlRiskScore] = useState<StudentRiskScoreResult | null>(null);
 
-  useLockBodyScroll(isOpen);
 
   const handleExportPDF = async () => {
     if (!student) return;
@@ -292,45 +294,21 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
 
   const isSending = sendingAlertId === student.alumno_id;
 
-  const modalJSX = (
-    <div
-      className="modal-backdrop-animated"
+  return (
+    <Modal
+      isOpen={isOpen && !!student}
+      onClose={onClose}
+      maxWidth="780px"
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        zIndex: 2000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
+        backgroundColor: 'var(--color-bg-card, #ffffff)',
+        color: 'var(--color-text-main, #0f172a)',
+        borderRadius: '20px',
+        maxHeight: '88vh',
+        padding: '24px',
+        border: '1px solid var(--color-border-subtle, #e2e8f0)',
       }}
-      onClick={onClose}
     >
-      <div
-        ref={modalRef}
-        className="modal-box-animated"
-        style={{
-          backgroundColor: 'var(--color-bg-card, #ffffff)',
-          color: 'var(--color-text-main, #0f172a)',
-          borderRadius: '20px',
-          maxWidth: '780px',
-          width: '100%',
-          maxHeight: '88vh',
-          overflowY: 'auto',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          zIndex: 2010,
-          padding: '24px',
-          position: 'relative',
-          border: '1px solid var(--color-border-subtle, #e2e8f0)',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
+
         {/* Encabezado Principal del Expediente Humanizado */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -733,9 +711,7 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
             </button>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalJSX, document.body);
 };
+
