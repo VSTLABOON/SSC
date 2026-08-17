@@ -417,8 +417,9 @@ export default function InicioOrientador() {
                         Tutor: {c.padreNombre} (Alumno: {c.alumnoNombre})
                       </span>
                     </div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#d97706', marginBottom: '4px' }}>
-                      📅 Fecha propuesta: {c.fechaPropuesta} a las {c.horaPropuesta} hrs
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#d97706', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>event</span>
+                      Fecha propuesta: {c.fechaPropuesta} a las {c.horaPropuesta} hrs
                     </div>
                     <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-main, #334155)', lineHeight: 1.4 }}>
                       {c.detalles}

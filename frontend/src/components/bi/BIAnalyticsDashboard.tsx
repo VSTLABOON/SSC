@@ -161,9 +161,9 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
     if (activePlantelId) {
       loadDashboardData();
 
-      // Suscripción WebSocket en Tiempo Real a la tabla public.incidencias
+      // 1. Suscripción WebSocket en Tiempo Real a las tablas operativas de Supabase
       const channel = supabase
-        .channel('realtime-bi-incidencias')
+        .channel('realtime-bi-analytics-suite')
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'incidencias' },
@@ -171,10 +171,38 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
             loadDashboardData();
           }
         )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'asistencias' },
+          () => {
+            loadDashboardData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'participaciones' },
+          () => {
+            loadDashboardData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'alumnos' },
+          () => {
+            loadDashboardData();
+          }
+        )
         .subscribe();
+
+      // 2. Escucha de eventos de mutación local inmediata en la misma pestaña / ventanas
+      const handleDataChanged = () => {
+        loadDashboardData();
+      };
+      window.addEventListener('ssc_data_changed', handleDataChanged);
 
       return () => {
         supabase.removeChannel(channel);
+        window.removeEventListener('ssc_data_changed', handleDataChanged);
       };
     } else {
       setLoading(false);

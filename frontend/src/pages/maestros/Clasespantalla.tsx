@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getGruposDeDocente } from '../../services/grupos';
 import type { ClassDocente } from '../../services/grupos';
+import { supabase } from '../../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import './Clasespantalla.css';
 
@@ -9,24 +10,56 @@ export default function ClasesPantalla() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const [clases, setClases] = useState<ClassDocente[]>([]);
+  const [verificadasMap, setVerificadasMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadGroups = useCallback(async () => {
     if (!session?.user?.id) return;
+    try {
+      setLoading(true);
+      const data = await getGruposDeDocente(session.user.id);
+      setClases(data);
 
-    async function loadGroups() {
-      try {
-        const data = await getGruposDeDocente(session!.user!.id);
-        setClases(data);
-      } catch (err) {
-        console.error('Error al cargar grupos del docente:', err);
-      } finally {
-        setLoading(false);
+      const fechaHoy = new Date().toISOString().split('T')[0];
+      const materiaIds = data.map(c => c.materiaId);
+      
+      const map: Record<string, boolean> = {};
+      if (materiaIds.length > 0) {
+        const { data: asistRows } = await supabase
+          .from('asistencias')
+          .select('materia_id')
+          .in('materia_id', materiaIds)
+          .eq('fecha', fechaHoy);
+
+        (asistRows || []).forEach((r: any) => {
+          map[r.materia_id] = true;
+        });
       }
-    }
 
-    loadGroups();
+      // Complementar con storage local por si offline/mock
+      materiaIds.forEach(mId => {
+        if (localStorage.getItem(`ssc_lista_verificada_${mId}_${fechaHoy}`) === 'true') {
+          map[mId] = true;
+        }
+      });
+
+      setVerificadasMap(map);
+    } catch (err) {
+      console.error('Error al cargar grupos del docente:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [session]);
+
+  useEffect(() => {
+    loadGroups();
+
+    const handleDataChanged = () => {
+      loadGroups();
+    };
+    window.addEventListener('ssc_data_changed', handleDataChanged);
+    return () => window.removeEventListener('ssc_data_changed', handleDataChanged);
+  }, [loadGroups]);
 
   function handleGestionarGrupo(clase: ClassDocente): void {
     navigate('/maestro/asistencia', {
@@ -68,10 +101,17 @@ export default function ClasesPantalla() {
             <div className="group-card" key={clase.materiaId} onClick={() => handleGestionarGrupo(clase)}>
               <div className="group-card-header">
                 <span className="group-code-chip">{clase.grupoNombre}</span>
-                <span className="group-status-chip">
-                  <span className="group-status-dot" />
-                  Activo
-                </span>
+                {verificadasMap[clase.materiaId] ? (
+                  <span className="group-status-chip" style={{ background: '#dcfce7', color: '#166534', borderColor: '#86efac', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>lock</span>
+                    Lista Pasada (Hoy)
+                  </span>
+                ) : (
+                  <span className="group-status-chip" style={{ background: '#fef3c7', color: '#92400e', borderColor: '#fde68a', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
+                    Pendiente Hoy
+                  </span>
+                )}
               </div>
               <h3 className="group-title" style={{ marginBottom: '12px' }}>{clase.materiaNombre}</h3>
               <div className="group-card-stats" style={{ marginBottom: '20px' }}>

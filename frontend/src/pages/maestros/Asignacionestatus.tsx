@@ -85,32 +85,72 @@ export default function AsignacionEstatus() {
   const [activeFilter, setActiveFilter] = useState<'todos' | 'guardados' | 'pendientes'>('todos');
   const [expandedObs, setExpandedObs] = useState<Set<number>>(new Set());
 
-  // Guardado
+  // Guardado y Bloqueo de Clase
   const [isSaving, setIsSaving] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [hasPassedToday, setHasPassedToday] = useState(false);
   const [toastState, setToastState] = useState<ToastState>('hidden');
   const [undoTarget, setUndoTarget] = useState<{ index: number; previousState: RowStatus } | null>(null);
 
-  // ── useEffect: Cargar alumnos ────────────────────────────────────────────
+  // ── useEffect: Cargar alumnos y verificar pase de lista de hoy ────────────
   useEffect(() => {
     async function loadStudents() {
       try {
-        const data = await getAlumnosDeGrupo(grupoId);
-        setStudents(data || []);
-        setStatuses((data || []).map(() => ({
-          asistencia: null,
-          justificada: false,
-          desempeno: null,
-          observacion: '',
-          justificanteFile: null,
-        })));
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        const [data, { data: asistData }, { data: partData }] = await Promise.all([
+          getAlumnosDeGrupo(grupoId),
+          materiaId !== 'sin-id'
+            ? supabase.from('asistencias').select('alumno_id, presente, retardo, justificada, observaciones').eq('materia_id', materiaId).eq('fecha', fechaHoy)
+            : Promise.resolve({ data: [] }),
+          materiaId !== 'sin-id'
+            ? supabase.from('participaciones').select('alumno_id, nivel, observacion').eq('materia_id', materiaId).eq('fecha', fechaHoy)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        const studentList = data || [];
+        setStudents(studentList);
+
+        const asistMap = new Map((asistData || []).map((a: any) => [a.alumno_id, a]));
+        const partMap = new Map((partData || []).map((p: any) => [p.alumno_id, p]));
+        const alreadyPassed = (asistData && asistData.length > 0) || localStorage.getItem(`ssc_lista_verificada_${materiaId}_${fechaHoy}`) === 'true';
+
+        if (alreadyPassed) {
+          setIsLocked(true);
+          setHasPassedToday(true);
+        }
+
+        setStatuses(studentList.map((st) => {
+          const a = asistMap.get(st.id);
+          const p = partMap.get(st.id);
+          
+          let asistVal: AsistenciaValue = null;
+          if (a) {
+            asistVal = a.retardo ? 'retardo' : a.presente ? 'asistio' : 'falta';
+          }
+          
+          let despVal: DesempenoValue = null;
+          if (p) {
+            despVal = p.nivel === 'positiva' ? 'participo' : p.nivel === 'nula' ? 'no_participo' : 'neutral';
+          } else if (asistVal === 'asistio' || asistVal === 'retardo') {
+            despVal = 'neutral';
+          }
+
+          return {
+            asistencia: asistVal,
+            justificada: a?.justificada || false,
+            desempeno: despVal,
+            observacion: a?.observaciones || p?.observacion || '',
+            justificanteFile: null,
+          };
+        }));
       } catch (err) {
-        console.error('Error al cargar alumnos del grupo:', err);
+        console.error('Error al cargar alumnos del grupo y asistencia previa:', err);
       } finally {
         setLoading(false);
       }
     }
     loadStudents();
-  }, [grupoId]);
+  }, [grupoId, materiaId]);
 
   // ── useEffect: Cargar período y categorías (fuente de verdad de puntos) ──
   useEffect(() => {
@@ -329,6 +369,15 @@ export default function AsignacionEstatus() {
       if (errorsList.length > 0) {
         setErrorText(`Se guardaron algunos registros con errores:\n\n${errorsList.join('\n')}`);
       } else {
+        setIsLocked(true);
+        setHasPassedToday(true);
+        try {
+          localStorage.setItem(`ssc_lista_verificada_${materiaId}_${fechaHoy}`, 'true');
+          window.dispatchEvent(new CustomEvent('ssc_data_changed', { detail: { type: 'asistencia', materiaId, fecha: fechaHoy } }));
+        } catch {
+          // Ignorar error de storage
+        }
+
         setToastState('visible');
         setTimeout(() => setToastState('fading'), 2000);
         setTimeout(() => setToastState('hidden'), 2300);
@@ -450,12 +499,72 @@ export default function AsignacionEstatus() {
           <p className="page-subtitle">Grupo: {grupoNombre} &bull; {students.length} Alumnos Inscritos</p>
         </div>
         <div className="page-header-actions">
-          <button className="btn-guardar" onClick={handleSave} disabled={isSaving}>
-            <span className="material-symbols-outlined">save</span>
-            {isSaving ? 'Guardando...' : 'Guardar Registro'}
+          <button
+            className="btn-guardar"
+            onClick={isLocked ? () => setIsLocked(false) : handleSave}
+            disabled={isSaving}
+            style={{
+              background: isLocked ? '#16a34a' : '#204785',
+            }}
+          >
+            <span className="material-symbols-outlined">{isLocked ? 'lock' : 'save'}</span>
+            {isSaving ? 'Guardando...' : isLocked ? 'Lista Verificada (Bloqueada)' : 'Guardar Registro'}
           </button>
         </div>
       </header>
+
+      {/* Banner Informativo de Bloqueo de Clase */}
+      {hasPassedToday && (
+        <div style={{
+          background: isLocked ? '#f0fdf4' : '#fffbeb',
+          border: isLocked ? '1px solid #86efac' : '1px solid #fde68a',
+          borderRadius: '12px',
+          padding: '14px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '24px', color: isLocked ? '#16a34a' : '#d97706' }}>
+              {isLocked ? 'lock' : 'lock_open'}
+            </span>
+            <div>
+              <strong style={{ fontSize: '13px', color: isLocked ? '#166534' : '#92400e', display: 'block' }}>
+                {isLocked ? 'Pase de Lista Verificado y Bloqueado' : 'Modo de Edición Habilitado'}
+              </strong>
+              <span style={{ fontSize: '12px', color: isLocked ? '#15803d' : '#b45309' }}>
+                {isLocked
+                  ? 'Esta sesión ya fue registrada para hoy. Los campos están protegidos contra modificaciones accidentales.'
+                  : 'Puedes realizar ajustes y guardar nuevamente para actualizar los registros.'}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsLocked(prev => !prev)}
+            style={{
+              background: isLocked ? '#ffffff' : '#204785',
+              color: isLocked ? '#166534' : '#ffffff',
+              border: isLocked ? '1px solid #86efac' : 'none',
+              borderRadius: '8px',
+              padding: '6px 14px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+              {isLocked ? 'edit' : 'lock'}
+            </span>
+            {isLocked ? 'Habilitar Edición' : 'Bloquear Registro'}
+          </button>
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="progress-section" style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid rgba(190,201,192,0.2)' }}>
@@ -585,6 +694,7 @@ export default function AsignacionEstatus() {
                                 type="checkbox"
                                 id={`just-${originalIndex}`}
                                 checked={rowStatus.justificada}
+                                disabled={isLocked}
                                 onChange={(e) => handleJustificada(originalIndex, e.target.checked)}
                               />
                               <label htmlFor={`just-${originalIndex}`}>Falta justificada</label>
@@ -593,7 +703,7 @@ export default function AsignacionEstatus() {
                           {/* Evidence upload */}
                           {rowStatus.asistencia === 'falta' && rowStatus.justificada && (
                             <div className="evidence-upload">
-                              <label className="evidence-label" htmlFor={`ev-${originalIndex}`}>
+                              <label className="evidence-label" htmlFor={`ev-${originalIndex}`} style={{ opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
                                 <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>attach_file</span>
                                 {' '}Adjuntar evidencia
                               </label>
@@ -601,6 +711,7 @@ export default function AsignacionEstatus() {
                                 id={`ev-${originalIndex}`}
                                 type="file"
                                 accept=".pdf,.jpg,.jpeg,.png"
+                                disabled={isLocked}
                                 style={{ display: 'none' }}
                                 onChange={(e) => handleJustificanteFile(originalIndex, e.target.files?.[0] || null)}
                               />
@@ -618,6 +729,7 @@ export default function AsignacionEstatus() {
                               <input
                                 className="obs-input"
                                 type="text"
+                                disabled={isLocked}
                                 placeholder="Observaci&#243;n del docente (opcional)..."
                                 value={rowStatus.observacion}
                                 onChange={(e) => handleObservacion(originalIndex, e.target.value)}
@@ -630,7 +742,7 @@ export default function AsignacionEstatus() {
                             ASISTENCIA_OPTIONS,
                             rowStatus.asistencia,
                             (key) => handleAsistencia(originalIndex, key as AsistenciaValue),
-                            false,
+                            isLocked,
                           )}
                         </td>
                         <td className="attendance-td attendance-td--desempeno">
@@ -638,7 +750,7 @@ export default function AsignacionEstatus() {
                             DESEMPENO_OPTIONS,
                             rowStatus.desempeno,
                             (key) => handleDesempeno(originalIndex, key as DesempenoValue),
-                            rowStatus.asistencia === 'falta' || rowStatus.asistencia === null,
+                            rowStatus.asistencia === 'falta' || rowStatus.asistencia === null || isLocked,
                           )}
                         </td>
                         <td className="attendance-td" style={{ width: '44px', textAlign: 'center' }}>
@@ -682,7 +794,7 @@ export default function AsignacionEstatus() {
                           ASISTENCIA_OPTIONS,
                           rowStatus.asistencia,
                           (key) => handleAsistencia(originalIndex, key as AsistenciaValue),
-                          false,
+                          isLocked,
                         )}
                       </div>
                       <div>
@@ -691,7 +803,7 @@ export default function AsignacionEstatus() {
                           DESEMPENO_OPTIONS,
                           rowStatus.desempeno,
                           (key) => handleDesempeno(originalIndex, key as DesempenoValue),
-                          rowStatus.asistencia === 'falta' || rowStatus.asistencia === null,
+                          rowStatus.asistencia === 'falta' || rowStatus.asistencia === null || isLocked,
                         )}
                       </div>
                     </div>
@@ -702,6 +814,7 @@ export default function AsignacionEstatus() {
                           type="checkbox"
                           id={`just-m-${originalIndex}`}
                           checked={rowStatus.justificada}
+                          disabled={isLocked}
                           onChange={(e) => handleJustificada(originalIndex, e.target.checked)}
                         />
                         <label htmlFor={`just-m-${originalIndex}`}>Falta justificada</label>
@@ -710,7 +823,7 @@ export default function AsignacionEstatus() {
                     {/* Evidence upload mobile */}
                     {rowStatus.asistencia === 'falta' && rowStatus.justificada && (
                       <div className="evidence-upload">
-                        <label className="evidence-label" htmlFor={`ev-m-${originalIndex}`}>
+                        <label className="evidence-label" htmlFor={`ev-m-${originalIndex}`} style={{ opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
                           <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>attach_file</span>
                           {' '}Adjuntar evidencia
                         </label>
@@ -718,6 +831,7 @@ export default function AsignacionEstatus() {
                           id={`ev-m-${originalIndex}`}
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
+                          disabled={isLocked}
                           style={{ display: 'none' }}
                           onChange={(e) => handleJustificanteFile(originalIndex, e.target.files?.[0] || null)}
                         />
@@ -734,6 +848,7 @@ export default function AsignacionEstatus() {
                       <input
                         className="obs-input"
                         type="text"
+                        disabled={isLocked}
                         placeholder="Observación (opcional)..."
                         value={rowStatus.observacion}
                         onChange={(e) => handleObservacion(originalIndex, e.target.value)}

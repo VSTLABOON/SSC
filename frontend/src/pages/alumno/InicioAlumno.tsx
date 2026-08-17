@@ -104,49 +104,79 @@ export default function InicioAlumno() {
     }
   }, []);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!session?.user?.id) return;
-      try {
-        setLoadingData(true);
-        const perfil = await getPerfilAlumno(session.user.id);
-        if (perfil) {
-          setAlumno(perfil as AlumnoProfile);
-          loadJustificantes(perfil.id);
+  const loadData = useCallback(async () => {
+    if (!session?.user?.id) return;
+    try {
+      setLoadingData(true);
+      const perfil = await getPerfilAlumno(session.user.id);
+      if (perfil) {
+        setAlumno(perfil as AlumnoProfile);
+        loadJustificantes(perfil.id);
 
-          const [incList, avisosRes] = await Promise.all([
-            getIncidenciasDelAlumno(perfil.id),
-            supabase
-              .from('avisos')
-              .select('id, titulo, contenido, fecha_publicacion')
-              .in('destinatarios', ['todos', 'alumnos'])
-              .order('fecha_publicacion', { ascending: false })
-              .limit(3),
-          ]);
+        const [incList, avisosRes] = await Promise.all([
+          getIncidenciasDelAlumno(perfil.id),
+          supabase
+            .from('avisos')
+            .select('id, titulo, contenido, fecha_publicacion')
+            .in('destinatarios', ['todos', 'alumnos'])
+            .order('fecha_publicacion', { ascending: false })
+            .limit(3),
+        ]);
 
-          setIncidencias((incList || []) as unknown as IncidentFromDB[]);
-          if (!avisosRes.error && avisosRes.data) {
-            setAvisos(avisosRes.data);
-          }
-
-          // Cálculo de asistencia
-          const faltas = (incList || []).filter((i: any) =>
-            i.categorias_incidencia?.nombre?.toLowerCase().includes('falta') ||
-            i.categorias_incidencia?.nombre?.toLowerCase().includes('inasistencia')
-          ).length;
-          const totalClases = 50;
-          const pct = Math.max(0, Math.min(100, Math.round(((totalClases - faltas) / totalClases) * 100)));
-          setAsistenciaPorcentaje(pct);
+        setIncidencias((incList || []) as unknown as IncidentFromDB[]);
+        if (!avisosRes.error && avisosRes.data) {
+          setAvisos(avisosRes.data);
         }
-      } catch (err) {
-        console.error('Error al cargar datos del alumno:', err);
-      } finally {
-        setLoadingData(false);
-      }
-    }
 
-    loadData();
+        // Cálculo de asistencia
+        const faltas = (incList || []).filter((i: any) =>
+          i.categorias_incidencia?.nombre?.toLowerCase().includes('falta') ||
+          i.categorias_incidencia?.nombre?.toLowerCase().includes('inasistencia')
+        ).length;
+        const totalClases = 50;
+        const pct = Math.max(0, Math.min(100, Math.round(((totalClases - faltas) / totalClases) * 100)));
+        setAsistenciaPorcentaje(pct);
+      }
+    } catch (err) {
+      console.error('Error al cargar datos del alumno:', err);
+    } finally {
+      setLoadingData(false);
+    }
   }, [session?.user?.id, loadJustificantes]);
+
+  useEffect(() => {
+    loadData();
+
+    // 1. Suscripción en tiempo real a cambios en incidencias y saldo de puntos
+    const channel = supabase
+      .channel('realtime-alumno-home')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'incidencias' },
+        () => {
+          loadData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'alumnos' },
+        () => {
+          loadData();
+        }
+      )
+      .subscribe();
+
+    // 2. Escucha de eventos locales
+    const handleDataChanged = () => {
+      loadData();
+    };
+    window.addEventListener('ssc_data_changed', handleDataChanged);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('ssc_data_changed', handleDataChanged);
+    };
+  }, [loadData]);
 
   const handleExportPDF = async () => {
     if (!pageRef.current) return;
@@ -363,7 +393,11 @@ export default function InicioAlumno() {
                     <div className="incident-item__tags">
                       <span className={style.badgeClass}>{catName}</span>
                       <span className="incident-item__date">{formatDate(inc.created_at)}</span>
-                      {inc.lugar && <span className="incident-item__location">📍 {inc.lugar}</span>}
+                      {inc.lugar && (
+                        <span className="incident-item__location">
+                          <Icon name="location_on" style={{ fontSize: '14px', verticalAlign: 'middle' }} /> {inc.lugar}
+                        </span>
+                      )}
                     </div>
                     {inc.descripcion && <p className="incident-item__desc">{inc.descripcion}</p>}
                   </div>

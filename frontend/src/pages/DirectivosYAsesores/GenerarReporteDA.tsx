@@ -191,6 +191,12 @@ export default function GenerarReporteDA() {
 
       if (error) throw error;
 
+      try {
+        window.dispatchEvent(new CustomEvent('ssc_data_changed', { detail: { type: 'incidencia', alumnoId: selectedStudent.id } }));
+      } catch {
+        // Ignorar
+      }
+
       setSuccessModalOpen(true);
     } catch (err) {
       console.error('Error al guardar reporte disciplinario:', err);

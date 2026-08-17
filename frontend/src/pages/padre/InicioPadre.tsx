@@ -199,10 +199,40 @@ export default function InicioPadre() {
     initParent();
   }, [session?.user?.id, loadDataForChild]);
 
-  // Recargar al cambiar de hijo seleccionado
+  // Recargar al cambiar de hijo seleccionado y escuchar cambios en tiempo real
   useEffect(() => {
     if (selectedHijoId) {
       loadDataForChild(selectedHijoId);
+
+      // 1. Suscripción a cambios de incidencias y datos del estudiante
+      const channel = supabase
+        .channel(`realtime-padre-child-${selectedHijoId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'incidencias' },
+          () => {
+            loadDataForChild(selectedHijoId);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'alumnos' },
+          () => {
+            loadDataForChild(selectedHijoId);
+          }
+        )
+        .subscribe();
+
+      // 2. Escucha de eventos locales
+      const handleDataChanged = () => {
+        loadDataForChild(selectedHijoId);
+      };
+      window.addEventListener('ssc_data_changed', handleDataChanged);
+
+      return () => {
+        supabase.removeChannel(channel);
+        window.removeEventListener('ssc_data_changed', handleDataChanged);
+      };
     }
   }, [selectedHijoId, loadDataForChild]);
 
@@ -426,7 +456,11 @@ export default function InicioPadre() {
                     <div className="incident-item__tags">
                       <span className={style.badgeClass}>{catName}</span>
                       <span className="incident-item__date">{formatDate(inc.created_at)}</span>
-                      {inc.lugar && <span className="incident-item__location">📍 {inc.lugar}</span>}
+                      {inc.lugar && (
+                        <span className="incident-item__location">
+                          <Icon name="location_on" style={{ fontSize: '14px', verticalAlign: 'middle' }} /> {inc.lugar}
+                        </span>
+                      )}
                     </div>
                     {inc.descripcion && <p className="incident-item__desc">{inc.descripcion}</p>}
                   </div>
