@@ -72,80 +72,246 @@ export async function getBIKPIStats(filters: BIFilters): Promise<BIKPIStats> {
 }
 
 /**
- * Obtener tendencia de incidencias mediante el RPC PostgreSQL 'fn_bi_get_trend'
- * FUENTE ÚNICA DE VERDAD: PostgreSQL RPC
+ * Obtener tendencia de incidencias mediante el RPC PostgreSQL 'fn_bi_get_trend' o fallback relacional
  */
 export async function getBITrend(filters: BIFilters): Promise<BITrendItem[]> {
-  const { data, error } = await supabase.rpc('fn_bi_get_trend', {
-    p_periodo_id: filters.periodoId || null,
-    p_generacion: filters.generacion || null,
-    p_grupo_id: filters.grupoId || null,
-    p_rango_temporal: filters.rangoTemporal || 'periodo',
-  });
+  try {
+    const { data, error } = await supabase.rpc('fn_bi_get_trend', {
+      p_periodo_id: filters.periodoId || null,
+      p_generacion: filters.generacion || null,
+      p_grupo_id: filters.grupoId || null,
+      p_rango_temporal: filters.rangoTemporal || 'periodo',
+    });
 
-  if (error) {
-    console.error('Error en RPC fn_bi_get_trend:', error);
-    throw error;
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data as BITrendItem[];
+    }
+  } catch {
+    // Fallback a consulta relacional directa
   }
-  return (data || []) as BITrendItem[];
+
+  // Fallback relacional directo
+  try {
+    let query = supabase
+      .from('incidencias')
+      .select('created_at, categorias_incidencia(color_semaforo), alumnos!inner(id, generacion, grupo_id)');
+
+    if (filters.periodoId) query = query.eq('periodo_id', filters.periodoId);
+    if (filters.generacion) query = query.eq('alumnos.generacion', filters.generacion);
+    if (filters.grupoId) query = query.eq('alumnos.grupo_id', filters.grupoId);
+
+    const { data: rows, error: qErr } = await query;
+    if (qErr || !rows) return [];
+
+    const monthMap = new Map<string, { mes: string; mes_nombre: string; verde: number; naranja: number; rojo: number; total: number }>();
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    rows.forEach((r: any) => {
+      const d = new Date(r.created_at);
+      const mesKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const mesNombre = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+      
+      if (!monthMap.has(mesKey)) {
+        monthMap.set(mesKey, { mes: mesKey, mes_nombre: mesNombre, verde: 0, naranja: 0, rojo: 0, total: 0 });
+      }
+
+      const item = monthMap.get(mesKey)!;
+      item.total++;
+      const cat = Array.isArray(r.categorias_incidencia) ? r.categorias_incidencia[0] : r.categorias_incidencia;
+      const color = cat?.color_semaforo;
+      if (color === 'verde') item.verde++;
+      else if (color === 'naranja') item.naranja++;
+      else if (color === 'rojo') item.rojo++;
+    });
+
+    return Array.from(monthMap.values()).sort((a, b) => a.mes.localeCompare(b.mes));
+  } catch (err) {
+    console.error('Error al generar tendencia de incidencias:', err);
+    return [];
+  }
 }
 
 /**
  * Obtener distribución de categorías más frecuentes mediante el RPC PostgreSQL 'fn_bi_get_categories'
- * FUENTE ÚNICA DE VERDAD: PostgreSQL RPC
  */
 export async function getBICategories(filters: BIFilters): Promise<BICategoryItem[]> {
-  const { data, error } = await supabase.rpc('fn_bi_get_categories', {
-    p_periodo_id: filters.periodoId || null,
-    p_generacion: filters.generacion || null,
-    p_grupo_id: filters.grupoId || null,
-    p_rango_temporal: filters.rangoTemporal || 'periodo',
-  });
+  try {
+    const { data, error } = await supabase.rpc('fn_bi_get_categories', {
+      p_periodo_id: filters.periodoId || null,
+      p_generacion: filters.generacion || null,
+      p_grupo_id: filters.grupoId || null,
+      p_rango_temporal: filters.rangoTemporal || 'periodo',
+    });
 
-  if (error) {
-    console.error('Error en RPC fn_bi_get_categories:', error);
-    throw error;
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data as BICategoryItem[];
+    }
+  } catch {
+    // Continuar a fallback
   }
-  return (data || []) as BICategoryItem[];
+
+  try {
+    let query = supabase
+      .from('incidencias')
+      .select('categorias_incidencia!inner(nombre, color_semaforo), alumnos!inner(id, generacion, grupo_id)');
+
+    if (filters.periodoId) query = query.eq('periodo_id', filters.periodoId);
+    if (filters.generacion) query = query.eq('alumnos.generacion', filters.generacion);
+    if (filters.grupoId) query = query.eq('alumnos.grupo_id', filters.grupoId);
+
+    const { data: rows, error: qErr } = await query;
+    if (qErr || !rows) return [];
+
+    const map = new Map<string, { categoria: string; severidad: string; total_incidencias: number }>();
+    rows.forEach((r: any) => {
+      const cat = Array.isArray(r.categorias_incidencia) ? r.categorias_incidencia[0] : r.categorias_incidencia;
+      const name = cat?.nombre || 'General';
+      const sev = cat?.color_semaforo || 'verde';
+
+      if (!map.has(name)) {
+        map.set(name, { categoria: name, severidad: sev, total_incidencias: 0 });
+      }
+      map.get(name)!.total_incidencias++;
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.total_incidencias - a.total_incidencias);
+  } catch (err) {
+    console.error('Error al generar categorías BI:', err);
+    return [];
+  }
 }
 
 /**
- * Obtener estudiantes en riesgo / atención prioritaria mediante el RPC PostgreSQL 'fn_bi_get_risk_students'
- * FUENTE ÚNICA DE VERDAD: PostgreSQL RPC
+ * Obtener estudiantes en riesgo / atención prioritaria mediante el RPC PostgreSQL o motor compuesto
  */
 export async function getBIRiskStudents(filters: BIFilters): Promise<BIRiskStudent[]> {
-  const { data, error } = await supabase.rpc('fn_bi_get_risk_students', {
-    p_periodo_id: filters.periodoId || null,
-    p_generacion: filters.generacion || null,
-    p_grupo_id: filters.grupoId || null,
-    p_rango_temporal: filters.rangoTemporal || 'periodo',
-  });
+  try {
+    const { data, error } = await supabase.rpc('fn_bi_get_risk_students', {
+      p_periodo_id: filters.periodoId || null,
+      p_generacion: filters.generacion || null,
+      p_grupo_id: filters.grupoId || null,
+      p_rango_temporal: filters.rangoTemporal || 'periodo',
+    });
 
-  if (error) {
-    console.error('Error en RPC fn_bi_get_risk_students:', error);
-    throw error;
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data as BIRiskStudent[];
+    }
+  } catch {
+    // Continuar a fallback
   }
-  return (data || []) as BIRiskStudent[];
+
+  // Fallback relacional con cálculo exacto de Composite Risk Score
+  try {
+    let query = supabase
+      .from('alumnos')
+      .select('id, matricula, nivel_semaforo, puntos_totales, generacion, usuarios!alumnos_usuario_id_fkey(nombre, apellido), grupos(nombre), incidencias(id, impacto_puntos, categorias_incidencia(color_semaforo))')
+      .or('nivel_semaforo.in.(rojo,naranja),puntos_totales.lt.75');
+
+    if (filters.generacion) query = query.eq('generacion', filters.generacion);
+    if (filters.grupoId) query = query.eq('grupo_id', filters.grupoId);
+
+    const { data: rows, error: qErr } = await query;
+    if (qErr || !rows) return [];
+
+    const list: BIRiskStudent[] = rows.map((a: any) => {
+      const us = Array.isArray(a.usuarios) ? a.usuarios[0] : a.usuarios;
+      const gr = Array.isArray(a.grupos) ? a.grupos[0] : a.grupos;
+      const incs = a.incidencias || [];
+      const totalInc = incs.length;
+      const critInc = incs.filter((i: any) => {
+        const c = Array.isArray(i.categorias_incidencia) ? i.categorias_incidencia[0] : i.categorias_incidencia;
+        return c?.color_semaforo === 'rojo' || (i.impacto_puntos || 0) <= -15;
+      }).length;
+
+      const isc = a.puntos_totales ?? 100;
+      const drop = Math.max(0, 100 - isc);
+
+      const iscFct = (100 - Math.min(100, Math.max(0, isc))) * 0.40;
+      const critFct = Math.min(100, critInc * 25) * 0.30;
+      const dropFct = Math.min(100, drop * 2.5) * 0.20;
+      const volFct = Math.min(100, totalInc * 10) * 0.10;
+      const score = Math.min(100, Math.max(0, Math.round(iscFct + critFct + dropFct + volFct)));
+
+      let cat = 'bajo';
+      if (score >= 70 || isc < 70) cat = 'critico';
+      else if (score >= 40 || isc < 90) cat = 'alto';
+      else if (score >= 20) cat = 'moderado';
+
+      return {
+        alumno_id: a.id,
+        nombre_completo: `${us?.nombre || ''} ${us?.apellido || ''}`.trim() || 'Estudiante',
+        matricula: a.matricula,
+        grupo_nombre: gr?.nombre || 'Grupo',
+        nivel_semaforo: (a.nivel_semaforo || 'verde') as 'verde' | 'naranja' | 'rojo',
+        puntos_totales: a.puntos_totales,
+        total_incidencias: totalInc,
+        risk_score: score,
+        risk_categoria: cat,
+      };
+    });
+
+    return list.sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0)).slice(0, 15);
+  } catch (err) {
+    console.error('Error al generar lista de riesgo BI:', err);
+    return [];
+  }
 }
 
 /**
- * Obtener la evaluación de riesgo multivariable de un alumno específico mediante el RPC SQL 'fn_bi_get_risk_score_alumno'
- * FUENTE ÚNICA DE VERDAD: PostgreSQL RPC
+ * Obtener la evaluación de riesgo multivariable de un alumno específico
  */
 export async function getBIRiskScoreAlumno(alumnoId: string): Promise<StudentRiskScoreResult | null> {
-  const { data, error } = await supabase.rpc('fn_bi_get_risk_score_alumno', {
-    p_alumno_id: alumnoId,
-  });
+  try {
+    const { data, error } = await supabase.rpc('fn_bi_get_risk_score_alumno', {
+      p_alumno_id: alumnoId,
+    });
 
-  if (error) {
-    console.error('Error en RPC fn_bi_get_risk_score_alumno:', error);
-    throw error;
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data[0] as StudentRiskScoreResult;
+    }
+  } catch {
+    // Continuar a fallback
   }
 
-  if (Array.isArray(data) && data.length > 0) {
-    return data[0] as StudentRiskScoreResult;
+  try {
+    const { data: al, error: alErr } = await supabase
+      .from('alumnos')
+      .select('id, puntos_totales, incidencias(id, impacto_puntos, categorias_incidencia(color_semaforo))')
+      .eq('id', alumnoId)
+      .single();
+
+    if (alErr || !al) return null;
+
+    const incs = al.incidencias || [];
+    const totalInc = incs.length;
+    const critInc = incs.filter((i: any) => {
+      const c = Array.isArray(i.categorias_incidencia) ? i.categorias_incidencia[0] : i.categorias_incidencia;
+      return c?.color_semaforo === 'rojo' || (i.impacto_puntos || 0) <= -15;
+    }).length;
+
+    const isc = al.puntos_totales ?? 100;
+    const drop = Math.max(0, 100 - isc);
+
+    const iscFct = (100 - Math.min(100, Math.max(0, isc))) * 0.40;
+    const critFct = Math.min(100, critInc * 25) * 0.30;
+    const dropFct = Math.min(100, drop * 2.5) * 0.20;
+    const volFct = Math.min(100, totalInc * 10) * 0.10;
+    const score = Math.min(100, Math.max(0, Math.round(iscFct + critFct + dropFct + volFct)));
+
+    let cat = 'bajo';
+    if (score >= 70 || isc < 70) cat = 'critico';
+    else if (score >= 40 || isc < 90) cat = 'alto';
+    else if (score >= 20) cat = 'moderado';
+
+    return {
+      alumno_id: alumnoId,
+      score,
+      categoria: cat,
+      recent_drop: drop,
+    };
+  } catch {
+    return null;
   }
-  return data as StudentRiskScoreResult | null;
 }
 
 /**

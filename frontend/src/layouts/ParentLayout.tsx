@@ -57,7 +57,7 @@ export default function ParentLayout() {
       try {
         const { data, error } = await supabase
           .from('padres_alumnos')
-          .select('alumno_id, alumnos(id, matricula, grupos(nombre), usuarios(nombre, apellido))')
+          .select('alumno_id, parentesco, alumnos(id, matricula, correo_institucional, grupos(nombre), usuarios!alumnos_usuario_id_fkey(nombre, apellido))')
           .eq('padre_id', session!.user!.id);
 
         if (!error && data && data.length > 0) {
@@ -65,9 +65,14 @@ export default function ParentLayout() {
             const al = Array.isArray(r.alumnos) ? r.alumnos[0] : r.alumnos;
             const us = Array.isArray(al?.usuarios) ? al?.usuarios[0] : al?.usuarios;
             const gr = Array.isArray(al?.grupos) ? al?.grupos[0] : al?.grupos;
+            const fallback = al?.correo_institucional
+              ? al.correo_institucional.split('@')[0].replace('student.', 'Estudiante ').replace('.', ' ')
+              : `Estudiante (${al?.matricula || 'Tutelado'})`;
+            const nombreCompleto = us?.nombre ? `${us.nombre} ${us.apellido || ''}`.trim() : fallback;
+
             return {
               alumno_id: r.alumno_id,
-              nombre: `${us?.nombre || 'Alumno'} ${us?.apellido || ''}`.trim(),
+              nombre: nombreCompleto,
               grupo: gr?.nombre || 'Sin Grupo',
             };
           });
