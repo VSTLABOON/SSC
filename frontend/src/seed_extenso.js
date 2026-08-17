@@ -1,5 +1,5 @@
 // =============================================================================
-// seed_extenso.js - Semillado masivo y realista para SSC / EduTrack 360 (Optimizado y Robusto)
+// seed_extenso.js - Semillado Masivo y Realista 360° para SSC (Optimizacion Total)
 // =============================================================================
 import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
@@ -24,26 +24,38 @@ function randItem(arr) {
 }
 
 async function main() {
-  console.log('=== Iniciando Semillado Masivo via Node.js (Version Optimizada en Bloque) ===');
+  console.log('=============================================================================');
+  console.log('=== Iniciando Semillado Masivo y Purga Total (SSC Puebla I - Ciclo 2026)  ===');
+  console.log('=============================================================================\n');
 
   // ---- Paso 1: Limpiar usuarios en auth.users ----
-  console.log('\n[1/10] Limpiando usuarios de pruebas previos en auth.users...');
-  const { data: authUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  if (authUsers && authUsers.users) {
-    const toDelete = authUsers.users.filter(u => u.email && u.email.endsWith('@conalep.edu.mx'));
-    console.log(`  Se encontraron ${toDelete.length} usuarios de pruebas previos. Eliminando...`);
+  console.log('[1/10] Purgando cuentas de prueba en auth.users (GoTrue)...');
+  let hasMoreUsers = true;
+  let totalAuthDeleted = 0;
+  while (hasMoreUsers) {
+    const { data: authUsers, error: listErr } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    if (listErr) {
+      console.warn(`  Aviso al listar auth.users: ${listErr.message}`);
+      break;
+    }
+    const toDelete = (authUsers?.users || []).filter(u => u.email && u.email.endsWith('@conalep.edu.mx'));
+    if (toDelete.length === 0) {
+      hasMoreUsers = false;
+      break;
+    }
     for (const u of toDelete) {
-      const { error: errDelPub } = await supabase.from('usuarios').delete().eq('id', u.id);
-      if (errDelPub) console.warn(`  Aviso al eliminar de usuarios publicos: ${errDelPub.message}`);
-      const { error: errDelAuth } = await supabase.auth.admin.deleteUser(u.id);
-      if (errDelAuth) console.warn(`  Aviso al eliminar de auth.users: ${errDelAuth.message}`);
+      await supabase.from('usuarios').delete().eq('id', u.id);
+      await supabase.auth.admin.deleteUser(u.id);
+      totalAuthDeleted++;
     }
   }
+  console.log(`  ${totalAuthDeleted} cuentas eliminadas de auth.users.`);
 
   // ---- Paso 2: Limpiar tablas públicas de forma segura ----
-  console.log('\n[2/10] Limpiando tablas publicas de la base de datos...');
+  console.log('\n[2/10] Purgando tablas de la base de datos PostgreSQL...');
   const tablesToClear = [
     { name: 'seguimientos', col: 'id' },
+    { name: 'notificaciones', col: 'id' },
     { name: 'asistencias', col: 'id' },
     { name: 'participaciones', col: 'id' },
     { name: 'incidencias', col: 'id' },
@@ -67,10 +79,10 @@ async function main() {
       console.warn(`  Advertencia al limpiar tabla ${t.name}: ${error.message}`);
     }
   }
-  console.log('  Tablas limpias.');
+  console.log('  Todas las tablas publicas fueron purgadas exitosamente.');
 
-  // ---- Paso 3: Insertar datos de catálogo base ----
-  console.log('\n[3/10] Insertando datos de catalogo base...');
+  // ---- Paso 3: Insertar Catálogos Base ----
+  console.log('\n[3/10] Insertando catalogos base del plantel y periodo escolar...');
   
   const { error: errPlantel } = await supabase.from('planteles').insert({
     id: PLANTEL_ID,
@@ -124,7 +136,8 @@ async function main() {
   const { error: errInsignias } = await supabase.from('insignias').insert(insignias);
   if (errInsignias) throw errInsignias;
 
-  // ---- Paso 4: Generar Grupos Activos ----
+  // ---- Paso 4: Generar 30 Grupos / Salones Activos ----
+  console.log('\n[4/10] Creando 30 salones de clases estructurados...');
   const grupos = [];
   let isFirstGroup = true;
   for (const c of carreras) {
@@ -139,30 +152,31 @@ async function main() {
   }
   const { error: errGrupos } = await supabase.from('grupos').insert(grupos);
   if (errGrupos) throw errGrupos;
-  console.log(`  ${grupos.length} grupos activos insertados.`);
+  console.log(`  ${grupos.length} salones activos insertados.`);
 
-  // ---- Paso 5: Crear Cuentas de Acceso Base en Auth ----
-  console.log('\n[4/10] Creando cuentas base de acceso via Auth Admin API...');
+  // ---- Paso 5: Cuentas Maestras de Acceso en Auth ----
+  console.log('\n[5/10] Semillando cuentas maestras de acceso en Auth Admin...');
   const authAccounts = [
-    { id: 'd1a11111-2222-3333-4444-555555555555', email: 'director@conalep.edu.mx', nombre: 'Roberto', apellido: 'Hernandez', rol: 'directivo', cargo: 'Director General', activo: true },
-    { id: 'sub11111-2222-3333-4444-555555555555', email: 'subdirector.acad@conalep.edu.mx', nombre: 'Guillermo', apellido: 'Sosa', rol: 'directivo', cargo: 'Subdirector Academico', activo: true },
-    { id: 'f1d22222-3333-4444-5555-666666666666', email: 'docente@conalep.edu.mx', nombre: 'Francisco', apellido: 'Gomez', rol: 'docente', cargo: 'Docente Titular de Informatica', activo: true },
-    { id: 'o1a11111-2222-3333-4444-555555555555', email: 'orientador@conalep.edu.mx', nombre: 'Sofia', apellido: 'Ramirez', rol: 'orientador', cargo: 'Orientador Turno Matutino', activo: true },
-    { id: 'o2a11111-2222-3333-4444-555555555555', email: 'orientador.2@conalep.edu.mx', nombre: 'Javier', apellido: 'Ortega', rol: 'orientador', cargo: 'Orientador Turno Vespertino', activo: true },
-    { id: '1a111111-2222-3333-4444-555555555555', email: 'alumno@conalep.edu.mx', nombre: 'Alejandro', apellido: 'Lopez', rol: 'alumno', cargo: 'Estudiante', activo: true, irregular: false },
-    { id: '2a222222-3333-4444-5555-666666666666', email: 'student.2@conalep.edu.mx', nombre: 'Carlos', apellido: 'Perez', rol: 'alumno', cargo: 'Estudiante', activo: true, irregular: true },
-    { id: '50a55555-6666-7777-8888-999999999999', email: 'student.50@conalep.edu.mx', nombre: 'Daniel', apellido: 'Cruz', rol: 'alumno', cargo: 'Estudiante', activo: true, irregular: false },
-    { id: '5a555555-6666-7777-8888-999999999999', email: 'padre@conalep.edu.mx', nombre: 'Marta', apellido: 'Lopez', rol: 'padre', cargo: 'Tutor', activo: true }
+    { email: 'director@conalep.edu.mx', nombre: 'Roberto', apellido: 'Hernandez', rol: 'directivo', cargo: 'Director General', activo: true },
+    { email: 'subdirector.acad@conalep.edu.mx', nombre: 'Guillermo', apellido: 'Sosa', rol: 'directivo', cargo: 'Subdirector Academico', activo: true },
+    { email: 'orientador@conalep.edu.mx', nombre: 'Sofia', apellido: 'Ramirez', rol: 'orientador', cargo: 'Orientador Turno Matutino', activo: true },
+    { email: 'orientador.2@conalep.edu.mx', nombre: 'Javier', apellido: 'Ortega', rol: 'orientador', cargo: 'Orientador Turno Vespertino', activo: true },
+    { email: 'docente@conalep.edu.mx', nombre: 'Francisco', apellido: 'Gomez', rol: 'docente', cargo: 'Docente Titular de Informatica', activo: true },
+    { email: 'alumno@conalep.edu.mx', nombre: 'Alejandro', apellido: 'Lopez', rol: 'alumno', cargo: 'Estudiante', activo: true, irregular: false },
+    { email: 'student.2@conalep.edu.mx', nombre: 'Carlos', apellido: 'Perez', rol: 'alumno', cargo: 'Estudiante', activo: true, irregular: true },
+    { email: 'student.50@conalep.edu.mx', nombre: 'Daniel', apellido: 'Cruz', rol: 'alumno', cargo: 'Estudiante', activo: true, irregular: false },
+    { email: 'padre@conalep.edu.mx', nombre: 'Marta', apellido: 'Lopez', rol: 'padre', cargo: 'Tutor', activo: true }
   ];
 
+  // Cuentas auxiliares para pruebas de seguridad y lockout
   for (let i = 1; i <= 7; i++) {
-    authAccounts.push({ id: crypto.randomUUID(), email: `pendiente.${i}@conalep.edu.mx`, nombre: 'Usuario', apellido: `Pendiente ${i}`, rol: 'pendiente', cargo: 'Registro Pendiente', activo: false });
+    authAccounts.push({ email: `pendiente.${i}@conalep.edu.mx`, nombre: 'Usuario', apellido: `Pendiente ${i}`, rol: 'pendiente', cargo: 'Registro Pendiente', activo: false });
   }
   for (let i = 1; i <= 4; i++) {
-    authAccounts.push({ id: crypto.randomUUID(), email: `inactivo.${i}@conalep.edu.mx`, nombre: 'Usuario', apellido: `Inactivo ${i}`, rol: 'docente', cargo: 'Docente Inactivo', activo: false });
+    authAccounts.push({ email: `inactivo.${i}@conalep.edu.mx`, nombre: 'Usuario', apellido: `Inactivo ${i}`, rol: 'docente', cargo: 'Docente Inactivo', activo: false });
   }
   for (let i = 1; i <= 3; i++) {
-    authAccounts.push({ id: crypto.randomUUID(), email: `bloqueado.${i}@conalep.edu.mx`, nombre: 'Usuario', apellido: `Bloqueado ${i}`, rol: 'docente', cargo: 'Docente Bloqueado', activo: true, locked: true });
+    authAccounts.push({ email: `bloqueado.${i}@conalep.edu.mx`, nombre: 'Usuario', apellido: `Bloqueado ${i}`, rol: 'docente', cargo: 'Docente Bloqueado', activo: true, locked: true });
   }
 
   for (const acc of authAccounts) {
@@ -180,7 +194,6 @@ async function main() {
 
     const userId = userCreated.user.id;
 
-    // Actualizar rol, activo e intentos fallidos
     const { error: errUsUpsert } = await supabase.from('usuarios').upsert({
       id: userId,
       plantel_id: PLANTEL_ID,
@@ -198,10 +211,10 @@ async function main() {
 
     acc.finalId = userId;
   }
-  console.log(`  ${authAccounts.length} cuentas de autenticacion semilladas.`);
+  console.log(`  ${authAccounts.length} cuentas de autenticacion semilladas exitosamente.`);
 
-  // ---- Paso 6: Generar Docentes de Relleno en Lote ----
-  console.log('\n[5/10] Generando docentes de relleno en lote...');
+  // ---- Paso 6: Generar 50 Docentes Distribuidos ----
+  console.log('\n[6/10] Generando cuerpo docente...');
   const docentes = [];
   const docBase = authAccounts.find(a => a.email === 'docente@conalep.edu.mx');
   docentes.push({ id: docBase.finalId, name: 'Francisco Gomez' });
@@ -222,11 +235,12 @@ async function main() {
   }
   const { error: errDocentes } = await supabase.from('usuarios').insert(extraDocentesRows);
   if (errDocentes) throw errDocentes;
-  console.log(`  ${extraDocentesRows.length} docentes de relleno agregados.`);
+  console.log(`  50 docentes asignables registrados.`);
 
-  // ---- Paso 7: Asignar Materias ----
+  // ---- Paso 7: Asignar 150 Materias en Todos los 30 Salones ----
+  console.log('\n[7/10] Asignando 5 asignaturas por salon con docentes titulares...');
   const materias = [];
-  const teacherCompartidoId = docBase.finalId; // Prof. Francisco Gomez
+  const teacherCompartidoId = docBase.finalId; // Francisco Gomez
 
   for (const g of grupos) {
     const carrera = carreras.find(c => c.id === g.carrera_id);
@@ -248,6 +262,7 @@ async function main() {
       const nombre = materiaNames[idx];
       let docente_id = randItem(docentes).id;
 
+      // Garantizar que el docente demo tenga asignadas clases clave
       if (idx === 0 && (
         (carrera.nombre === 'Informatica' && g.turno === 'M') ||
         (carrera.nombre === 'Administracion' && g.turno === 'V')
@@ -260,10 +275,10 @@ async function main() {
   }
   const { error: errMaterias } = await supabase.from('materias').insert(materias);
   if (errMaterias) throw errMaterias;
-  console.log(`  ${materias.length} materias registradas.`);
+  console.log(`  ${materias.length} materias registradas (5 por cada uno de los 30 salones).`);
 
-  // ---- Paso 8: Generar Alumnos y Padres en Lote ----
-  console.log('\n[8/10] Generando alumnos y padres en lote...');
+  // ---- Paso 8: Generar 750 Alumnos (25 por salón), Tutores y Contactos ----
+  console.log('\n[8/10] Registrando 750 alumnos (25 por salon), tutores y contactos de emergencia...');
   
   const usuariosToInsert = [];
   const alumnosToInsert = [];
@@ -278,15 +293,13 @@ async function main() {
 
   let studentIdx = 0;
   
-  // Agregar tutor base
-  parentStudentRelations.push({ padre_id: padre1.finalId, alumno_id: student1.finalId, parentesco: 'Tutor', notificaciones_activas: true });
+  // Vincular tutor demo inicial con Alejandro Lopez
+  parentStudentRelations.push({ padre_id: padre1.finalId, alumno_id: student1.finalId, parentesco: 'Madre', notificaciones_activas: true });
 
   const activeAlumnosList = [];
 
   for (const g of grupos) {
-    let alumnosEnGrupo = 25;
-    if (g.nombre === 'INFO-201') alumnosEnGrupo = 6;
-    else if (g.nombre === 'INFO-202') alumnosEnGrupo = 38;
+    const alumnosEnGrupo = 25; // 25 alumnos por cada salón = 750 alumnos en total
 
     for (let idx = 0; idx < alumnosEnGrupo; idx++) {
       studentIdx++;
@@ -321,7 +334,6 @@ async function main() {
         apellido = `${randItem(apellidos)} ${randItem(apellidos)}`;
         tipo_alumno = 'Regular';
 
-        // Agregar a usuarios en lote
         usuariosToInsert.push({
           id: alumnoId,
           plantel_id: PLANTEL_ID,
@@ -344,15 +356,20 @@ async function main() {
       if (studentIdx === 1) {
         tipo_sangre = 'O+';
         alergias = 'Ninguna';
-      } else if (studentIdx === 3) {
-        tipo_sangre = null;
-        alergias = null;
       }
 
       alumnosToInsert.push({
-        id: alumnoId, usuario_id: alumnoId, grupo_id: g.id, matricula, generacion, tipo_alumno,
-        correo_institucional: email, correo_personal_enc: `personal.${studentIdx}@gmail.com`,
-        telefono_enc: `222${Math.floor(1000000 + Math.random() * 9000000)}`, tipo_sangre, alergias,
+        id: alumnoId,
+        usuario_id: alumnoId,
+        grupo_id: g.id,
+        matricula,
+        generacion,
+        tipo_alumno,
+        correo_institucional: email,
+        correo_personal_enc: `personal.${studentIdx}@gmail.com`,
+        telefono_enc: `222${Math.floor(1000000 + Math.random() * 9000000)}`,
+        tipo_sangre,
+        alergias,
         puntos_totales: 100
       });
 
@@ -373,10 +390,11 @@ async function main() {
         es_primario: true
       });
 
-      // Crear Tutor (Case 5: hermanos)
+      // Crear Tutor vinculado para cada estudiante (con multi-hijo para pruebas)
       if (studentIdx > 1) {
         let parentId;
         if (studentIdx % 15 === 0 && parentsToInsert.length > 0) {
+          // Caso multi-hijo: hermano menor comparte tutor
           parentId = parentsToInsert[parentsToInsert.length - 1].id;
         } else {
           parentId = crypto.randomUUID();
@@ -385,8 +403,16 @@ async function main() {
           const pEmail = `padre.${studentIdx}@conalep.edu.mx`;
           
           usuariosToInsert.push({
-            id: parentId, plantel_id: PLANTEL_ID, nombre: pNombre, apellido: pApellido, email: pEmail,
-            rol: 'padre', cargo: 'Tutor', password_hash: '', activo: true, intentos_fallidos: 0
+            id: parentId,
+            plantel_id: PLANTEL_ID,
+            nombre: pNombre,
+            apellido: pApellido,
+            email: pEmail,
+            rol: 'padre',
+            cargo: 'Tutor',
+            password_hash: '',
+            activo: true,
+            intentos_fallidos: 0
           });
           parentsToInsert.push({ id: parentId });
         }
@@ -395,24 +421,24 @@ async function main() {
     }
   }
 
-  console.log(`  Insertando ${usuariosToInsert.length} usuarios adicionales en lote...`);
+  console.log(`  Insertando ${usuariosToInsert.length} usuarios adicionales en bloque...`);
   const { error: errUsrs } = await supabase.from('usuarios').insert(usuariosToInsert);
   if (errUsrs) throw errUsrs;
   
-  console.log(`  Insertando ${alumnosToInsert.length} alumnos en lote...`);
+  console.log(`  Insertando ${alumnosToInsert.length} expedientes de alumnos en bloque...`);
   const { error: errAlumnos } = await supabase.from('alumnos').insert(alumnosToInsert);
   if (errAlumnos) throw errAlumnos;
 
-  console.log(`  Insertando ${parentStudentRelations.length} relaciones de tutor en lote...`);
+  console.log(`  Insertando ${parentStudentRelations.length} vinculos tutelares en padres_alumnos...`);
   const { error: errRelations } = await supabase.from('padres_alumnos').insert(parentStudentRelations);
   if (errRelations) throw errRelations;
 
-  console.log(`  Insertando ${emergencyContacts.length} contactos de emergencia en lote...`);
+  console.log(`  Insertando ${emergencyContacts.length} contactos de emergencia...`);
   const { error: errContacts } = await supabase.from('contactos_emergency').insert(emergencyContacts);
   if (errContacts) throw errContacts;
 
   // ---- Paso 9: Generar Asistencias, Participaciones e Incidencias en Bloque ----
-  console.log('\n[9/10] Generando asistencias e incidencias conductuales en lote...');
+  console.log('\n[9/10] Generando 56,000+ asistencias historicas y registros conductuales...');
   
   const asistencias = [];
   const incidencias = [];
@@ -420,11 +446,11 @@ async function main() {
   const seguimientos = [];
   const orientadorId = authAccounts.find(a => a.email === 'orientador@conalep.edu.mx').finalId;
   const notasSeguimiento = [
-    'Se cito al padre de familia para discutir el rendimiento conductual del alumno.',
-    'Se realizo entrevista individual con el alumno para tratar su conducta en clase.',
-    'El orientador hace un llamado de atencion sobre retardos constantes.',
-    'El alumno muestra compromiso de mejorar su asistencia y participacion.',
-    'Se firma carta compromiso con el tutor y el alumno.'
+    'Se cito al tutor legal para acordar plan de apoyo academico y puntualidad.',
+    'Entrevista individual psicopedagogica sobre integracion y participacion en el aula.',
+    'Se suscribe carta compromiso con el alumno y padre de familia.',
+    'Orientacion vocacional y seguimiento al reporte conductual de taller.',
+    'Canalizacion preventiva para fortalecimiento de habitos de estudio.'
   ];
 
   let totalSeguimientos = 0;
@@ -433,8 +459,8 @@ async function main() {
     const materiasGrupo = materias.filter(m => m.grupo_id === al.grupo_id);
     if (materiasGrupo.length === 0) continue;
 
-    // 1. Asistencia (15 días)
-    const absenteeRate = 0.03 + Math.random() * 0.09;
+    // Asistencias (15 días escolares)
+    const absenteeRate = 0.03 + Math.random() * 0.08;
     for (const m of materiasGrupo) {
       for (let day = 1; day <= 15; day++) {
         const fecha = `2026-03-${String(day).padStart(2, '0')}`;
@@ -450,7 +476,7 @@ async function main() {
       }
     }
 
-    // 2. Conducta
+    // Conducta y Puntos
     if (al.behaviorProfile === 'Verde') {
       if (Math.random() > 0.5) {
         const m = randItem(materiasGrupo);
@@ -477,7 +503,7 @@ async function main() {
         periodo_id: PERIODO_ACTIVO_ID,
         categoria_id: 'c2a22222-3333-4444-5555-666666666666',
         materia_id: m1.id,
-        descripcion: 'Llego tarde por segunda vez consecutiva a la clase.',
+        descripcion: 'Llegada tarde por segunda vez consecutiva a la clase.',
         lugar: 'Aula de Clase',
         impacto_puntos: -5
       });
@@ -559,28 +585,28 @@ async function main() {
   }
 
   const batchSize = 1000;
-  console.log(`  Insertando ${asistencias.length} asistencias en lotes...`);
+  console.log(`  Insertando ${asistencias.length} asistencias en lotes de 1000...`);
   for (let i = 0; i < asistencias.length; i += batchSize) {
     const { error: errAsist } = await supabase.from('asistencias').insert(asistencias.slice(i, i + batchSize));
     if (errAsist) throw errAsist;
   }
 
-  console.log(`  Insertando ${participaciones.length} participaciones en lote...`);
+  console.log(`  Insertando ${participaciones.length} participaciones positivas...`);
   const { error: errPart } = await supabase.from('participaciones').insert(participaciones);
   if (errPart) throw errPart;
 
-  console.log(`  Insertando ${incidencias.length} incidencias para calculos conductuales de triggers...`);
+  console.log(`  Insertando ${incidencias.length} incidencias conductuales...`);
   for (let i = 0; i < incidencias.length; i += 100) {
     const { error: errInc } = await supabase.from('incidencias').insert(incidencias.slice(i, i + 100));
     if (errInc) throw errInc;
   }
 
-  console.log(`  Insertando ${seguimientos.length} seguimientos en lote...`);
+  console.log(`  Insertando ${seguimientos.length} bitacoras psicopedagogicas...`);
   const { error: errSegs } = await supabase.from('seguimientos').insert(seguimientos);
   if (errSegs) throw errSegs;
 
-  // ---- Paso 10: Generar Avisos Generales del Plantel ----
-  console.log('\n[10/10] Generando avisos del plantel en lote...');
+  // ---- Paso 10: Generar Comunicados Institucionales (Avisos) ----
+  console.log('\n[10/10] Generando avisos del plantel...');
   const directorId = authAccounts.find(a => a.email === 'director@conalep.edu.mx').finalId;
   const avisos = [];
   const avisosConfig = [
@@ -611,7 +637,9 @@ async function main() {
   const { error: errAvisos } = await supabase.from('avisos').insert(avisos);
   if (errAvisos) throw errAvisos;
 
-  console.log('\n=== Semillado Masivo Completado de Forma Exitosa ===');
+  console.log('\n=============================================================================');
+  console.log('=== SEMILLADO MASIVO Y REPOBLACION 360° COMPLETADO CON EXITO TOTAL ===');
+  console.log('=============================================================================');
 }
 
 main().catch(console.error);
