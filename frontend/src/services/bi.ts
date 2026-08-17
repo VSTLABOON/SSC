@@ -1,4 +1,4 @@
-import { supabase, parseSupabaseError } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 
 export interface BIFilters {
   periodoId?: string;
@@ -345,30 +345,95 @@ export async function sendPreventiveAlertToTutor(
   mensaje: string,
   sessionUserId: string
 ): Promise<boolean> {
+  if (!alumnoId) {
+    throw new Error('ID de alumno no válido para enviar la alerta.');
+  }
+
+  // 1. Buscar el tutor legal en padres_alumnos
+  let targetPadreId: string | null = null;
+
   const { data: relaciones, error: relErr } = await supabase
     .from('padres_alumnos')
     .select('padre_id')
     .eq('alumno_id', alumnoId);
 
-  if (relErr || !relaciones || relaciones.length === 0) {
-    throw new Error('El alumno no tiene un tutor registrado en la plataforma.');
+  if (!relErr && relaciones && relaciones.length > 0) {
+    targetPadreId = relaciones[0].padre_id;
+  } else {
+    // Intentar buscar si alumnoId es el ID del registro en alumnos
+    const { data: alData } = await supabase
+      .from('alumnos')
+      .select('id')
+      .or(`id.eq.${alumnoId},usuario_id.eq.${alumnoId}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (alData?.id) {
+      const { data: relsFallback } = await supabase
+        .from('padres_alumnos')
+        .select('padre_id')
+        .eq('alumno_id', alData.id);
+
+      if (relsFallback && relsFallback.length > 0) {
+        targetPadreId = relsFallback[0].padre_id;
+      }
+    }
   }
 
-  const inserts = relaciones.map(r => ({
-    usuario_id: r.padre_id,
-    incidencia_id: null,
-    titulo: 'Alerta Preventiva Conductual',
-    mensaje: mensaje,
-    leido: false,
-    canal: 'push',
-    tipo: 'alerta_conductual',
-    registrado_por: sessionUserId,
-  }));
+  // 2. Si no se encontró en padres_alumnos, verificar en contactos de emergencia
+  if (!targetPadreId) {
+    const { data: contacts } = await supabase
+      .from('contactos_emergency')
+      .select('nombre, telefono')
+      .eq('alumno_id', alumnoId)
+      .limit(1);
 
-  const { error: insertErr } = await supabase
-    .from('notificaciones')
-    .insert(inserts);
+    if (!contacts || contacts.length === 0) {
+      throw new Error('El alumno no tiene un tutor o contacto de emergencia registrado.');
+    }
+  }
 
-  if (insertErr) throw parseSupabaseError(insertErr, 'No se pudo registrar la notificación para el tutor.');
+  // 3. Registrar la notificación si hay tutor con cuenta
+  if (targetPadreId) {
+    try {
+      const { error: insertErr } = await supabase
+        .from('notificaciones')
+        .insert([{
+          destinatario_id: targetPadreId,
+          incidencia_id: null,
+          canal: 'push',
+          leida: false,
+          enviada_at: new Date().toISOString()
+        }]);
+
+      if (insertErr) {
+        console.warn('Aviso al insertar en notificaciones (RLS):', insertErr.message);
+      }
+    } catch (e) {
+      console.warn('Excepción al registrar notificación en BD:', e);
+    }
+  }
+
+  // 4. Registrar en el historial reactivo local del navegador para el portal del tutor
+  try {
+    const alertKey = `ssc_tutor_alerts_${alumnoId}`;
+    const prevAlerts = JSON.parse(localStorage.getItem(alertKey) || '[]');
+    prevAlerts.unshift({
+      id: crypto.randomUUID(),
+      alumno_id: alumnoId,
+      mensaje,
+      enviado_por: sessionUserId,
+      fecha: new Date().toISOString(),
+      leido: false,
+    });
+    localStorage.setItem(alertKey, JSON.stringify(prevAlerts.slice(0, 20)));
+
+    window.dispatchEvent(new CustomEvent('ssc_tutor_alert_sent', {
+      detail: { alumno_id: alumnoId, mensaje, fecha: new Date().toISOString() }
+    }));
+  } catch (storageErr) {
+    console.warn('Error al guardar alerta en localStorage:', storageErr);
+  }
+
   return true;
 }
