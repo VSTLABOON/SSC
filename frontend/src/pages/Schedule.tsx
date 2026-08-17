@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import './Schedule.css';
 
 interface ClassCardProps {
@@ -27,6 +28,7 @@ function ClassCard({ borderColor, textColor, subject, professor, icon, room }: C
 // el backend no cuenta actualmente con una tabla 'horarios' u otra estructura
 // de base de datos dedicada. Esta conexión queda pendiente para una fase futura.
 export default function Schedule() {
+  const { rol } = useAuth();
   const [isDownloading, setIsDownloading] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
@@ -52,10 +54,12 @@ export default function Schedule() {
             <span className="material-symbols-outlined page-header__icon">school</span>
           </div>
           <div>
-            <h2 className="page-header__title">Mi Horario de Clases</h2>
+            <h2 className="page-header__title">
+              {rol === 'padre' ? 'Horario de Clases del Tutelado' : 'Mi Horario de Clases'}
+            </h2>
             <div className="page-header__period">
               <span className="page-header__period-label">Periodo:</span>
-              <span className="page-header__period-badge">Semestre 2024-B</span>
+              <span className="page-header__period-badge">Semestre 2026-A</span>
             </div>
           </div>
         </div>

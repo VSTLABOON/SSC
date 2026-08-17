@@ -42,6 +42,7 @@ export const BottomNav: React.FC = () => {
     ];
     rightItems = [
       { id: 'historial', label: 'Bitácora', icon: 'history', path: '/orientador/historial' },
+      { id: 'intervenciones', label: 'Acuerdos', icon: 'handshake', path: '/orientador/inicio' },
     ];
   } else if (isAlumno) {
     leftItems = [
@@ -113,10 +114,20 @@ export const BottomNav: React.FC = () => {
             )}
 
             {isOrientador && (
-              <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/orientador/reporte')}>
-                <span className="material-symbols-outlined fab-action-icon">add_task</span>
-                Generar Reporte Conductual
-              </button>
+              <>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/orientador/inicio')}>
+                  <span className="material-symbols-outlined fab-action-icon">radar</span>
+                  Radar BI & Atención Prioritaria
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/orientador/reporte')}>
+                  <span className="material-symbols-outlined fab-action-icon">add_task</span>
+                  Generar Reporte Conductual
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/orientador/historial')}>
+                  <span className="material-symbols-outlined fab-action-icon">history</span>
+                  Bitácora del Plantel
+                </button>
+              </>
             )}
 
             {isDirectivo && (
@@ -128,6 +139,48 @@ export const BottomNav: React.FC = () => {
                 <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/usuarios')}>
                   <span className="material-symbols-outlined fab-action-icon">person_add</span>
                   Gestión de Usuarios
+                </button>
+              </>
+            )}
+
+            {isPadre && (
+              <>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/padre/inicio')}>
+                  <span className="material-symbols-outlined fab-action-icon">dashboard</span>
+                  Ver Estado Conductual
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/padre/historial')}>
+                  <span className="material-symbols-outlined fab-action-icon">history</span>
+                  Historial de Reportes
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/padre/horario')}>
+                  <span className="material-symbols-outlined fab-action-icon">schedule</span>
+                  Consultar Horario
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/padre/perfil')}>
+                  <span className="material-symbols-outlined fab-action-icon">person</span>
+                  Perfil del Tutelado
+                </button>
+              </>
+            )}
+
+            {isAlumno && (
+              <>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/alumno/inicio')}>
+                  <span className="material-symbols-outlined fab-action-icon">dashboard</span>
+                  Mi Estado Conductual
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/alumno/historial')}>
+                  <span className="material-symbols-outlined fab-action-icon">history</span>
+                  Historial de Incidencias
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/alumno/horario')}>
+                  <span className="material-symbols-outlined fab-action-icon">schedule</span>
+                  Mi Horario de Clases
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/alumno/perfil')}>
+                  <span className="material-symbols-outlined fab-action-icon">person</span>
+                  Mi Perfil
                 </button>
               </>
             )}

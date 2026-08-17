@@ -179,29 +179,29 @@ export async function sendPreventiveAlertToTutor(
   mensaje: string,
   sessionUserId: string
 ): Promise<boolean> {
-  const { data: relacion, error: relErr } = await supabase
+  const { data: relaciones, error: relErr } = await supabase
     .from('padres_alumnos')
     .select('padre_id')
-    .eq('alumno_id', alumnoId)
-    .limit(1)
-    .single();
+    .eq('alumno_id', alumnoId);
 
-  if (relErr || !relacion?.padre_id) {
+  if (relErr || !relaciones || relaciones.length === 0) {
     throw new Error('El alumno no tiene un tutor registrado en la plataforma.');
   }
 
+  const inserts = relaciones.map(r => ({
+    usuario_id: r.padre_id,
+    incidencia_id: null,
+    titulo: 'Alerta Preventiva Conductual',
+    mensaje: mensaje,
+    leido: false,
+    canal: 'push',
+    tipo: 'alerta_conductual',
+    registrado_por: sessionUserId,
+  }));
+
   const { error: insertErr } = await supabase
     .from('notificaciones')
-    .insert({
-      usuario_id: relacion.padre_id,
-      incidencia_id: null,
-      titulo: 'Alerta Preventiva Conductual',
-      mensaje: mensaje,
-      leido: false,
-      canal: 'push',
-      tipo: 'alerta_conductual',
-      registrado_por: sessionUserId,
-    });
+    .insert(inserts);
 
   if (insertErr) throw parseSupabaseError(insertErr, 'No se pudo registrar la notificación para el tutor.');
   return true;

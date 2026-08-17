@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { NotificationCenter } from '../components/NotificationCenter';
+import { BottomNav } from '../components/navigation/BottomNav';
 import '../pages/Home.css';
 
 interface NavItem {
@@ -101,7 +103,6 @@ export default function StudentLayout() {
 
       <div className="home-content">
         <header className="topbar">
-
           <div className="topbar-left">
             <button
               type="button"
@@ -114,14 +115,18 @@ export default function StudentLayout() {
             <h1 className="topbar-title">CONALEP Gestión Conductual</h1>
           </div>
           <div className="topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <NotificationCenter />
             <ThemeToggle />
           </div>
         </header>
 
-        <main className="page-canvas">
+        <main className="page-canvas" style={{ paddingBottom: '88px' }}>
           <Outlet />
         </main>
       </div>
+
+      {/* Barra de Navegación Inferior Adaptativa */}
+      <BottomNav />
     </div>
   );
 }

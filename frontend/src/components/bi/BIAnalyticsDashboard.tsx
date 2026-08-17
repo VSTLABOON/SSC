@@ -198,6 +198,13 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
   // Construir el contexto exhaustivo multi-dimensional para el Agente IA
   function buildFullDbContext() {
     return {
+      _contexto_usuario_y_filtros: {
+        rol_usuario: userRole,
+        grupo_filtrado: grupos.find(g => g.id === filters.grupoId)?.nombre || 'Todos los Grupos del Plantel',
+        generacion_filtrada: filters.generacion || 'Todas las Generaciones',
+        ventana_temporal: filters.rangoTemporal === 'semana' ? 'Esta Semana' : filters.rangoTemporal === 'mes' ? 'Este Mes' : 'Ciclo Escolar Completo',
+        severidad_filtrada: filters.severidad || 'Todas las Severidades',
+      },
       _seccion_KPIs: {
         _descripcion: 'Indicadores globales calculados por fn_bi_get_kpis en PostgreSQL',
         total_alumnos: kpis?.total_alumnos ?? 0,
@@ -291,31 +298,33 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
 
   return (
     <div className="bi-dashboard">
-      {/* Botón de Reporte Ejecutivo Directivo */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-        <button
-          type="button"
-          onClick={handleOpenPlantelExecutiveReport}
-          disabled={!kpis}
-          style={{
-            background: '#204785',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '8px 16px',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            boxShadow: '0 2px 8px rgba(32,71,133,0.2)',
-          }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>description</span>
-          Generar Reporte Ejecutivo de Plantel
-        </button>
-      </div>
+      {/* Botón de Reporte Ejecutivo Directivo (Exclusivo para Directivos y Orientadores) */}
+      {(userRole === 'directivo' || userRole === 'orientador') && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+          <button
+            type="button"
+            onClick={handleOpenPlantelExecutiveReport}
+            disabled={!kpis}
+            style={{
+              background: '#204785',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 8px rgba(32,71,133,0.2)',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>description</span>
+            Generar Reporte Ejecutivo de Plantel
+          </button>
+        </div>
+      )}
 
       {/* Barra de Filtros Multidimensionales */}
       <BIFilterBar

@@ -61,7 +61,7 @@ export const NotificationCenter: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, rol]);
 
   const unreadCount = notifications.length;
 

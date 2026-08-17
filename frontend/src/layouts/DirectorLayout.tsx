@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import '../pages/DirectivosYAsesores/InicioDA.css';
 import foto_maestro from '../assets/imagenes/foto_maestro.jpg';
 import SCTechlogo from '../assets/imagenes/SCTechlogo.png';
+import CONALEPlogo from '../assets/imagenes/CONALEPlogo.png';
 
 interface NavItem {
   id: string;
@@ -179,8 +180,7 @@ export default function DirectorLayout() {
               <img
                 alt="Logo Institucional"
                 className="grm-topbar-institution-logo"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVN4tbYkPmVGUA7PiggmYiGSDi1vpBbCLGyR3yjxujoiVsb8az6OYz9kmbH1GmmTX9_Weg6fhNo1kse5BbZbXJKe03j-_v6ssJ--uGU89jcouUcr5lB6_TetGEee59J7cU4Ms6GbAJ9eDwArGKV8Xh9LG56EEyx9A0shJS5oqlj-8bPi7AI-IxPRE6TF-gqKT9bSBulPhnyEI5cSgFQ4b7rUSLZKsXI8XWoALTtM1qkDhOeh7nKqeKSQk8J7-jdD7_SDggbGWlKw0"
-                onClick={() => console.log('Logo institucional')}
+                src={CONALEPlogo}
               />
             </div>
           </div>

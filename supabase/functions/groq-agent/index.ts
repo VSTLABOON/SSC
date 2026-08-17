@@ -6,8 +6,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
+const SITE_URL = Deno.env.get("SITE_URL");
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": SITE_URL || "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -87,7 +89,7 @@ serve(async (req) => {
       );
     }
 
-    const { kpiOrChartTitle, dbContextJson, userQuery } = await req.json();
+    const { kpiOrChartTitle, dbContextJson, userQuery, conversationHistory } = await req.json();
 
     // Sanitización preventiva: truncar a 6000 chars para dar espacio exhaustivo sin exceder tokens
     const safeContext = (dbContextJson || "").length > 6000
@@ -135,6 +137,26 @@ Responde la pregunta con un tono ágil, claro y directo basándote en los datos 
       );
     }
 
+    // Construcción de mensajes con historial conversacional para seguimiento contextual
+    const messagesPayload: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    if (Array.isArray(conversationHistory) && conversationHistory.length > 1) {
+      // Incluir turnos previos (máximo 6 turnos) excluyendo la consulta actual que irá al final
+      const previousTurns = conversationHistory.slice(0, -1).slice(-6);
+      for (const turn of previousTurns) {
+        if (turn.text) {
+          messagesPayload.push({
+            role: turn.sender === 'user' ? 'user' : 'assistant',
+            content: turn.text,
+          });
+        }
+      }
+    }
+
+    messagesPayload.push({ role: "user", content: userPrompt });
+
     // AbortSignal timeout de 15 segundos para dar margen al análisis exhaustivo
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -145,14 +167,20 @@ Responde la pregunta con un tono ágil, claro y directo basándote en los datos 
       },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        messages: messagesPayload,
         temperature: 0.15,
         max_tokens: 1200,
       }),
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Groq API Error ${response.status}]:`, errorText);
+      return new Response(
+        JSON.stringify({ error: `Servicio de IA temporalmente no disponible (Status ${response.status}).`, details: errorText }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 502 }
+      );
+    }
 
     const data = await response.json();
     const reply = data?.choices?.[0]?.message?.content || "Síntesis no disponible.";

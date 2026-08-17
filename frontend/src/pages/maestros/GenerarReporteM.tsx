@@ -8,6 +8,8 @@ import './GenerarReporteM.css';
 import { Modal } from '../../components/Modal';
 import '../../components/Modal.css';
 import InlineAlert from '../../components/InlineAlert';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 type Severity = 'verde' | 'naranja' | 'rojo' | null;
 
@@ -54,17 +56,13 @@ export default function GenerarReporteM() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Bloquear el scroll del body mientras un modal esté abierto
-  useEffect(() => {
-    if (modalOpen || successModalOpen || warningModalOpen) {
-      document.body.classList.add('no-scroll');
-    } else {
-      document.body.classList.remove('no-scroll');
-    }
-    return () => {
-      document.body.classList.remove('no-scroll');
-    };
-  }, [modalOpen, successModalOpen, warningModalOpen]);
+  const isAnyModalOpen = modalOpen || successModalOpen || warningModalOpen;
+  useLockBodyScroll(isAnyModalOpen);
+  useEscapeToClose(() => {
+    if (modalOpen) handleCloseModal();
+    else if (successModalOpen) setSuccessModalOpen(false);
+    else if (warningModalOpen) setWarningModalOpen(false);
+  });
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -277,7 +275,7 @@ export default function GenerarReporteM() {
                 <th>Alumno</th>
                 <th>Matrícula</th>
                 <th>Grupo</th>
-                <th>Puntos Semáforo</th>
+                <th style={{ textAlign: 'center' }}>Puntos Semáforo</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>

@@ -308,11 +308,9 @@ const Login = () => {
                 />
                 <label htmlFor="captcha">No soy un robot</label>
               </div>
-              <div className="login-captcha-badge">
-                <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAImbvRoxvtsTadZWXZ9UyZHf-gIIUmx_FkNtCOGfftXyeiwFTSlfKLYKyK6kCXsp-QVFOkSKZFaECmyE2fIY5BPcZ3gmOiy3hsMNN7RHcGY7jaK6gjw1OgwRT7_rOQ0E2R4RekCa0OtqOoOHYCvCG5SGc4QH392zQhFeYLE_8GKhUPNSAeyO8Z5UoiXIIXsyUG9-Qm2qPwWGEPJZ3OPJ0L8PfkK6x7Yj-x5IGKUrl1dI3KOQ-9x2YQrI8F_Mf_rL1JDpEa81fw6Gh"
-                  alt="Captcha"
-                />
+              <div className="login-captcha-badge" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#1a73e8' }}>verified_user</span>
+                <span style={{ fontSize: '8px', color: '#64748b', fontWeight: 600 }}>reCAPTCHA</span>
               </div>
             </div>
 

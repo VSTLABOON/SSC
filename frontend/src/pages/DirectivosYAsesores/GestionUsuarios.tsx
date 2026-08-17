@@ -16,6 +16,8 @@ interface Usuario {
   rol: string;
   activo: boolean;
   plantel_id: string;
+  bloqueado_hasta?: string | null;
+  intentos_fallidos?: number | null;
 }
 
 type FiltroRol = 'todos' | 'pendiente' | 'docente' | 'alumno' | 'orientador' | 'padre';
@@ -72,7 +74,7 @@ export default function GestionUsuarios() {
     if (!plantelId) return [];
     const { data, error } = await supabase
       .from('usuarios')
-      .select('id, nombre, apellido, email, rol, activo, plantel_id')
+      .select('id, nombre, apellido, email, rol, activo, plantel_id, bloqueado_hasta, intentos_fallidos')
       .eq('plantel_id', plantelId)
       .neq('rol', 'directivo')
       .order('rol')
@@ -115,14 +117,22 @@ export default function GestionUsuarios() {
   async function handleCambiarRol(userId: string, nuevoRol: string) {
     setActionError(null);
     setUpdatingId(userId);
+
+    const userActual = usuarios.find(u => u.id === userId);
+    const updates: { rol: string; activo?: boolean } = { rol: nuevoRol };
+    // Si el usuario estaba pendiente de activación, al asignarle rol formal se activa automáticamente
+    if (userActual?.rol === 'pendiente') {
+      updates.activo = true;
+    }
+
     const { error } = await supabase
       .from('usuarios')
-      .update({ rol: nuevoRol })
+      .update(updates)
       .eq('id', userId);
 
     if (!error) {
       setUsuarios(prev =>
-        prev.map(u => u.id === userId ? { ...u, rol: nuevoRol } : u)
+        prev.map(u => u.id === userId ? { ...u, rol: nuevoRol, ...(updates.activo !== undefined ? { activo: true } : {}) } : u)
       );
     } else {
       setActionError(`No se pudo cambiar el rol del usuario: ${error.message}`);
@@ -145,6 +155,25 @@ export default function GestionUsuarios() {
       );
     } else {
       setActionError(`No se pudo actualizar el estado del usuario: ${error.message}`);
+    }
+    setUpdatingId(null);
+  }
+
+  // ── Desbloquear usuario bloqueado por intentos fallidos ───────────────────
+  async function handleDesbloquearUsuario(userId: string) {
+    setActionError(null);
+    setUpdatingId(userId);
+    const { error } = await supabase
+      .from('usuarios')
+      .update({ bloqueado_hasta: null, intentos_fallidos: 0 })
+      .eq('id', userId);
+
+    if (!error) {
+      setUsuarios(prev =>
+        prev.map(u => u.id === userId ? { ...u, bloqueado_hasta: null, intentos_fallidos: 0 } : u)
+      );
+    } else {
+      setActionError(`No se pudo desbloquear al usuario: ${error.message}`);
     }
     setUpdatingId(null);
   }
@@ -224,8 +253,13 @@ export default function GestionUsuarios() {
     return `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
   }
 
+  function isBloqueado(u: Usuario): boolean {
+    return Boolean(u.bloqueado_hasta && new Date(u.bloqueado_hasta) > new Date());
+  }
+
   // ── Badge de estado ────────────────────────────────────────────────────────
   function badgeClase(u: Usuario) {
+    if (isBloqueado(u)) return 'gu-badge gu-badge--bloqueado';
     if (!u.activo) return 'gu-badge gu-badge--inactivo';
     if (u.rol === 'pendiente') return 'gu-badge gu-badge--pendiente';
     return 'gu-badge gu-badge--activo';
@@ -336,9 +370,11 @@ export default function GestionUsuarios() {
                     <td>
                       <span className={badgeClase(u)}>
                         <span className="material-symbols-outlined" style={{ fontSize: '13px', verticalAlign: 'middle', marginRight: '4px' }}>
-                          {!u.activo ? 'block' : u.rol === 'pendiente' ? 'hourglass_empty' : 'check_circle'}
+                          {isBloqueado(u) ? 'lock' : !u.activo ? 'block' : u.rol === 'pendiente' ? 'hourglass_empty' : 'check_circle'}
                         </span>
-                        {!u.activo
+                        {isBloqueado(u)
+                          ? 'Bloqueado'
+                          : !u.activo
                           ? 'Inactivo'
                           : u.rol === 'pendiente'
                           ? 'Pendiente'
@@ -346,25 +382,38 @@ export default function GestionUsuarios() {
                       </span>
                     </td>
                     <td>
-                      {!u.activo ? (
-                        <button
-                          className="gu-action-btn gu-action-btn--activate"
-                          disabled={updatingId === u.id}
-                          onClick={() => handleToggleActivo(u.id, true)}
-                          title="Reactivar acceso"
-                        >
-                          Reactivar →
-                        </button>
-                      ) : (
-                        <button
-                          className="gu-action-btn gu-action-btn--deactivate"
-                          disabled={updatingId === u.id || u.id === session?.user?.id}
-                          onClick={() => handleToggleActivo(u.id, false)}
-                          title="Suspender acceso"
-                        >
-                          Suspender
-                        </button>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        {isBloqueado(u) && (
+                          <button
+                            className="gu-action-btn"
+                            style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}
+                            disabled={updatingId === u.id}
+                            onClick={() => handleDesbloquearUsuario(u.id)}
+                            title="Desbloquear usuario por límite de intentos de contraseña"
+                          >
+                            Desbloquear
+                          </button>
+                        )}
+                        {!u.activo ? (
+                          <button
+                            className="gu-action-btn gu-action-btn--activate"
+                            disabled={updatingId === u.id}
+                            onClick={() => handleToggleActivo(u.id, true)}
+                            title="Reactivar acceso"
+                          >
+                            Reactivar →
+                          </button>
+                        ) : (
+                          <button
+                            className="gu-action-btn gu-action-btn--deactivate"
+                            disabled={updatingId === u.id || u.id === session?.user?.id}
+                            onClick={() => handleToggleActivo(u.id, false)}
+                            title="Suspender acceso"
+                          >
+                            Suspender
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -228,7 +228,7 @@ export default function HistorialReporteDA() {
                 <th>Grupo</th>
                 <th>Carrera / Plantel</th>
                 <th>Reportes Totales</th>
-                <th className="hrm-th-right">Ver Expediente Modal</th>
+                <th style={{ textAlign: 'center' }}>Expediente</th>
               </tr>
             </thead>
             <tbody>

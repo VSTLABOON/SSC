@@ -81,12 +81,26 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [incidentFilter, setIncidentFilter] = useState<IncidentFilter>('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [activeChildId, setActiveChildId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
+
+  // Sincronización con el selector global de tutelados
+  useEffect(() => {
+    function handleChildChange(evt: Event) {
+      const custom = evt as CustomEvent<{ childId: string }>;
+      if (custom.detail?.childId) {
+        setActiveChildId(custom.detail.childId);
+      }
+    }
+    window.addEventListener('ssc_child_change', handleChildChange);
+    return () => window.removeEventListener('ssc_child_change', handleChildChange);
+  }, []);
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
     async function loadReports() {
       try {
+        setLoading(true);
         let studentId = session!.user!.id;
 
         if (rol === 'padre') {
@@ -103,7 +117,7 @@ export default function History() {
             return;
           }
 
-          const selectedId = localStorage.getItem('ssc_selected_child_id');
+          const selectedId = activeChildId || localStorage.getItem('ssc_selected_child_id');
           const matched = linkRows.find(r => r.alumno_id === selectedId);
           studentId = matched ? matched.alumno_id : linkRows[0].alumno_id;
         }
@@ -118,7 +132,7 @@ export default function History() {
     }
 
     loadReports();
-  }, [session, rol]);
+  }, [session, rol, activeChildId]);
 
   // Procesamos incidencias del backend a las estructuras de la UI
   const reports: ProcessedReport[] = useMemo(() => {

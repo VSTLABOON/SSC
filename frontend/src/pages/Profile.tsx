@@ -25,12 +25,26 @@ export default function Profile() {
   const { session, rol } = useAuth();
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeChildId, setActiveChildId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
+
+  // Sincronización con el selector global de tutelados
+  useEffect(() => {
+    function handleChildChange(evt: Event) {
+      const custom = evt as CustomEvent<{ childId: string }>;
+      if (custom.detail?.childId) {
+        setActiveChildId(custom.detail.childId);
+      }
+    }
+    window.addEventListener('ssc_child_change', handleChildChange);
+    return () => window.removeEventListener('ssc_child_change', handleChildChange);
+  }, []);
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
     async function loadProfile() {
       try {
+        setLoading(true);
         let studentId = session!.user!.id;
 
         if (rol === 'padre') {
@@ -47,7 +61,7 @@ export default function Profile() {
             return;
           }
 
-          const selectedId = localStorage.getItem('ssc_selected_child_id');
+          const selectedId = activeChildId || localStorage.getItem('ssc_selected_child_id');
           const matched = linkRows.find(r => r.alumno_id === selectedId);
           studentId = matched ? matched.alumno_id : linkRows[0].alumno_id;
         }
@@ -62,7 +76,7 @@ export default function Profile() {
     }
 
     loadProfile();
-  }, [session, rol]);
+  }, [session, rol, activeChildId]);
 
   if (loading) {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando perfil...</div>;
@@ -216,6 +230,53 @@ export default function Profile() {
               <p className="info-field__value info-field__value--error">
                 {alumno?.alergias || 'No especificado'}
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tarjeta: Méritos e Insignias Institucionales */}
+        <div className="info-card">
+          <div className="info-card__header">
+            <div className="info-card__icon-box" style={{ background: '#fef3c7', color: '#d97706' }}>
+              <span className="material-symbols-outlined icon-filled">
+                military_tech
+              </span>
+            </div>
+            <h3 className="info-card__title">Reconocimientos & Estatus</h3>
+          </div>
+          <div className="info-card__body">
+            <div className="info-field">
+              <label className="info-field__label">Nivel de Desempeño</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                <span className="material-symbols-outlined" style={{ color: (alumno?.puntos_totales ?? 100) >= 80 ? '#10b981' : '#f59e0b', fontSize: '20px' }}>
+                  {(alumno?.puntos_totales ?? 100) >= 80 ? 'workspace_premium' : 'warning'}
+                </span>
+                <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--color-on-surface)' }}>
+                  {(alumno?.puntos_totales ?? 100) >= 90 ? 'Conducta Sobresaliente (Cuadro de Honor)' : (alumno?.puntos_totales ?? 100) >= 80 ? 'Buen Desempeño Conductual' : 'Atención Requerida'}
+                </span>
+              </div>
+            </div>
+
+            <div className="info-field">
+              <label className="info-field__label">Insignias Otorgadas</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                {(alumno?.puntos_totales ?? 100) >= 80 && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '16px', fontSize: '11px', fontWeight: 600, border: '1px solid #a7f3d0' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>verified_user</span>
+                    Semáforo Verde
+                  </div>
+                )}
+                {(alumno?.puntos_totales ?? 100) >= 95 && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '16px', fontSize: '11px', fontWeight: 600, border: '1px solid #fde68a' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>star</span>
+                    Puntaje Óptimo (+95 pts)
+                  </div>
+                )}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#eff6ff', color: '#1e40af', padding: '4px 10px', borderRadius: '16px', fontSize: '11px', fontWeight: 600, border: '1px solid #bfdbfe' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>school</span>
+                  Matrícula Vigente
+                </div>
+              </div>
             </div>
           </div>
         </div>

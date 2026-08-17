@@ -14,7 +14,8 @@ export async function getPeriodoActivo(plantelId: string): Promise<string> {
     .select('id')
     .eq('plantel_id', plantelId)
     .eq('activo', true)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error) throw error;
   if (!data?.id) throw new Error('No se encontró un período activo para este plantel.');

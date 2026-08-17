@@ -87,9 +87,22 @@ export default function Home() {
   const [isExporting, setIsExporting] = useState(false);
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [incidencias, setIncidencias] = useState<IncidentFromDB[]>([]);
+  const [asistenciaPorcentaje, setAsistenciaPorcentaje] = useState<number>(100);
   const [loadingData, setLoadingData] = useState(true);
   const [hijos, setHijos] = useState<Array<{ alumno_id: string; nombre: string; grupo: string }>>([]);
   const [selectedHijoId, setSelectedHijoId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
+
+  // Sincronización con el selector global de tutelados
+  useEffect(() => {
+    function handleChildChange(evt: Event) {
+      const custom = evt as CustomEvent<{ childId: string }>;
+      if (custom.detail?.childId) {
+        setSelectedHijoId(custom.detail.childId);
+      }
+    }
+    window.addEventListener('ssc_child_change', handleChildChange);
+    return () => window.removeEventListener('ssc_child_change', handleChildChange);
+  }, []);
 
   const handleExportPDF = async () => {
     if (!pageRef.current) return;
@@ -160,6 +173,24 @@ export default function Home() {
 
         const incs = await getIncidenciasDelAlumno(studentId);
         setIncidencias(incs as unknown as IncidentFromDB[]);
+
+        // Cálculo dinámico de asistencia real desde la base de datos
+        const { data: astRows } = await supabase
+          .from('asistencias')
+          .select('estatus, presente, justificada')
+          .eq('alumno_id', studentId);
+
+        if (astRows && astRows.length > 0) {
+          const valid = astRows.filter(a =>
+            a.estatus === 'asistencia' ||
+            a.estatus === 'justificada' ||
+            a.presente === true ||
+            a.justificada === true
+          ).length;
+          setAsistenciaPorcentaje(Math.round((valid / astRows.length) * 100));
+        } else {
+          setAsistenciaPorcentaje(100);
+        }
       } catch (err) {
         console.error('Error al cargar datos del alumno:', err);
       } finally {
@@ -173,6 +204,7 @@ export default function Home() {
   function handleSelectHijo(childId: string) {
     setSelectedHijoId(childId);
     localStorage.setItem('ssc_selected_child_id', childId);
+    window.dispatchEvent(new CustomEvent('ssc_child_change', { detail: { childId } }));
   }
 
   if (loadingData) {
@@ -181,9 +213,6 @@ export default function Home() {
 
   const level = alumno?.nivel_semaforo || 'verde';
   const theme = SEMAPHORE_THEME[level] || SEMAPHORE_THEME.verde;
-
-  // Calculamos promedio de asistencia o mock
-  const asistenciaPorcentaje = 94; // Mantener mock por ahora
 
   const user = (Array.isArray(alumno?.usuarios) ? alumno?.usuarios[0] : alumno?.usuarios) as { nombre?: string; apellido?: string } | null;
   const group = (Array.isArray(alumno?.grupos) ? alumno?.grupos[0] : alumno?.grupos) as { nombre?: string } | null;

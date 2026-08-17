@@ -163,6 +163,7 @@
 .gu-badge--pendiente { background: #fff3cd; color: #856404; }
 .gu-badge--activo    { background: #d1fae5; color: #065f46; }
 .gu-badge--inactivo  { background: var(--c-error-container); color: var(--c-on-error-cont); }
+.gu-badge--bloqueado { background: #fed7aa; color: #9a3412; }
 
 /* ── Acciones ──────────────────────────────────────────────────────────────── */
 .gu-action-btn {
@@ -199,7 +200,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: var(--z-modal-backdrop, 2000);
   padding: 16px;
   animation: gu-fade-in .15s ease;
 }
@@ -216,7 +217,7 @@
   width: 100%;
   max-width: 460px;
   box-shadow: var(--shadow-md);
-  z-index: 210;
+  z-index: var(--z-modal-box, 2010);
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
   animation: gu-slide-up .2s ease;

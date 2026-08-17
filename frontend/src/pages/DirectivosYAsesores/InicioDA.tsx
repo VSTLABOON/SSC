@@ -17,8 +17,11 @@ export default function InicioDA() {
     return () => clearTimeout(t);
   }, []);
 
+  const reportPath = rol === 'orientador' ? '/orientador/reporte' : '/director/reporte';
+  const historyPath = rol === 'orientador' ? '/orientador/historial' : '/director/historial';
+
   function handleGoToReport(): void {
-    navigate('/director/reporte');
+    navigate(reportPath);
   }
 
   return (
@@ -27,9 +30,13 @@ export default function InicioDA() {
       <section className={`ida-hero${heroVisible ? ' ida-hero--visible' : ''}`}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h2 className="ida-hero__title">Panel de Inteligencia de Negocio & Control Directivo</h2>
+            <h2 className="ida-hero__title">
+              {rol === 'orientador'
+                ? 'Panel de Inteligencia Conductual & Orientación Educativa'
+                : 'Panel de Inteligencia de Negocio & Control Directivo'}
+            </h2>
             <p className="ida-hero__subtitle">
-              Bienvenido(a), {nombre || 'Administrador(a)'}. Monitoreo en tiempo real de salud conductual, tendencias e indicadores clave.
+              Bienvenido(a), {nombre || (rol === 'orientador' ? 'Orientador(a)' : 'Administrador(a)')}. Monitoreo en tiempo real de salud conductual, tendencias e indicadores clave.
             </p>
           </div>
           <button
@@ -87,7 +94,7 @@ export default function InicioDA() {
       {activeTab === 'operacion' && (
         <section className="dedicated-tab-content">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-            <div className="op-card" onClick={() => navigate('/director/reporte')} style={{ cursor: 'pointer', background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+            <div className="op-card" onClick={() => navigate(reportPath)} style={{ cursor: 'pointer', background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#204785', background: '#eff6ff', padding: '10px', borderRadius: '12px' }}>post_add</span>
                 <h4 style={{ margin: 0, fontSize: '15px', color: '#0f172a' }}>Generar Nuevo Reporte</h4>
@@ -95,7 +102,7 @@ export default function InicioDA() {
               <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Registrar una incidencia conductual positiva o negativa en el sistema.</p>
             </div>
 
-            <div className="op-card" onClick={() => navigate('/director/historial')} style={{ cursor: 'pointer', background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+            <div className="op-card" onClick={() => navigate(historyPath)} style={{ cursor: 'pointer', background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#0284c7', background: '#e0f2fe', padding: '10px', borderRadius: '12px' }}>manage_search</span>
                 <h4 style={{ margin: 0, fontSize: '15px', color: '#0f172a' }}>Historial de Incidencias</h4>

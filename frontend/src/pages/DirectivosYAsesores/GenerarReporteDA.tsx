@@ -8,6 +8,8 @@ import './GenerarReporteDA.css';
 import { Modal } from '../../components/Modal';
 import '../../components/Modal.css';
 import InlineAlert from '../../components/InlineAlert';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 type Severity = 'verde' | 'naranja' | 'rojo' | null;
 
@@ -53,6 +55,14 @@ export default function GenerarReporteDA() {
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isAnyModalOpen = modalOpen || successModalOpen || warningModalOpen;
+  useLockBodyScroll(isAnyModalOpen);
+  useEscapeToClose(() => {
+    if (modalOpen) handleCloseModal();
+    else if (successModalOpen) setSuccessModalOpen(false);
+    else if (warningModalOpen) setWarningModalOpen(false);
+  });
 
   useEffect(() => {
     if (!plantelId) return;
@@ -248,7 +258,7 @@ export default function GenerarReporteDA() {
                 <th>Alumno</th>
                 <th>Matrícula</th>
                 <th>Grupo</th>
-                <th>Puntos Semáforo</th>
+                <th style={{ textAlign: 'center' }}>Puntos Semáforo</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>

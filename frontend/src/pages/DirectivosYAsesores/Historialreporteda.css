@@ -301,7 +301,7 @@ a      { text-decoration: none; }
 .hrm-tr-clickable:hover { background: var(--c-surface-cont); }
 .hrm-table td { padding: 14px 24px; font-size: 14px; color: var(--c-on-surface); }
 .hrm-td-muted  { color: var(--c-on-surface-var); }
-.hrm-td-action { text-align: right; }
+.hrm-td-action { text-align: center; }
 .hrm-td-empty  { text-align: center; padding: 40px; color: var(--c-secondary); font-size: 14px; }
 
 /* Student cell */
