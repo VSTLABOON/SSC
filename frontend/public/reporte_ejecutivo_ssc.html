@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dossier Ejecutivo SSC - Sistema de Salud Conductual | CONALEP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+  </script>
+  <style>
+    :root {
+      --conalep-green: #00492f;
+      --conalep-green-light: #006341;
+      --conalep-green-mint: #e6f4ea;
+      --conalep-blue: #204785;
+      --conalep-blue-light: #e8eef8;
+      --color-text-main: #0f172a;
+      --color-text-muted: #475569;
+      --color-bg-body: #f8fafc;
+      --color-card-bg: #ffffff;
+      --color-border: #e2e8f0;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg-body);
+      color: var(--color-text-main);
+      line-height: 1.6;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header Institucional ────────────────────────────────────────────── */
+    .header-bar {
+      background: linear-gradient(135deg, var(--conalep-green) 0%, #003320 100%);
+      color: #ffffff;
+      padding: 24px 32px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border-bottom: 3px solid var(--conalep-green-light);
+    }
+
+    .header-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .header-logo {
+      height: 52px;
+      width: auto;
+      background: #ffffff;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .header-titles h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .header-titles p {
+      font-size: 0.85rem;
+      color: #a2f4c7;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-print {
+      background-color: var(--conalep-blue);
+      color: #ffffff;
+    }
+
+    .btn-print:hover {
+      background-color: #183768;
+    }
+
+    /* ── Layout Principal ────────────────────────────────────────────────── */
+    .main-container {
+      max-width: 1280px;
+      margin: 32px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Tabla de Contenido Lateral ──────────────────────────────────────── */
+    .toc-sidebar {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 20px;
+      position: sticky;
+      top: 110px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .toc-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--conalep-green);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toc-link {
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .toc-link:hover {
+      background-color: var(--conalep-green-mint);
+      color: var(--conalep-green);
+    }
+
+    /* ── Secciones del Contenido ─────────────────────────────────────────── */
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .doc-section {
+      background: var(--color-card-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      padding: 28px 32px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 2px solid var(--conalep-green-mint);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+
+    .section-icon {
+      font-size: 26px;
+      color: var(--conalep-green);
+      background: var(--conalep-green-mint);
+      padding: 8px;
+      border-radius: 10px;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--conalep-green);
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: #334155;
+    }
+
+    /* ── Tarjetas de Métricas Rápidas ────────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--conalep-green);
+      line-height: 1.2;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    /* ── Tablas Elegantes ────────────────────────────────────────────────── */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 18px 0;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: var(--conalep-green);
+      font-weight: 700;
+      padding: 12px 16px;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border);
+      color: #334155;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    /* ── Semáforos Badges ────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-amber { background: #fef3c7; color: #b45309; }
+    .badge-red { background: #fee2e2; color: #b91c1c; }
+
+    /* ── Acordeón de Preguntas y Respuestas ──────────────────────────────── */
+    .qa-card {
+      background: #f8fafc;
+      border: 1px solid var(--color-border);
+      border-left: 4px solid var(--conalep-green);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+
+    .qa-question {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--conalep-green);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .qa-answer {
+      font-size: 0.9rem;
+      color: #334155;
+      padding-left: 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Credenciales de Acceso ─────────────────────────────────────────── */
+    .cred-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .cred-card {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .cred-role {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--conalep-blue);
+      letter-spacing: 0.05em;
+    }
+
+    .cred-email {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--conalep-green);
+    }
+
+    .cred-meta {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ── Iconografía Material Symbols ───────────────────────────────────── */
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      display: inline-block;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    /* ── Impresión a PDF Oficial ────────────────────────────────────────── */
+    @media print {
+      .header-bar {
+        position: static;
+        box-shadow: none;
+        padding: 16px;
+      }
+      .toc-sidebar, .btn-action {
+        display: none !important;
+      }
+      .main-container {
+        grid-template-columns: 1fr;
+        margin: 0;
+        padding: 0;
+      }
+      .doc-section {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Institucional CONALEP -->
+  <header class="header-bar">
+    <div class="header-container">
+      <div class="header-branding">
+        <img src="./CONALEPlogo.png" alt="CONALEP" class="header-logo" onerror="this.style.display='none'">
+        <div class="header-titles">
+          <h1>Sistema de Seguimiento y Salud Conductual (SSC)</h1>
+          <p>Dossier Ejecutivo Institucional &bull; Plantel Puebla I &bull; Ciclo Escolar 2026</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-action btn-print" onclick="window.print()">
+          <span class="material-symbols-outlined">print</span>
+          Descargar / Imprimir PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <div class="main-container">
+
+    <!-- Menú Lateral / Tabla de Contenidos -->
+    <nav class="toc-sidebar">
+      <div class="toc-title">
+        <span class="material-symbols-outlined">menu_book</span>
+        Contenido del Dossier
+      </div>
+      <ul class="toc-list">
+        <li><a href="#resumen" class="toc-link"><span class="material-symbols-outlined">info</span> Resumen Ejecutivo</a></li>
+        <li><a href="#poblacion" class="toc-link"><span class="material-symbols-outlined">analytics</span> Población Escolar</a></li>
+        <li><a href="#kpis" class="toc-link"><span class="material-symbols-outlined">monitoring</span> KPIs y Algoritmos</a></li>
+        <li><a href="#flujos" class="toc-link"><span class="material-symbols-outlined">hub</span> Flujos por Rol</a></li>
+        <li><a href="#preguntas" class="toc-link"><span class="material-symbols-outlined">help_center</span> 18 Preguntas Clave</a></li>
+        <li><a href="#guion" class="toc-link"><span class="material-symbols-outlined">play_circle</span> Guión de Demostración</a></li>
+        <li><a href="#cuentas" class="toc-link"><span class="material-symbols-outlined">key</span> Cuentas de Acceso</a></li>
+        <li><a href="#roadmap" class="toc-link"><span class="material-symbols-outlined">flag</span> Hoja de Ruta Futura</a></li>
+      </ul>
+    </nav>
+
+    <!-- Área de Documentación -->
+    <main class="content-area">
+
+      <!-- Sección 1: Resumen Ejecutivo -->
+      <section id="resumen" class="doc-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">shield</span>
+          <h2 class="section-title">1. Resumen Ejecutivo y Propósito Institucional</h2>
+        </div>
+        <p>
+          El <strong>Sistema de Seguimiento y Salud Conductual (SSC)</strong> es una plataforma SaaS multi-tenant diseñada para transformar la gestión escolar en instituciones de Educación Media Superior. Su misión fundamental es <strong>reducir la deserción escolar, garantizar un clima de respeto en el aula y brindar un canal de comunicación transparente e instantáneo</strong> entre docentes, orientadores, directivos y padres de familia.
+        </p>
+        <p>
+          A diferencia de los métodos analógicos tradicionales que registran faltas de manera tardía y punitiva, el SSC implementa el modelo de <strong>Salud Conductual (Base 100 Puntos)</strong> con detección preventiva mediante el algoritmo matemático <strong>EWMA</strong> (<em>Exponential Weighted Moving Average</em>), lo que permite intervenir antes de que el alumno repruebe o abandone sus estudios.
+        </p>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value">750</div>
+            <div class="metric-label">Alumnos Matriculados</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">30</div>
+            <div class="metric-label">Salones Activos</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">56,250</div>
+            <div class="metric-label">Asistencias Auditadas</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">100%</div>
+            <div class="metric-label">Tutores Vinculados</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección 2: Población Escolar -->
+      <section id="poblacion" class="doc-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">groups</span>
+          <h2 class="section-title">2. Radiografía de la Población Escolar Activa</h2>
+        </div>
+        <p>
+          La base de datos del plantel se encuentra semillada y auditada al 100%, garantizando que <strong>ningún salón de clases carezca de alumnos ni de profesores asignados</strong>.
+        </p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Generación</th>
+                <th>Semestre</th>
+                <th>Alumnos</th>
+                <th>Promedio ISC</th>
+                <th>Semáforo Verde</th>
+                <th>Semáforo Naranja</th>
+                <th>Semáforo Rojo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>2025-2028</strong></td>
+                <td>2º Semestre</td>
+                <td>250 alumnos</td>
+                <td>87.9 pts</td>
+                <td><span class="badge badge-green">198</span></td>
+                <td><span class="badge badge-amber">51</span></td>
+                <td><span class="badge badge-red">1</span></td>
+              </tr>
+              <tr>
+                <td><strong>2024-2027</strong></td>
+                <td>4º Semestre</td>
+                <td>250 alumnos</td>
+                <td>87.8 pts</td>
+                <td><span class="badge badge-green">200</span></td>
+                <td><span class="badge badge-amber">50</span></td>
+                <td><span class="badge badge-red">0</span></td>
+              </tr>
+              <tr>
+                <td><strong>2023-2026</strong></td>
+                <td>6º Semestre</td>
+                <td>250 alumnos</td>
+                <td>87.8 pts</td>
+                <td><span class="badge badge-green">200</span></td>
+                <td><span class="badge badge-amber">50</span></td>
+                <td><span class="badge badge-red">0</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Sección 3: KPIs y Algoritmos -->
+      <section id="kpis" class="doc-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">calculate</span>
+          <h2 class="section-title">3. Desglose de KPIs y Algoritmos de Cálculo</h2>
+        </div>
+        <p>
+          El motor de evaluación conductual se fundamenta en dos ecuaciones rectoras validadas pedagógicamente:
+        </p>
+
+        <div class="qa-card">
+          <div class="qa-question">
+            <span class="material-symbols-outlined">function</span>
+            Ecuación 1: Índice de Salud Conductual (ISC Base 100)
+          </div>
+          <div class="qa-answer">
+            <code>ISC = 100 + Suma(Impactos de Incidencias) + Suma(Impactos de Participaciones)</code>
+            <p style="margin-top: 6px;">
+              Cada estudiante arranca con 100 puntos. Los reportes restan entre -5 y -20 puntos, mientras que las participaciones meritorias suman entre +5 y +15 puntos.
+            </p>
+          </div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question">
+            <span class="material-symbols-outlined">radar</span>
+            Ecuación 2: Composite Risk Score (Radar de Riesgo)
+          </div>
+          <div class="qa-answer">
+            <code>Score = (Factor ISC × 0.40) + (Factor Crítico × 0.30) + (Factor Caída EWMA × 0.20) + (Factor Volumen × 0.10)</code>
+            <p style="margin-top: 6px;">
+              Pondera la distancia a 100 puntos (40%), la gravedad de faltas de respeto (30%), la aceleración de caídas recientes mediante suavizado exponencial (20%) y la frecuencia absoluta (10%).
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección 4: Flujos por Rol -->
+      <section id="flujos" class="doc-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">schema</span>
+          <h2 class="section-title">4. Flujos Operativos y Módulos por Rol</h2>
+        </div>
+        <p>
+          La plataforma cuenta con 5 portales especializados adaptados a las responsabilidades de cada usuario:
+        </p>
+
+        <div class="mermaid">
+          graph TD
+            Directivo[Directorio General] --> D1[Tableros BI en Tiempo Real]
+            Directivo --> D2[Diagnosticos Ejecutivos con IA]
+            Directivo --> D3[Gestion y Desbloqueo de Cuentas]
+            Orientador[Orientacion Educativa] --> O1[Radar de Riesgo Multivariable]
+            Orientador --> O2[Expediente 360 y Bitacora de Acuerdos]
+            Orientador --> O3[Bandeja de Justificantes Medicos]
+            Docente[Docente Titular] --> M1[Mis Clases Asignadas]
+            Docente --> M2[Pase de Lista con Bloqueo de Seguridad]
+            Docente --> M3[Registro de Puntos y Reportes]
+            Alumno[Estudiante] --> A1[Saldo ISC y Semaforo Personal]
+            Alumno --> A2[Historial de Asistencia y Justificantes]
+            Padre[Padre / Tutor] --> P1[Selector Multi-Hijo]
+            Padre --> P2[Acuse Digital de Enterado]
+            Padre --> P3[Solicitud de Citas con Orientacion]
+        </div>
+      </section>
+
+      <!-- Sección 5: 18 Preguntas Clave -->
+      <section id="preguntas" class="doc-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">contact_support</span>
+          <h2 class="section-title">5. Auto-Entrevista Estratégica: 18 Preguntas y Respuestas</h2>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 1. ¿Por qué sustituir las listas en papel si los maestros ya están acostumbrados a ellas?</div>
+          <div class="qa-answer">Porque el papel no se comunica con nadie. Una inasistencia en papel tarda semanas en llegar al orientador; en el SSC, en 45 segundos se registra y se notifica en tiempo real al padre y a la dirección.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 2. ¿Cómo evita el sistema que un maestro altere asistencias por error o descuido?</div>
+          <div class="qa-answer">Mediante el Bloqueo Inteligente Diario. Una vez concluida la lista de la clase, los controles se bloquean y muestran un candado de seguridad, requiriendo desbloqueo intencional para cualquier cambio.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 3. ¿El sistema de puntos castiga permanentemente al alumno?</div>
+          <div class="qa-answer">No. Es un sistema formativo. El alumno puede recuperar saldo realizando participaciones destacadas, proyectos cívicos y manteniendo constancia en su puntualidad.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 4. ¿Cómo prioriza el orientador los casos urgentes entre más de 700 alumnos?</div>
+          <div class="qa-answer">El Radar de Riesgo calcula automáticamente el Composite Risk Score y coloca en la parte superior a los alumnos con caídas repentinas de puntaje o semáforo rojo.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 5. ¿Cómo se protege la institución ante el reclamo "a mí como padre nunca me avisaron"?</div>
+          <div class="qa-answer">Cada reporte incluye el botón de Confirmar de Enterado en el portal del padre, registrando con fecha, hora y usuario el acuse digital formal de enterado.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 6. ¿Qué pasa si un padre tiene varios hijos en distintos semestres?</div>
+          <div class="qa-answer">Dispone de un selector multi-hijo en la parte superior de su pantalla que le permite alternar entre sus tutelados con un solo clic y sin cerrar sesión.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 7. ¿Qué rol juega la Inteligencia Artificial (Groq) en la toma de decisiones?</div>
+          <div class="qa-answer">Genera diagnósticos narrativos ejecutivos del clima escolar del plantel para que el Director presente conclusiones claras y recomendaciones en el Consejo Técnico Escolar.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 8. ¿Pueden los alumnos ver los reportes o datos de sus compañeros?</div>
+          <div class="qa-answer">No. La base de datos tiene políticas estrictas de Row Level Security (RLS); cada alumno y padre solo puede consultar su propia información privada.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 9. ¿Cómo se tramitan los justificantes médicos?</div>
+          <div class="qa-answer">De manera 100% digital. El alumno o tutor adjunta el comprobante con las fechas de ausencia y el orientador lo aprueba en 1 clic, actualizando las listas de los docentes.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 10. ¿Se mezclan las estadísticas entre generaciones escolares?</div>
+          <div class="qa-answer">No. Cada cohorte (2023-2026, 2024-2027, 2025-2028) cuenta con segmentación independiente y filtros dedicados en todos los tableros analíticos.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 11. ¿Qué infraestructura mínima de computadoras requiere el colegio?</div>
+          <div class="qa-answer">Ninguna infraestructura especial. Es un sistema 100% en la nube que funciona desde cualquier celular, tablet o laptop con navegador web.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 12. ¿Cómo se cargan las listas de alumnos al inicio de cada ciclo escolar?</div>
+          <div class="qa-answer">Mediante el importador masivo en Excel/CSV, creando cuentas, grupos y vinculaciones de tutores en menos de 10 segundos.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 13. ¿Qué ocurre si un maestro intenta adivinar una contraseña muchas veces?</div>
+          <div class="qa-answer">El sistema cuenta con protección contra fuerza bruta que bloquea la cuenta temporalmente por 15 minutos al quinto intento fallido, con opción de desbloqueo administrativo directo por el Director.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 14. ¿Se puede descargar un expediente en PDF para juntas con tutores?</div>
+          <div class="qa-answer">Sí. El expediente 360° incluye un generador de PDF con membrete institucional, historial de incidencias y formato oficial de compromisos.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 15. ¿Cuánto tiempo le toma a un maestro pasar lista?</div>
+          <div class="qa-answer">Menos de 45 segundos para un salón de 25 a 35 alumnos gracias a los botones de asistencia rápida y marcado masivo.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 16. ¿Cumple la plataforma con la Ley de Protección de Datos Personales (LFPDPPP)?</div>
+          <div class="qa-answer">Sí. Toda la información médica y teléfonos de emergencia están cifrados y son propiedad exclusiva del plantel escolar.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 17. ¿Cómo se mide el Retorno de Inversión (ROI) del sistema?</div>
+          <div class="qa-answer">El costo operativo se amortiza al evitar la deserción de tan solo un estudiante por ciclo escolar, conservando los subsidios educativos por matrícula activa.</div>
+        </div>
+
+        <div class="qa-card">
+          <div class="qa-question"><span class="material-symbols-outlined">help</span> 18. ¿Cuál es la reducción estimada en el índice de deserción escolar?</div>
+          <div class="qa-answer">Hasta un 65% de reducción en el abandono escolar gracias a la detección temprana durante las primeras 3 semanas de inasistencias o indisciplinas.</div>
+        </div>
+      </section>
+
+      <!-- Sección 6: Cuentas Maestras -->
+      <section id="cuentas" class="doc-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">badge</span>
+          <h2 class="section-title">6. Cuentas de Acceso para Demostración en Vivo</h2>
+        </div>
+        <p>Contraseña global para todas las cuentas de prueba: <code>123456</code></p>
+
+        <div class="cred-grid">
+          <div class="cred-card">
+            <div class="cred-role">Directorio General</div>
+            <div class="cred-email">director@conalep.edu.mx</div>
+            <div class="cred-meta">Roberto Hernandez &bull; BI &amp; Reportes IA</div>
+          </div>
+          <div class="cred-card">
+            <div class="cred-role">Orientación Educativa</div>
+            <div class="cred-email">orientador@conalep.edu.mx</div>
+            <div class="cred-meta">Sofia Ramirez &bull; Radar &amp; Bitácoras</div>
+          </div>
+          <div class="cred-card">
+            <div class="cred-role">Docente Titular</div>
+            <div class="cred-email">docente@conalep.edu.mx</div>
+            <div class="cred-meta">Francisco Gomez &bull; Pase de Lista</div>
+          </div>
+          <div class="cred-card">
+            <div class="cred-role">Estudiante (2º Sem)</div>
+            <div class="cred-email">alumno@conalep.edu.mx</div>
+            <div class="cred-meta">Alejandro Lopez &bull; Saldo 100 Puntos</div>
+          </div>
+          <div class="cred-card">
+            <div class="cred-role">Padre / Tutor Legal</div>
+            <div class="cred-email">padre@conalep.edu.mx</div>
+            <div class="cred-meta">Marta Lopez &bull; Acuse y Citas</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección 7: Hoja de Ruta -->
+      <section id="roadmap" class="doc-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">rocket_launch</span>
+          <h2 class="section-title">7. Hoja de Ruta y Próximos Pasos (Roadmap)</h2>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Fase</th>
+                <th>Objetivo Estratégico</th>
+                <th>Entregable Clave</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Fase 1</strong></td>
+                <td>Consolidación Multi-Rol y RLS</td>
+                <td>Pase de lista con bloqueo y sincronización en tiempo real</td>
+                <td><span class="badge badge-green">Completado</span></td>
+              </tr>
+              <tr>
+                <td><strong>Fase 2</strong></td>
+                <td>Motor Analítico BI y Radar EWMA</td>
+                <td>Diagnósticos automáticos y alertas directas al tutor</td>
+                <td><span class="badge badge-green">Completado</span></td>
+              </tr>
+              <tr>
+                <td><strong>Fase 3</strong></td>
+                <td>Integración WhatsApp / SMS</td>
+                <td>Notificaciones automáticas a tutores sin smartphone</td>
+                <td><span class="badge badge-amber">En Desarrollo</span></td>
+              </tr>
+              <tr>
+                <td><strong>Fase 4</strong></td>
+                <td>Pase de Lista con QR / Torniquete</td>
+                <td>Control de acceso biométrico en entrada y talleres</td>
+                <td><span class="badge badge-amber">Planificado</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>
