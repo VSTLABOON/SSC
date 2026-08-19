@@ -129,9 +129,8 @@ export default function BulkUserImport({ isOpen, onClose, onComplete, plantelId 
     reader.readAsArrayBuffer(file);
   };
 
-  // ── Validación ─────────────────────────────────────────────────────────────
+  // ── Validación y Mapeo Inteligente de Encabezados (Smart Header Matching) ──
   const validarYTransformarFilas = async (rows: any[]) => {
-    // 1. Obtener emails existentes
     let emailsExistentes = new Set<string>();
     try {
       const { data } = await supabase.from('usuarios').select('email').eq('plantel_id', plantelId);
@@ -145,45 +144,120 @@ export default function BulkUserImport({ isOpen, onClose, onComplete, plantelId 
     const nuevosRegistros: RegistroImportacion[] = [];
     const emailsEnArchivo = new Set<string>();
 
+    // Helper para buscar valores tolerando variaciones de encabezado (sin acentos, mayúsculas ni espacios)
+    const findField = (row: any, aliases: string[]): string => {
+      const normalizedKeys = Object.keys(row).map(k => ({
+        original: k,
+        clean: k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
+      }));
+
+      for (const alias of aliases) {
+        const cleanAlias = alias.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+        const match = normalizedKeys.find(k => k.clean === cleanAlias);
+        if (match && row[match.original] !== undefined && String(row[match.original]).trim() !== '') {
+          return String(row[match.original]).trim();
+        }
+      }
+      return '';
+    };
+
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      const fila = i + 2; // +1 para 1-index, +1 por headers
-      
-      const email = String(r['Email'] || '').trim().toLowerCase();
-      const nombre = String(r['Nombre'] || '').trim();
-      const apellido = String(r['Apellido'] || '').trim();
-      let rol = String(r['Rol'] || '').trim().toLowerCase();
-      const matricula = String(r['Matricula'] || '').trim();
+      const fila = i + 2; // +1 para 1-index, +1 por fila de encabezados
 
-      // Inferencia de rol
-      if (!rol && r['Matricula']) rol = 'alumno';
+      const matricula = findField(r, ['matricula', 'no_control', 'control', 'id_alumno', 'folio', 'nocontrol']);
+      let email = findField(r, ['email', 'correo', 'correo_institucional', 'correo_electronico', 'email_institucional']).toLowerCase();
+      let nombre = findField(r, ['nombre', 'nombres', 'nombre_alumno', 'estudiante']);
+      let apellido = findField(r, ['apellido', 'apellidos', 'primer_apellido', 'paterno', 'apellido_paterno']);
+      const segundoApellido = findField(r, ['segundo_apellido', 'materno', 'apellido_materno']);
+      const nombreCompleto = findField(r, ['nombre_completo', 'nombrecompleto', 'alumno_nombre_completo']);
+
+      // 1. Resolver apellidos compuestos o separados
+      if (segundoApellido && apellido) {
+        apellido = `${apellido} ${segundoApellido}`.trim();
+      } else if (!nombre && !apellido && nombreCompleto) {
+        // Descomponer "APELLIDO PATERNO MATERNO NOMBRE" o "NOMBRE APELLIDOS"
+        const parts = nombreCompleto.split(' ').filter(Boolean);
+        if (parts.length >= 3) {
+          apellido = `${parts[0]} ${parts[1]}`;
+          nombre = parts.slice(2).join(' ');
+        } else if (parts.length === 2) {
+          apellido = parts[0];
+          nombre = parts[1];
+        } else {
+          nombre = nombreCompleto;
+          apellido = 'Sin Apellido';
+        }
+      }
+
+      // 2. Inferencia y normalización de Rol
+      let rol = findField(r, ['rol', 'perfil', 'tipo_usuario']).toLowerCase();
+      if (!rol && matricula) rol = 'alumno';
       else if (!rol) rol = 'docente';
 
+      // 3. Autogeneración de email institucional si viene vacío para alumnos con matrícula
+      if (!email && rol === 'alumno' && matricula) {
+        email = `student.${matricula}@conalep.edu.mx`.toLowerCase();
+      }
+
+      // 4. Mapeo de Grupo, Carrera y Semestre
+      const grupo = findField(r, ['grupo', 'salon', 'salon_clase', 'aula', 'seccion', 'clave_grupo']);
+      const carrera = findField(r, ['carrera', 'especialidad', 'carrera_tecnica']);
+      const semestreRaw = findField(r, ['semestre', 'grado', 'periodo_semestral']);
+      const semestre = semestreRaw ? parseInt(semestreRaw, 10) : undefined;
+
+      // 5. Mapeo de Tutor y Contactos
+      let tutorEmail = findField(r, ['email_tutor', 'correo_tutor', 'email_padre', 'correo_padre', 'tutor_email']).toLowerCase();
+      const tutorNombre = findField(r, ['nombre_tutor', 'tutor_nombre', 'tutor', 'padre', 'madre', 'representante']);
+      const tutorApellido = findField(r, ['apellido_tutor', 'tutor_apellido', 'apellidos_tutor']);
+      const telEmergencia = findField(r, ['tel_emergencia', 'telefono', 'telefono_emergencia', 'celular', 'whatsapp', 'tel_tutor', 'telefono_tutor']);
+
+      // Si hay tutor pero no tiene correo, autogenerar identificador sintético para crear su cuenta
+      if (!tutorEmail && matricula && (tutorNombre || telEmergencia)) {
+        tutorEmail = `padre.${matricula}@conalep.edu.mx`.toLowerCase();
+      }
+
       const registro: RegistroImportacion = {
-        fila, email, nombre, apellido, rol,
+        fila,
+        email,
+        nombre,
+        apellido,
+        rol,
         matricula,
-        grupo: String(r['Grupo'] || ''),
-        carrera: String(r['Carrera'] || ''),
-        semestre: r['Semestre'] ? Number(r['Semestre']) : undefined,
-        tutor_email: String(r['Email_Tutor'] || '').trim().toLowerCase(),
-        tutor_nombre: String(r['Nombre_Tutor'] || '').trim(),
-        tutor_apellido: String(r['Apellido_Tutor'] || '').trim(),
-        tel_emergencia: String(r['Tel_Emergencia'] || '').trim(),
+        grupo,
+        carrera,
+        semestre: !isNaN(semestre as number) ? semestre : undefined,
+        tutor_email: tutorEmail || undefined,
+        tutor_nombre: tutorNombre || undefined,
+        tutor_apellido: tutorApellido || undefined,
+        tel_emergencia: telEmergencia || undefined,
         estado: 'valido'
       };
 
       let errores = [];
 
       // Validaciones requeridas
-      if (!email || !nombre || !apellido) errores.push('Faltan campos obligatorios (Email, Nombre, Apellido).');
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errores.push('Formato de email inválido.');
-      if (rol === 'alumno' && !matricula) errores.push('La matrícula es obligatoria para alumnos.');
-      if (!ROLES_VALIDOS.includes(rol)) errores.push('Rol inválido. Debe ser: alumno, docente, orientador, padre.');
+      if (!email || !nombre || !apellido) {
+        errores.push('Faltan campos obligatorios (Email, Nombre, Apellido).');
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errores.push('Formato de correo electrónico inválido.');
+      }
+      if (rol === 'alumno' && !matricula) {
+        errores.push('La matrícula es obligatoria para registrar alumnos.');
+      }
+      if (!ROLES_VALIDOS.includes(rol)) {
+        errores.push(`Rol inválido ("${rol}"). Debe ser: alumno, docente, orientador, padre.`);
+      }
 
-      // Duplicados
+      // Detección de duplicados
       if (email) {
-        if (emailsExistentes.has(email)) errores.push('El correo ya existe en el plantel.');
-        if (emailsEnArchivo.has(email)) errores.push('Correo duplicado en este archivo.');
+        if (emailsExistentes.has(email)) {
+          errores.push('El correo ya existe registrado en este plantel.');
+        }
+        if (emailsEnArchivo.has(email)) {
+          errores.push('Correo duplicado dentro de este mismo archivo.');
+        }
         emailsEnArchivo.add(email);
       }
 
