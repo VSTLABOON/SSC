@@ -32,12 +32,6 @@ export default function TeacherLayout() {
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  function handleMenuToggleClick(event: React.MouseEvent): void {
-    event.stopPropagation();
-    if (window.innerWidth >= 768) return;
-    setIsSidebarOpen(prev => !prev);
-  }
-
   useEffect(() => {
     function handleResize(): void {
       if (window.innerWidth >= 768) {
@@ -152,14 +146,19 @@ export default function TeacherLayout() {
       <main className="tl-main-content">
         <header className="tl-topbar">
           <div className="tl-topbar-left">
-            <button
-              className="tl-menu-toggle"
-              id="tl-menu-toggle"
-              onClick={handleMenuToggleClick}
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <h1 className="tl-topbar-title">Portal de Docencia</h1>
+            <h1 className="tl-topbar-title">
+              {location.pathname === '/maestro/inicio'
+                ? 'Portal de Docencia'
+                : location.pathname === '/maestro/clases'
+                ? 'Mis Grupos Asignados'
+                : location.pathname === '/maestro/asistencia'
+                ? 'Pase de Lista'
+                : location.pathname === '/maestro/reporte'
+                ? 'Generar Reporte'
+                : location.pathname === '/maestro/historial'
+                ? 'Historial de Reportes'
+                : 'Portal de Docencia'}
+            </h1>
           </div>
           <div className="tl-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ThemeToggle />

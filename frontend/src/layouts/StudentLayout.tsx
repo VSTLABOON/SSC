@@ -49,12 +49,6 @@ export default function StudentLayout() {
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  function handleMenuToggleClick(event: React.MouseEvent): void {
-    event.stopPropagation();
-    if (window.innerWidth >= 768) return;
-    setIsSidebarOpen((prev) => !prev);
-  }
-
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
@@ -104,15 +98,7 @@ export default function StudentLayout() {
       <div className="home-content">
         <header className="topbar">
           <div className="topbar-left">
-            <button
-              type="button"
-              className="mobile-menu-btn"
-              aria-label="Abrir menú de navegación"
-              onClick={handleMenuToggleClick}
-            >
-              <Icon name="menu" />
-            </button>
-            <h1 className="topbar-title">CONALEP Gestión Conductual</h1>
+            <h1 className="topbar-title">Portal del Estudiante</h1>
           </div>
           <div className="topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <NotificationCenter />

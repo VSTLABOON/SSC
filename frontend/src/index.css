@@ -886,3 +886,15 @@ table.history-table td {
   background-color: rgba(51, 65, 85, 0.4) !important;
 }
 
+/* Ocultar botones de menú hamburguesa (navegación resuelta mediante BottomNav en móvil) */
+.mobile-menu-btn,
+.tl-menu-toggle,
+.grm-menu-toggle,
+.ida-menu-btn,
+#tl-menu-toggle,
+.sidebar-overlay,
+.tl-sidebar-overlay {
+  display: none !important;
+}
+
+

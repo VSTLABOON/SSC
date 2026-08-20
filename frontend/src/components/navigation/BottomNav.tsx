@@ -39,20 +39,17 @@ export const BottomNav: React.FC = () => {
   } else if (isOrientador) {
     leftItems = [
       { id: 'inicio', label: 'Casos', icon: 'psychology', path: '/orientador/inicio' },
-      { id: 'reporte', label: 'Reporte', icon: 'edit_note', path: '/orientador/reporte' },
     ];
     rightItems = [
+      { id: 'reporte', label: 'Reporte', icon: 'edit_note', path: '/orientador/reporte' },
       { id: 'historial', label: 'Bitácora', icon: 'history', path: '/orientador/historial' },
-      { id: 'perfil', label: 'Perfil', icon: 'account_circle', path: '/orientador/perfil' },
     ];
   } else if (isAdministrador) {
     leftItems = [
       { id: 'usuarios', label: 'Usuarios', icon: 'manage_accounts', path: '/admin/usuarios' },
-      { id: 'importar', label: 'Importar', icon: 'upload_file', path: '/admin/importar' },
     ];
     rightItems = [
-      { id: 'perfil', label: 'Perfil', icon: 'account_circle', path: '/admin/perfil' },
-      { id: 'gestion', label: 'Cuentas', icon: 'group', path: '/admin/usuarios' },
+      { id: 'importar', label: 'Importar', icon: 'upload_file', path: '/admin/importar' },
     ];
   } else if (isAlumno) {
     leftItems = [
@@ -70,17 +67,16 @@ export const BottomNav: React.FC = () => {
     ];
     rightItems = [
       { id: 'historial', label: 'Historial', icon: 'history', path: '/padre/historial' },
-      { id: 'perfil', label: 'Perfil', icon: 'person', path: '/padre/perfil' },
+      { id: 'perfil', label: 'Expediente', icon: 'folder_shared', path: '/padre/perfil' },
     ];
   } else {
     // Directivo
     leftItems = [
       { id: 'inicio', label: 'BI Analytics', icon: 'analytics', path: '/director/inicio' },
-      { id: 'reporte', label: 'Reporte', icon: 'assessment', path: '/director/reporte' },
     ];
     rightItems = [
+      { id: 'reporte', label: 'Reporte', icon: 'assessment', path: '/director/reporte' },
       { id: 'historial', label: 'Auditoría', icon: 'history', path: '/director/historial' },
-      { id: 'perfil', label: 'Perfil', icon: 'account_circle', path: '/director/perfil' },
     ];
   }
 
@@ -120,6 +116,10 @@ export const BottomNav: React.FC = () => {
                   <span className="material-symbols-outlined fab-action-icon">add_task</span>
                   Generar Reporte Conductual
                 </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/maestro/historial')}>
+                  <span className="material-symbols-outlined fab-action-icon">history</span>
+                  Historial de Reportes
+                </button>
               </>
             )}
 
@@ -142,13 +142,30 @@ export const BottomNav: React.FC = () => {
 
             {isDirectivo && (
               <>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/inicio')}>
+                  <span className="material-symbols-outlined fab-action-icon">analytics</span>
+                  Tablero BI Analytics
+                </button>
                 <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/reporte')}>
                   <span className="material-symbols-outlined fab-action-icon">add_task</span>
-                  Generar Reporte Conductual
+                  Generar Reporte Institucional
                 </button>
-                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/usuarios')}>
-                  <span className="material-symbols-outlined fab-action-icon">person_add</span>
-                  Gestión de Usuarios
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/director/historial')}>
+                  <span className="material-symbols-outlined fab-action-icon">history</span>
+                  Auditoría de Incidencias
+                </button>
+              </>
+            )}
+
+            {isAdministrador && (
+              <>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/admin/usuarios')}>
+                  <span className="material-symbols-outlined fab-action-icon">manage_accounts</span>
+                  Directorio de Usuarios
+                </button>
+                <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/admin/importar')}>
+                  <span className="material-symbols-outlined fab-action-icon">upload_file</span>
+                  Importación Masiva
                 </button>
               </>
             )}
@@ -168,8 +185,8 @@ export const BottomNav: React.FC = () => {
                   Consultar Horario
                 </button>
                 <button type="button" className="fab-action-btn" onClick={() => handleNavigate('/padre/perfil')}>
-                  <span className="material-symbols-outlined fab-action-icon">person</span>
-                  Perfil del Tutelado
+                  <span className="material-symbols-outlined fab-action-icon">folder_shared</span>
+                  Expediente del Tutelado
                 </button>
               </>
             )}

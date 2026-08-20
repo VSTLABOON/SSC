@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../pages/DirectivosYAsesores/InicioDA.css';
@@ -25,16 +25,9 @@ export default function AdminLayout() {
   const navItems: NavItem[] = [
     { id: 'usuarios', icon: 'manage_accounts', label: 'Gestión de Usuarios', path: '/admin/usuarios' },
     { id: 'importar', icon: 'upload_file',     label: 'Importación Masiva',  path: '/admin/importar' },
-    { id: 'perfil',   icon: 'account_circle',   label: 'Mi Perfil',           path: '/admin/perfil' },
   ];
 
   const closeSidebar = () => setIsSidebarOpen(false);
-
-  function handleMenuToggleClick(event: React.MouseEvent): void {
-    event.stopPropagation();
-    if (window.innerWidth >= 768) return;
-    setIsSidebarOpen(prev => !prev);
-  }
 
   useEffect(() => {
     function handleResize(): void {
@@ -140,14 +133,11 @@ export default function AdminLayout() {
       <div className="ida-main">
         <header className="grm-topbar">
           <div className="grm-topbar-left">
-            <button
-              className="grm-menu-toggle"
-              aria-label="Abrir menú"
-              onClick={handleMenuToggleClick}
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <h1 className="grm-topbar-title">Administración & Control Escolar</h1>
+            <h1 className="grm-topbar-title">
+              {location.pathname === '/admin/importar'
+                ? 'Importación Masiva de Usuarios'
+                : 'Gestión y Cuentas de Usuarios'}
+            </h1>
           </div>
 
           <div className="grm-topbar-right">

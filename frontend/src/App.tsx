@@ -12,7 +12,6 @@ import AdminLayout from './layouts/AdminLayout';
 
 import Login from './pages/Login';
 import PendienteActivacion from './pages/PendienteActivacion';
-import Profile from './pages/Profile';
 
 // Dynamic lazy imports para code-splitting por rol (Escalabilidad Modular)
 // Rol: alumno
@@ -123,7 +122,6 @@ export default function App() {
             <Route path="asistencia" element={<PaseLista />} />
             <Route path="reporte" element={<GenerarReporteDocente />} />
             <Route path="historial" element={<HistorialDocente />} />
-            <Route path="perfil" element={<Profile />} />
           </Route>
 
           {/* 4. Portal exclusivo: ORIENTADOR */}
@@ -133,7 +131,6 @@ export default function App() {
             <Route path="inicio" element={<InicioOrientador />} />
             <Route path="reporte" element={<GenerarReporteOrientador />} />
             <Route path="historial" element={<HistorialOrientador />} />
-            <Route path="perfil" element={<Profile />} />
           </Route>
 
           {/* 5. Portal exclusivo: DIRECTIVO (Gobernanza y BI Analytics) */}
@@ -143,7 +140,6 @@ export default function App() {
             <Route path="inicio" element={<InicioDirectivo />} />
             <Route path="reporte" element={<GenerarReporteDirectivo />} />
             <Route path="historial" element={<HistorialDirectivo />} />
-            <Route path="perfil" element={<Profile />} />
           </Route>
 
           {/* 6. Portal exclusivo: ADMINISTRADOR (Control Escolar y TI) */}
@@ -153,7 +149,6 @@ export default function App() {
             <Route index element={<Navigate to="/admin/usuarios" replace />} />
             <Route path="usuarios" element={<GestionUsuariosAdmin />} />
             <Route path="importar" element={<ImportarUsuariosAdmin />} />
-            <Route path="perfil" element={<Profile />} />
           </Route>
 
           <Route path="*" element={<DefaultRouteRedirect />} />

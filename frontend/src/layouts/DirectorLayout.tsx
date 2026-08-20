@@ -31,16 +31,9 @@ export default function DirectorLayout() {
     { id: 'inicio',    icon: 'analytics',       label: 'BI & Analítica',                 path: '/director/inicio' },
     { id: 'reporte',  icon: 'assessment',      label: 'Generar Reporte Institucional',  path: '/director/reporte' },
     { id: 'historial',icon: 'history',         label: 'Auditoría de Incidencias',       path: '/director/historial' },
-    { id: 'perfil',   icon: 'account_circle',   label: 'Mi Perfil',                      path: '/director/perfil' },
   ];
 
   const closeSidebar = () => setIsSidebarOpen(false);
-
-  function handleMenuToggleClick(event: React.MouseEvent): void {
-    event.stopPropagation();
-    if (window.innerWidth >= 768) return;
-    setIsSidebarOpen(prev => !prev);
-  }
 
   useEffect(() => {
     function handleResize(): void {
@@ -153,18 +146,13 @@ export default function DirectorLayout() {
       <main className="ida-main">
         <header className="grm-topbar">
           <div className="grm-topbar-left">
-            <button className="grm-menu-toggle" onClick={handleMenuToggleClick}>
-              <span className="material-symbols-outlined">menu</span>
-            </button>
             <h1 className="grm-topbar-title">
               {location.pathname === '/director/inicio'
-                ? 'Inicio'
+                ? 'Tablero BI & Analítica'
                 : location.pathname === '/director/reporte'
-                ? 'Generar Reporte'
+                ? 'Generar Reporte Institucional'
                 : location.pathname === '/director/historial'
-                ? 'Historial de Reportes'
-                : location.pathname === '/director/usuarios'
-                ? 'Gestión de Usuarios'
+                ? 'Auditoría de Incidencias'
                 : 'Panel Directivo'}
             </h1>
           </div>

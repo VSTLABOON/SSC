@@ -16,9 +16,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'home', icon: 'home', label: 'Inicio', path: '/padre/inicio' },
-  { id: 'profile', icon: 'person', label: 'Perfil Tutelado', path: '/padre/perfil' },
   { id: 'schedule', icon: 'schedule', label: 'Horario Tutelado', path: '/padre/horario' },
   { id: 'history', icon: 'calendar_today', label: 'Historial Conductual', path: '/padre/historial' },
+  { id: 'profile', icon: 'folder_shared', label: 'Expediente Tutelado', path: '/padre/perfil' },
 ];
 
 const Icon = ({ name, className = '', style }: { name: string; className?: string; style?: React.CSSProperties }) => (
@@ -104,12 +104,6 @@ export default function ParentLayout() {
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  function handleMenuToggleClick(event: React.MouseEvent): void {
-    event.stopPropagation();
-    if (window.innerWidth >= 768) return;
-    setIsSidebarOpen(prev => !prev);
-  }
-
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
@@ -159,14 +153,6 @@ export default function ParentLayout() {
       <div className="home-content">
         <header className="topbar">
           <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button
-              type="button"
-              className="mobile-menu-btn"
-              aria-label="Abrir menú de navegación"
-              onClick={handleMenuToggleClick}
-            >
-              <Icon name="menu" />
-            </button>
             <h1 className="topbar-title">Portal de Tutores Legales</h1>
           </div>
 

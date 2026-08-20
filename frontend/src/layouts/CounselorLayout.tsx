@@ -25,16 +25,9 @@ export default function CounselorLayout() {
     { id: 'inicio',    icon: 'psychology',     label: 'Atención & Casos',        path: '/orientador/inicio' },
     { id: 'reporte',  icon: 'edit_note',      label: 'Acta de Intervención',   path: '/orientador/reporte' },
     { id: 'historial',icon: 'history',        label: 'Historial de Expedientes',path: '/orientador/historial' },
-    { id: 'perfil',   icon: 'account_circle',  label: 'Mi Perfil',               path: '/orientador/perfil' },
   ];
 
   const closeSidebar = () => setIsSidebarOpen(false);
-
-  function handleMenuToggleClick(event: React.MouseEvent): void {
-    event.stopPropagation();
-    if (window.innerWidth >= 768) return;
-    setIsSidebarOpen(prev => !prev);
-  }
 
   useEffect(() => {
     function handleResize(): void {
@@ -134,9 +127,6 @@ export default function CounselorLayout() {
       <main className="ida-main">
         <header className="grm-topbar">
           <div className="grm-topbar-left">
-            <button className="grm-menu-toggle" onClick={handleMenuToggleClick}>
-              <span className="material-symbols-outlined">menu</span>
-            </button>
             <h1 className="grm-topbar-title">
               {location.pathname === '/orientador/inicio'
                 ? 'Radar Conductual BI'
