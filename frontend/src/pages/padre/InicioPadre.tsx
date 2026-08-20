@@ -521,23 +521,38 @@ export default function InicioPadre() {
           </section>
 
           {/* Hero Card del Tutor */}
-          <section className="hero-card">
-            <div className="hero-card__badge">
-              <Icon name="family_restroom" className="hero-card__badge-icon" />
-              <span>Portal de Tutores Legales • CONALEP Puebla I</span>
-            </div>
-            <h2 className="hero-card__title">Bienvenido(a), {nombre || 'Tutor(a)'}</h2>
-            <p className="hero-card__subtitle">
-              Monitoreando a: <strong>{nombreHijo}</strong> (Matrícula: {alumno?.matricula || '---'} • Grupo: {grupoNombre})
-            </p>
-            <div className="hero-stats">
-              <div className="hero-stat-item">
-                <span className="hero-stat-value">{incidencias.length}</span>
-                <span className="hero-stat-label">Reportes en el Periodo</span>
+          <section className="hero-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: '14px', borderRadius: '18px', background: 'var(--color-bg-card, #ffffff)', border: '1px solid var(--color-border-subtle, #e2e8f0)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div className="hero-card__badge" style={{ margin: 0, padding: '4px 10px', fontSize: '11px', maxWidth: '100%' }}>
+                <Icon name="family_restroom" className="hero-card__badge-icon" style={{ fontSize: '14px' }} />
+                <span>Portal de Tutores • CONALEP Puebla I</span>
               </div>
-              <div className="hero-stat-item">
-                <span className="hero-stat-value">{asistenciaPorcentaje}%</span>
-                <span className="hero-stat-label">Índice de Asistencia</span>
+            </div>
+
+            <div>
+              <h2 className="hero-card__title" style={{ fontSize: '1.45rem', fontWeight: 800, margin: '0 0 6px', color: 'var(--color-text-main, #0f172a)' }}>
+                Bienvenido(a), {nombre || 'Tutor(a)'}
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', fontSize: '13px', color: 'var(--color-text-sub, #64748b)', lineHeight: 1.4 }}>
+                <span>Monitoreando a:</span>
+                <span style={{ fontWeight: 700, color: 'var(--color-text-main, #0f172a)', background: 'var(--color-bg-app, #f1f5f9)', padding: '2px 8px', borderRadius: '6px' }}>
+                  {nombreHijo}
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #94a3b8)' }}>• Matrícula: {alumno?.matricula || '---'}</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#204785', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px' }}>
+                  {grupoNombre}
+                </span>
+              </div>
+            </div>
+
+            <div className="hero-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginTop: '2px' }}>
+              <div className="hero-stat-item" style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--color-bg-app, #f8fafc)', border: '1px solid var(--color-border-subtle, #e2e8f0)' }}>
+                <span className="hero-stat-value" style={{ fontSize: '22px', fontWeight: 800, color: '#204785' }}>{incidencias.length}</span>
+                <span className="hero-stat-label" style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-sub, #64748b)' }}>Reportes en el Periodo</span>
+              </div>
+              <div className="hero-stat-item" style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--color-bg-app, #f8fafc)', border: '1px solid var(--color-border-subtle, #e2e8f0)' }}>
+                <span className="hero-stat-value" style={{ fontSize: '22px', fontWeight: 800, color: '#00492f' }}>{asistenciaPorcentaje}%</span>
+                <span className="hero-stat-label" style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-sub, #64748b)' }}>Índice de Asistencia</span>
               </div>
             </div>
           </section>
@@ -546,20 +561,51 @@ export default function InicioPadre() {
 
       {/* Avisos para Padres de Familia */}
       {(activeTab === 'todos' || activeTab === 'avisos') && avisos.length > 0 && (
-        <section style={{ marginBottom: '24px', background: 'var(--color-bg-card, #ffffff)', padding: '20px', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #e2e8f0)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-main, #0f172a)' }}>
-            <Icon name="campaign" style={{ color: '#204785' }} />
-            Comunicados Oficiales para Padres y Tutores ({avisos.length})
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {avisos.map(a => (
-              <div key={a.id} style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '14px 16px', borderRadius: '12px', border: '1px solid var(--color-border-subtle, #f1f5f9)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>{a.titulo}</h4>
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-sub, #94a3b8)' }}>{formatDate(a.fecha_publicacion)}</span>
-                </div>
-                <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--color-text-main, #334155)', whiteSpace: 'pre-line' }}>{a.contenido}</p>
+        <section style={{ marginBottom: '24px', background: 'var(--color-bg-card, #ffffff)', padding: '22px 20px', borderRadius: '18px', border: '1px solid var(--color-border-subtle, #e2e8f0)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--color-border-subtle, #f1f5f9)', paddingBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#204785' }}>
+                <Icon name="campaign" style={{ fontSize: '22px' }} />
               </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)' }}>
+                  Comunicados Oficiales
+                </h3>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
+                  Avisos y circulares dirigidas a tutores y padres de familia
+                </p>
+              </div>
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 800, background: '#eff6ff', color: '#204785', border: '1px solid #bfdbfe', padding: '3px 10px', borderRadius: '9999px' }}>
+              {avisos.length} {avisos.length === 1 ? 'comunicado' : 'comunicados'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {avisos.map(a => (
+              <article key={a.id} style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '16px 18px', borderRadius: '14px', border: '1px solid var(--color-border-subtle, #e2e8f0)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* Fila Superior: Badge + Fecha */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: '#0369a1', background: '#e0f2fe', padding: '2px 8px', borderRadius: '6px' }}>
+                    <Icon name="notifications_active" style={{ fontSize: '13px' }} />
+                    Aviso Institucional
+                  </span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-sub, #64748b)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Icon name="calendar_today" style={{ fontSize: '13px' }} />
+                    {formatDate(a.fecha_publicacion)}
+                  </span>
+                </div>
+
+                {/* Título de ancho completo */}
+                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, lineHeight: 1.35, color: 'var(--color-text-main, #0f172a)' }}>
+                  {a.titulo}
+                </h4>
+
+                {/* Contenido con legibilidad y aire visual */}
+                <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.55, color: 'var(--color-text-main, #334155)', whiteSpace: 'pre-line' }}>
+                  {a.contenido}
+                </p>
+              </article>
             ))}
           </div>
         </section>

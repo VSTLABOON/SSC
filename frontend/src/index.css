@@ -711,3 +711,178 @@ table.history-table td {
   color: #f87171 !important;
   border: 1px solid rgba(248, 113, 113, 0.3) !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ESTANDARIZACIÓN GLOBAL DE TABLAS EN TODOS LOS ROLES DEL SISTEMA (SSC)
+   Garantiza idéntico tamaño, padding, bordes, tipografía y scrolls
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Contenedores de Tarjeta de Tabla */
+.table-section,
+.hrm-table-container,
+.grm-table-container,
+.gu-card,
+.bi-risk-card,
+.attendance-card,
+.bui-table-container,
+.table-container {
+  background: var(--color-bg-card, #ffffff) !important;
+  border: 1px solid var(--color-border-subtle, #e2e8f0) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  margin-bottom: 24px;
+}
+
+/* Cabecera superior de la tabla con título y filtros */
+.table-section-header,
+.grm-table-header,
+.gu-header-actions,
+.attendance-header {
+  padding: 18px 22px !important;
+  background: var(--color-bg-card, #ffffff) !important;
+  border-bottom: 1px solid var(--color-border-subtle, #e2e8f0) !important;
+}
+
+/* Scroll Wrapper Unificado */
+.table-wrapper,
+.hrm-table-scroll,
+.grm-table-scroll,
+.gu-table-wrap,
+.bi-table-wrap,
+.attendance-scroll,
+.bui-table-scroll {
+  width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin;
+}
+
+/* Estructura Base de Todas las Tablas */
+.reports-table,
+.hrm-table,
+.grm-table,
+.gu-table,
+.bi-table,
+.bui-table,
+.attendance-table,
+.app-table {
+  width: 100% !important;
+  min-width: 720px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  text-align: left !important;
+  font-family: var(--sans) !important;
+}
+
+/* Encabezados de Columna (th) - Idéntica altura, padding y tipografía */
+.reports-table th,
+.hrm-table th,
+.grm-table th,
+.gu-table th,
+.bi-table th,
+.bui-table th,
+.attendance-table th,
+.app-table th {
+  padding: 13px 18px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--color-text-sub, #64748b) !important;
+  background-color: var(--color-bg-app, #f8fafc) !important;
+  border-bottom: 1px solid var(--color-border-subtle, #e2e8f0) !important;
+  border-top: none !important;
+  white-space: nowrap !important;
+  line-height: 1.3 !important;
+}
+
+/* Celdas de Datos (td) - Idéntica altura, padding y alineación vertical */
+.reports-table td,
+.hrm-table td,
+.grm-table td,
+.gu-table td,
+.bi-table td,
+.bui-table td,
+.attendance-table td,
+.app-table td {
+  padding: 13px 18px !important;
+  font-size: 13.5px !important;
+  color: var(--color-text-main, #1e293b) !important;
+  border-bottom: 1px solid var(--color-border-subtle, #f1f5f9) !important;
+  vertical-align: middle !important;
+  line-height: 1.45 !important;
+}
+
+/* Fila de Hover Estandarizada */
+.reports-table tbody tr,
+.hrm-table tbody tr,
+.grm-table tbody tr,
+.gu-table tbody tr,
+.bi-table tbody tr,
+.bui-table tbody tr,
+.attendance-table tbody tr,
+.app-table tbody tr {
+  transition: background-color 0.15s ease !important;
+}
+
+.reports-table tbody tr:hover,
+.hrm-table tbody tr:hover,
+.grm-table tbody tr:hover,
+.gu-table tbody tr:hover,
+.bi-table tbody tr:hover,
+.bui-table tbody tr:hover,
+.attendance-table tbody tr:hover,
+.app-table tbody tr:hover {
+  background-color: var(--color-surface-low, #f8fafc) !important;
+}
+
+/* Estado de celdas vacías */
+.hrm-td-empty,
+.grm-td-empty,
+.gu-empty-row,
+.reports-table-empty {
+  text-align: center !important;
+  padding: 48px 20px !important;
+  color: var(--color-text-sub, #64748b) !important;
+  font-size: 14px !important;
+}
+
+/* Modo Oscuro para Tablas Estandarizadas */
+[data-theme='dark'] .reports-table th,
+[data-theme='dark'] .hrm-table th,
+[data-theme='dark'] .grm-table th,
+[data-theme='dark'] .gu-table th,
+[data-theme='dark'] .bi-table th,
+[data-theme='dark'] .bui-table th,
+[data-theme='dark'] .attendance-table th,
+[data-theme='dark'] .app-table th {
+  background-color: #0f172a !important;
+  border-bottom-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .reports-table td,
+[data-theme='dark'] .hrm-table td,
+[data-theme='dark'] .grm-table td,
+[data-theme='dark'] .gu-table td,
+[data-theme='dark'] .bi-table td,
+[data-theme='dark'] .bui-table td,
+[data-theme='dark'] .attendance-table td,
+[data-theme='dark'] .app-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .reports-table tbody tr:hover,
+[data-theme='dark'] .hrm-table tbody tr:hover,
+[data-theme='dark'] .grm-table tbody tr:hover,
+[data-theme='dark'] .gu-table tbody tr:hover,
+[data-theme='dark'] .bi-table tbody tr:hover,
+[data-theme='dark'] .bui-table tbody tr:hover,
+[data-theme='dark'] .attendance-table tbody tr:hover,
+[data-theme='dark'] .app-table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.4) !important;
+}
+
