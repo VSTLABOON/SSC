@@ -1133,3 +1133,279 @@ body.no-scroll {
   margin: 0;
   font-size: 12px;
 }
+
+/* ===========================================================================
+   Nuevos Estilos para el Dashboard del Alumno / Tutor (Responsivo y Jerarquía)
+   =========================================================================== */
+
+.home-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 96px; /* Evita que la barra de navegación móvil tape contenido */
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .home-container {
+    padding: 24px 32px 64px;
+  }
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  width: 100%;
+}
+
+@media (min-width: 840px) {
+  .home-grid {
+    grid-template-columns: 1.1fr 1fr;
+  }
+}
+
+/* Hero Card del Alumno */
+.hero-card {
+  background: var(--color-bg-card, #ffffff);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.hero-card__badge-icon {
+  font-size: 14px;
+}
+
+.hero-card__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text-main, #0f172a);
+  letter-spacing: -0.02em;
+}
+
+.hero-card__subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-sub, #64748b);
+  line-height: 1.5;
+}
+
+.hero-card__subtitle strong {
+  color: var(--color-text-main, #1e293b);
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.hero-stat-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #00492f;
+  line-height: 1;
+}
+
+.hero-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* Semaphore Panel Enhancements */
+.semaphore-panel {
+  padding: 20px 24px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.semaphore-visual {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.semaphore-badge {
+  display: flex;
+  flex-direction: column;
+}
+
+.semaphore-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.45;
+}
+
+/* ── Activity Columns & Incidents Card ─────────────────────────────────────── */
+.incidents-card {
+  background: var(--color-bg-card, #ffffff);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.activity-col {
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activity-col--positive {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.activity-col--negative {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.activity-card-item {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.activity-col--positive .activity-card-item {
+  border: 1px solid #dcfce7;
+}
+
+.activity-col--negative .activity-card-item {
+  border: 1px solid #fde68a;
+}
+
+.activity-card-desc {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.activity-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* ── Reglas de Modo Oscuro para Home (Alumno / Padre) ─────────────────────── */
+[data-theme='dark'] .hero-card,
+[data-theme='dark'] .incidents-card,
+[data-theme='dark'] .card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .hero-stat-item {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .hero-stat-value {
+  color: #34d399 !important;
+}
+
+[data-theme='dark'] .hero-stat-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .hero-card__title {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .hero-card__subtitle {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .hero-card__subtitle strong {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .semaphore-desc {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .semaphore-panel--verde {
+  background-color: rgba(22, 163, 74, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+[data-theme='dark'] .semaphore-panel--naranja {
+  background-color: rgba(217, 119, 6, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme='dark'] .semaphore-panel--rojo {
+  background-color: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme='dark'] .activity-col--positive {
+  background-color: rgba(22, 101, 52, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.25) !important;
+}
+
+[data-theme='dark'] .activity-col--negative {
+  background-color: rgba(146, 64, 14, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+[data-theme='dark'] .activity-card-item {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .activity-card-desc {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .activity-card-meta {
+  color: #94a3b8 !important;
+}

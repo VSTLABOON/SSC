@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { getPerfilAlumno } from '../../services/alumnos';
 import { getIncidenciasDelAlumno } from '../../services/incidencias';
-import { exportElementToPDF } from '../../services/pdfExportService';
+import { exportFichaConductualAlumnoPDF } from '../../services/pdfExportService';
 import { SolicitarCitaModal, type CitaRecord } from '../../components/padre/SolicitarCitaModal';
 import '../Home.css';
 
@@ -34,7 +34,7 @@ const SEMAPHORE_THEME: Record<
     labelClass: 'semaphore-label semaphore-label--verde',
     sublabelClass: 'semaphore-sublabel semaphore-sublabel--verde',
     label: 'Verde',
-    desc: 'Su hijo(a) mantiene un buen desempeño conductual y asistencia regular.',
+    desc: 'Buen desempeño: El estudiante mantiene una trayectoria conductual y académica óptima (90 a 100 pts).',
   },
   naranja: {
     icon: 'warning',
@@ -43,7 +43,7 @@ const SEMAPHORE_THEME: Record<
     labelClass: 'semaphore-label semaphore-label--naranja',
     sublabelClass: 'semaphore-sublabel semaphore-sublabel--naranja',
     label: 'Naranja',
-    desc: 'Atención preventiva: Su hijo(a) presenta incidencias acumuladas o faltas en el periodo.',
+    desc: 'Atención preventiva: Se registran incidencias o retardos acumulados (70 a 89 pts).',
   },
   rojo: {
     icon: 'error',
@@ -52,7 +52,7 @@ const SEMAPHORE_THEME: Record<
     labelClass: 'semaphore-label semaphore-label--rojo',
     sublabelClass: 'semaphore-sublabel semaphore-sublabel--rojo',
     label: 'Rojo',
-    desc: 'Atención prioritaria: Se requiere comunicación inmediata con Orientación Educativa por faltas o reportes graves.',
+    desc: 'Atención prioritaria: Saldo crítico de salud conductual (menor a 70 pts) o acumulación de reportes disciplinarios.',
   },
 };
 
@@ -231,20 +231,30 @@ export default function InicioPadre() {
   }, [selectedHijoId, loadDataForChild]);
 
   const handleExportPDF = async () => {
-    if (!pageRef.current) return;
     setIsExporting(true);
     try {
       const userObj = alumno?.usuarios as { nombre?: string; apellido?: string } | undefined;
-      const nombreAlumno = userObj?.nombre ? `${userObj.nombre} ${userObj.apellido || ''}` : 'Alumno';
-      await exportElementToPDF(pageRef.current, {
-        title: `Ficha Tutelar - ${nombreAlumno}`,
-        filename: `Ficha_Tutor_${alumno?.matricula || 'Alumno'}.pdf`,
-        plantelNombre: 'CONALEP Plantel Puebla I',
-        periodoNombre: 'Semestre A-2026',
+      const nombreAlumno = userObj?.nombre ? `${userObj.nombre} ${userObj.apellido || ''}`.trim() : 'Estudiante Tutelado';
+      const grupoObj = alumno?.grupos as { nombre?: string } | undefined;
+      const puntos = alumno?.puntos_totales ?? 100;
+
+      await exportFichaConductualAlumnoPDF({
+        nombreCompleto: nombreAlumno,
+        matricula: alumno?.matricula || '---',
+        grupoNombre: grupoObj?.nombre || 'Grupo Asignado',
+        puntosTotales: puntos,
+        asistenciaPorcentaje,
+        incidencias: incidencias.map(i => ({
+          created_at: i.created_at,
+          descripcion: i.descripcion || '',
+          lugar: i.lugar,
+          impacto_puntos: i.impacto_puntos,
+          categoria_nombre: i.categorias_incidencia?.nombre,
+        })),
         generadoPor: `Tutor Legal: ${nombre || 'Padre de Familia'}`,
       });
     } catch (err) {
-      console.error('Error al exportar PDF:', err);
+      console.error('Error al exportar Ficha Tutelar PDF:', err);
     } finally {
       setIsExporting(false);
     }
@@ -253,7 +263,9 @@ export default function InicioPadre() {
   const [activeTab, setActiveTab] = useState<'todos' | 'resumen' | 'reportes' | 'citas' | 'avisos'>('todos');
   const [incFilter, setIncFilter] = useState<'all' | 'verde' | 'naranja' | 'rojo'>('all');
 
-  const semaforoKey = (alumno?.nivel_semaforo || 'verde').toLowerCase();
+  const puntosTotales = alumno?.puntos_totales ?? 100;
+  // Semáforo dinámico calculado con base en los puntos reales
+  const semaforoKey = puntosTotales < 70 ? 'rojo' : puntosTotales < 90 ? 'naranja' : 'verde';
   const semTheme = SEMAPHORE_THEME[semaforoKey] || SEMAPHORE_THEME.verde;
   const userObj = alumno?.usuarios as { nombre?: string; apellido?: string } | undefined;
   const grupoObj = alumno?.grupos as { nombre?: string } | undefined;
@@ -634,8 +646,8 @@ export default function InicioPadre() {
             
             {/* COLUMNA 1: ACTIVIDAD POSITIVA (+ Puntos) */}
             {(incFilter === 'all' || incFilter === 'verde') && (
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #bbf7d0', paddingBottom: '10px' }}>
+              <div className="activity-col activity-col--positive">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid currentColor', opacity: 0.9, paddingBottom: '10px' }}>
                   <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Icon name="workspace_premium" style={{ color: '#166534' }} />
                     Méritos y Reconocimientos
@@ -653,7 +665,7 @@ export default function InicioPadre() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {incidencias.filter(i => (i.categorias_incidencia?.color_semaforo === 'verde' || i.impacto_puntos > 0)).map((inc) => (
-                      <article key={inc.id} style={{ background: '#ffffff', border: '1px solid #dcfce7', borderRadius: '10px', padding: '12px 14px', boxShadow: '0 1px 4px rgba(22, 101, 52, 0.05)' }}>
+                      <article key={inc.id} className="activity-card-item">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px' }}>
                             {inc.categorias_incidencia?.nombre || 'Mérito Escolar'}
@@ -662,8 +674,8 @@ export default function InicioPadre() {
                             +{inc.impacto_puntos} pts
                           </span>
                         </div>
-                        {inc.descripcion && <p style={{ margin: '4px 0', fontSize: '13px', color: '#334155' }}>{inc.descripcion}</p>}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                        {inc.descripcion && <p className="activity-card-desc">{inc.descripcion}</p>}
+                        <div className="activity-card-meta">
                           <span>{formatDate(inc.created_at)}</span>
                           {inc.lugar && <span>{inc.lugar}</span>}
                         </div>
@@ -676,8 +688,8 @@ export default function InicioPadre() {
 
             {/* COLUMNA 2: ACTIVIDAD PREVENTIVA Y REPORTES (- Puntos) */}
             {(incFilter === 'all' || incFilter === 'naranja' || incFilter === 'rojo') && (
-              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #fde68a', paddingBottom: '10px' }}>
+              <div className="activity-col activity-col--negative">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid currentColor', opacity: 0.9, paddingBottom: '10px' }}>
                   <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Icon name="warning" style={{ color: '#b45309' }} />
                     Observaciones y Reportes de Conducta
@@ -697,7 +709,7 @@ export default function InicioPadre() {
                     {incidencias.filter(i => (i.impacto_puntos <= 0 && i.categorias_incidencia?.color_semaforo !== 'verde')).map((inc) => {
                       const isCritical = inc.impacto_puntos <= -15 || inc.categorias_incidencia?.color_semaforo === 'rojo';
                       return (
-                        <article key={inc.id} style={{ background: '#ffffff', border: isCritical ? '1px solid #fecaca' : '1px solid #fde68a', borderRadius: '10px', padding: '12px 14px', boxShadow: '0 1px 4px rgba(146, 64, 14, 0.05)' }}>
+                        <article key={inc.id} className="activity-card-item" style={{ borderLeft: isCritical ? '3px solid #ef4444' : '3px solid #f59e0b' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
                             <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: isCritical ? '#fee2e2' : '#fef3c7', color: isCritical ? '#991b1b' : '#b45309', padding: '2px 8px', borderRadius: '4px' }}>
                               {inc.categorias_incidencia?.nombre || 'Observación de Conducta'}
@@ -706,8 +718,8 @@ export default function InicioPadre() {
                               {inc.impacto_puntos} pts
                             </span>
                           </div>
-                          {inc.descripcion && <p style={{ margin: '4px 0', fontSize: '13px', color: '#334155' }}>{inc.descripcion}</p>}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                          {inc.descripcion && <p className="activity-card-desc">{inc.descripcion}</p>}
+                          <div className="activity-card-meta">
                             <span>{formatDate(inc.created_at)}</span>
                             {inc.lugar && <span>{inc.lugar}</span>}
                           </div>

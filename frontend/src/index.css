@@ -526,3 +526,113 @@ table.history-table td {
   padding: 12px 16px !important;
   font-size: 13px !important;
 }
+
+/* ===========================================================================
+   SISTEMA UNIVERSAL DE MITIGACIÓN DE MODO OSCURO (TODOS LOS PANELES)
+   =========================================================================== */
+
+/* Inputs, Selects y Textareas en Modo Oscuro */
+[data-theme='dark'] input:not([type='checkbox']):not([type='radio']),
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder {
+  color: #64748b !important;
+}
+
+[data-theme='dark'] input:focus,
+[data-theme='dark'] select:focus,
+[data-theme='dark'] textarea:focus {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25) !important;
+}
+
+/* Modales y Cuadros de Diálogo en Modo Oscuro */
+[data-theme='dark'] .modal-content,
+[data-theme='dark'] .modal-box,
+[data-theme='dark'] .gu-modal,
+[data-theme='dark'] .bui-modal,
+[data-theme='dark'] .grm-modal-box,
+[data-theme='dark'] .app-modal-box {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .modal-header,
+[data-theme='dark'] .grm-modal-header,
+[data-theme='dark'] .gu-modal-header {
+  background-color: #1e293b !important;
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .modal-footer,
+[data-theme='dark'] .grm-modal-footer,
+[data-theme='dark'] .gu-modal-footer {
+  background-color: #0f172a !important;
+  border-top-color: #334155 !important;
+}
+
+/* Píldoras de Navegación y Filtros Inactivos en Modo Oscuro */
+[data-theme='dark'] .filter-pill:not(.filter-pill--active),
+[data-theme='dark'] .grm-tab-btn:not(.grm-tab-btn--active),
+[data-theme='dark'] .grm-location-chip:not(.grm-location-chip--selected) {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .filter-pill:not(.filter-pill--active):hover,
+[data-theme='dark'] .grm-tab-btn:not(.grm-tab-btn--active):hover,
+[data-theme='dark'] .grm-location-chip:not(.grm-location-chip--selected):hover {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Tarjetas y Contenedores en Todos los Paneles */
+[data-theme='dark'] .gu-card,
+[data-theme='dark'] .attendance-card,
+[data-theme='dark'] .attendance-summary-card,
+[data-theme='dark'] .student-expediente-card,
+[data-theme='dark'] .history-table-card,
+[data-theme='dark'] .history-filters-card,
+[data-theme='dark'] .profile-card,
+[data-theme='dark'] .schedule-grid-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Filas y Tablas en Modo Oscuro */
+[data-theme='dark'] table tbody tr {
+  border-top-color: #334155 !important;
+}
+
+[data-theme='dark'] table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.4) !important;
+}
+
+/* Badges y Etiquetas en Modo Oscuro */
+[data-theme='dark'] .badge--secondary {
+  background-color: rgba(22, 163, 74, 0.25) !important;
+  color: #4ade80 !important;
+  border: 1px solid rgba(74, 222, 128, 0.3) !important;
+}
+
+[data-theme='dark'] .badge--amber {
+  background-color: rgba(217, 119, 6, 0.25) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251, 191, 36, 0.3) !important;
+}
+
+[data-theme='dark'] .badge--error {
+  background-color: rgba(220, 38, 38, 0.25) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(248, 113, 113, 0.3) !important;
+}

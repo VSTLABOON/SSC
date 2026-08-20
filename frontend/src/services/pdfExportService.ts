@@ -170,7 +170,7 @@ export async function exportStudentExpedientePDF(data: StudentExpedientePDFData)
 
   currentY += 29;
 
-  // 2. DIAGNÓSTICO NARRATIVO Y RECOMENDACIONES (Caja Resaltada Vectorial)
+  // 2. DIAGNÓSTICO NARRATIVO Y RECOMENDACIONES (Caja Resaltada Vectorial con Altura Dinámica)
   const diagBgColor: [number, number, number] =
     data.diagnostic.riskLevel === 'critical'
       ? [254, 242, 242]
@@ -185,9 +185,18 @@ export async function exportStudentExpedientePDF(data: StudentExpedientePDFData)
       ? [253, 230, 138]
       : [134, 239, 172];
 
+  // Calcular líneas de texto ajustadas para evitar desbordamientos
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  const splitDiag = doc.splitTextToSize(data.diagnostic.statusText || 'Sin observaciones adicionales.', pdfWidth - 32);
+  const splitFortaleza = doc.splitTextToSize(data.diagnostic.fortaleza || 'Conducta regular y asistencia constante.', pdfWidth - 75);
+  const splitRecom = doc.splitTextToSize(data.diagnostic.recommendation || 'Mantener seguimiento y acompañamiento tutorial regular.', pdfWidth - 75);
+
+  const boxHeight = Math.max(38, 18 + (splitDiag.length * 4) + (splitFortaleza.length * 4) + (splitRecom.length * 4));
+
   doc.setFillColor(...diagBgColor);
   doc.setDrawColor(...diagBorderColor);
-  doc.roundedRect(12, currentY, pdfWidth - 24, 38, 3, 3, 'FD');
+  doc.roundedRect(12, currentY, pdfWidth - 24, boxHeight, 3, 3, 'FD');
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
@@ -197,29 +206,26 @@ export async function exportStudentExpedientePDF(data: StudentExpedientePDFData)
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(30, 41, 59);
-
-  // Formatear texto en líneas ajustadas al ancho del PDF
-  const splitDiag = doc.splitTextToSize(data.diagnostic.statusText, pdfWidth - 32);
   doc.text(splitDiag, 16, currentY + 13);
 
-  let subY = currentY + 13 + splitDiag.length * 4;
+  let subY = currentY + 13 + (splitDiag.length * 4) + 2;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
   doc.text('FORTALEZA DESTACADA:', 16, subY);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(15, 23, 42);
-  doc.text(data.diagnostic.fortaleza, 55, subY);
+  doc.text(splitFortaleza, 65, subY);
 
-  subY += 5;
+  subY += Math.max(5, splitFortaleza.length * 4 + 1);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(100, 116, 139);
   doc.text('RECOMENDACIÓN PARA EL EQUIPO:', 16, subY);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(15, 23, 42);
-  doc.text(data.diagnostic.recommendation, 72, subY);
+  doc.text(splitRecom, 75, subY);
 
-  currentY += 43;
+  currentY += boxHeight + 5;
 
   // 3. TABLA VECTORIAL DE INCIDENCIAS
   doc.setFont('helvetica', 'bold');
@@ -334,52 +340,242 @@ export async function exportStudentExpedientePDF(data: StudentExpedientePDFData)
 }
 
 /**
+ * Ficha Conductual Oficial del Alumno (Generada para Alumno / Tutor con datos 100% reales).
+ */
+export async function exportFichaConductualAlumnoPDF(params: {
+  nombreCompleto: string;
+  matricula: string;
+  grupoNombre: string;
+  carreraNombre?: string;
+  puntosTotales: number;
+  asistenciaPorcentaje: number;
+  incidencias: Array<{
+    created_at: string;
+    descripcion: string;
+    lugar?: string;
+    impacto_puntos: number;
+    categoria_nombre?: string;
+  }>;
+  plantelNombre?: string;
+  periodoNombre?: string;
+  generadoPor?: string;
+}): Promise<void> {
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pdfWidth = doc.internal.pageSize.getWidth();
+  const pdfHeight = doc.internal.pageSize.getHeight();
+
+  const plantel = params.plantelNombre || 'CONALEP Plantel Puebla I';
+  const periodo = params.periodoNombre || 'Semestre A-2026';
+  const emisor = params.generadoPor || 'Portal Alumno / Tutor';
+
+  drawInstitutionalHeader(doc, 'FICHA DE SALUD CONDUCTUAL Y TRAYECTORIA ESCOLAR', plantel, periodo, emisor);
+
+  let currentY = 36;
+
+  // 1. TARJETA DE DATOS DEL ALUMNO
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(12, currentY, pdfWidth - 24, 24, 3, 3, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(15, 23, 42);
+  doc.text(params.nombreCompleto || 'Estudiante', 16, currentY + 7);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Matrícula: ${params.matricula || '---'}`, 16, currentY + 14);
+  doc.text(`Grupo: ${params.grupoNombre || '---'}`, 80, currentY + 14);
+  if (params.carreraNombre) {
+    doc.text(`Carrera: ${params.carreraNombre}`, 130, currentY + 14);
+  }
+
+  // Semáforo dinámico según puntaje
+  const puntos = params.puntosTotales ?? 100;
+  const isRojo = puntos < 70;
+  const isNaranja = puntos >= 70 && puntos < 90;
+  const semaforoLabel = isRojo ? 'ROJO / ATENCIÓN PRIORITARIA' : isNaranja ? 'NARANJA / PREVENTIVO' : 'VERDE / ÓPTIMO';
+  const semColor: [number, number, number] = isRojo ? [220, 38, 38] : isNaranja ? [217, 119, 6] : [22, 163, 74];
+
+  doc.text(`Estatus Conductual: `, 16, currentY + 20);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...semColor);
+  doc.text(semaforoLabel, 50, currentY + 20);
+
+  currentY += 29;
+
+  // 2. INDICADORES CLAVE DE SALUD CONDUCTUAL (Bento Grid Vectorial)
+  const cardW = (pdfWidth - 24 - 8) / 2;
+  
+  // Caja 1: Puntos
+  doc.setFillColor(isRojo ? 254 : isNaranja ? 254 : 240, isRojo ? 242 : isNaranja ? 252 : 253, isRojo ? 242 : isNaranja ? 232 : 244);
+  doc.setDrawColor(...semColor);
+  doc.roundedRect(12, currentY, cardW, 20, 3, 3, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...semColor);
+  doc.text('ÍNDICE DE SALUD CONDUCTUAL (ISC)', 16, currentY + 6);
+  doc.setFontSize(14);
+  doc.text(`${puntos} / 100 pts`, 16, currentY + 14);
+
+  // Caja 2: Asistencia
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(12 + cardW + 8, currentY, cardW, 20, 3, 3, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(32, 71, 133);
+  doc.text('REGULARIDAD DE ASISTENCIA', 12 + cardW + 12, currentY + 6);
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`${params.asistenciaPorcentaje}%`, 12 + cardW + 12, currentY + 14);
+
+  currentY += 26;
+
+  // 3. TABLA DETALLADA DE ACTIVIDAD Y OBSERVACIONES
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(0, 73, 47);
+  doc.text(`BITÁCORA DE INCIDENCIAS Y MÉRITOS (${params.incidencias.length} REGISTROS)`, 12, currentY);
+  currentY += 4;
+
+  // Encabezado
+  doc.setFillColor(0, 73, 47);
+  doc.rect(12, currentY, pdfWidth - 24, 7, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text('FECHA', 16, currentY + 5);
+  doc.text('MOTIVO / CATEGORÍA', 40, currentY + 5);
+  doc.text('DESCRIPCIÓN', 90, currentY + 5);
+  doc.text('LUGAR', 150, currentY + 5);
+  doc.text('IMPACTO', 178, currentY + 5);
+
+  currentY += 7;
+
+  if (params.incidencias.length === 0) {
+    doc.setFillColor(255, 255, 255);
+    doc.rect(12, currentY, pdfWidth - 24, 10, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Excelente conducta. Sin observaciones ni incidencias negativas registradas en el periodo activo.', 16, currentY + 6);
+    currentY += 12;
+  } else {
+    params.incidencias.forEach((inc, idx) => {
+      if (currentY > pdfHeight - 35) {
+        drawInstitutionalFooter(doc, 1, 2);
+        doc.addPage();
+        drawInstitutionalHeader(doc, 'FICHA DE SALUD CONDUCTUAL (CONTINUACIÓN)', plantel, periodo, emisor);
+        currentY = 35;
+      }
+
+      const rowBg = idx % 2 === 0 ? 255 : 248;
+      doc.setFillColor(rowBg, rowBg, rowBg);
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(12, currentY, pdfWidth - 24, 8, 'F');
+
+      const dateStr = new Date(inc.created_at).toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text(dateStr, 16, currentY + 5);
+
+      const catTrunc = (inc.categoria_nombre || 'Observación').substring(0, 22);
+      doc.text(catTrunc, 40, currentY + 5);
+
+      const descTrunc = (inc.descripcion || '---').length > 35 ? inc.descripcion.substring(0, 32) + '...' : inc.descripcion;
+      doc.text(descTrunc, 90, currentY + 5);
+
+      doc.text(inc.lugar || 'Aula', 150, currentY + 5);
+
+      const isPositive = inc.impacto_puntos > 0;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(isPositive ? 22 : 220, isPositive ? 163 : 38, isPositive ? 74 : 38);
+      doc.text(`${isPositive ? '+' : ''}${inc.impacto_puntos} pts`, 178, currentY + 5);
+
+      currentY += 8;
+    });
+  }
+
+  // 4. FIRMAS OFICIALES
+  if (currentY > pdfHeight - 45) {
+    drawInstitutionalFooter(doc, 1, 2);
+    doc.addPage();
+    drawInstitutionalHeader(doc, 'FICHA DE SALUD CONDUCTUAL (FIRMAS)', plantel, periodo, emisor);
+    currentY = 40;
+  } else {
+    currentY += 15;
+  }
+
+  doc.setDrawColor(148, 163, 184);
+  doc.setLineWidth(0.4);
+
+  // Línea Orientador
+  doc.line(20, currentY + 15, 75, currentY + 15);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(15, 23, 42);
+  doc.text('FIRMA ORIENTADOR EDUCATIVO', 47, currentY + 19, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text('CONALEP Plantel Puebla I', 47, currentY + 23, { align: 'center' });
+
+  // Línea Tutor
+  doc.line(85, currentY + 15, 135, currentY + 15);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(15, 23, 42);
+  doc.text('FIRMA PADRE O TUTOR LEGAL', 110, currentY + 19, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Acuse y Conformidad', 110, currentY + 23, { align: 'center' });
+
+  // Línea Dirección
+  doc.line(145, currentY + 15, 195, currentY + 15);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(15, 23, 42);
+  doc.text('SELLO Y FIRMA DIRECCIÓN', 170, currentY + 19, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text('CONALEP Plantel Puebla I', 170, currentY + 23, { align: 'center' });
+
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    drawInstitutionalFooter(doc, i, totalPages);
+  }
+
+  doc.save(`Ficha_Conductual_${params.matricula || 'Alumno'}.pdf`);
+}
+
+/**
  * Wrapper universal compatible para exportar cualquier pantalla a PDF Vectorial Oficial.
  */
 export async function exportElementToPDF(
   _element: HTMLElement,
   options: PDFExportOptions
 ): Promise<void> {
-  // Genera un PDF institucional vectorial directo
   const doc = new jsPDF('p', 'mm', 'a4');
-  const pdfWidth = doc.internal.pageSize.getWidth();
-
   const title = options.title || 'Reporte Institucional SSC';
   const plantel = options.plantelNombre || 'CONALEP Plantel Puebla I';
   const periodo = options.periodoNombre || 'Semestre A-2026';
   const emisor = options.generadoPor || 'Dirección General / Orientación';
 
   drawInstitutionalHeader(doc, title, plantel, periodo, emisor);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(15, 23, 42);
-  doc.text('RESUMEN DE REPORTE Y ESTADÍSTICAS', 12, 38);
-
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(203, 213, 225);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(12, 42, pdfWidth - 24, 30, 3, 3, 'FD');
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(51, 65, 85);
-  doc.text(
-    'Este documento contiene la síntesis ejecutiva oficial generada por el Sistema de Seguimiento Conductual.',
-    16,
-    50
-  );
-  doc.text(
-    'Todos los registros e indicadores han sido validados con la base de datos central de la institución.',
-    16,
-    56
-  );
-  doc.text(
-    `Estatus de Emisión: Documento Certificado • Plantel: ${plantel}`,
-    16,
-    64
-  );
-
   drawInstitutionalFooter(doc, 1, 1);
   doc.save(options.filename || 'Reporte_Institucional_CONALEP.pdf');
 }
