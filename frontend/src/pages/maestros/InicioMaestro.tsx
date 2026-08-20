@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import { getGruposDeDocente } from '../../services/grupos';
 import type { ClassDocente } from '../../services/grupos';
 import { BIAnalyticsDashboard } from '../../components/bi/BIAnalyticsDashboard';
@@ -8,12 +9,22 @@ import './InicioMaestro.css';
 
 type TabType = 'bi' | 'operacion' | 'avisos';
 
+interface AvisoItem {
+  id: string;
+  titulo: string;
+  contenido: string;
+  descripcion?: string;
+  fecha_publicacion: string;
+}
+
 export default function InicioMaestro() {
   const navigate = useNavigate();
   const { session, plantelId } = useAuth();
   const [clases, setClases] = useState<ClassDocente[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('bi');
+  const [avisos, setAvisos] = useState<AvisoItem[]>([]);
+  const [loadingAvisos, setLoadingAvisos] = useState(false);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -29,7 +40,27 @@ export default function InicioMaestro() {
       }
     }
 
+    async function loadAvisos() {
+      try {
+        setLoadingAvisos(true);
+        const { data, error } = await supabase
+          .from('avisos')
+          .select('id, titulo, contenido, descripcion, fecha_publicacion')
+          .in('destinatarios', ['todos', 'docentes'])
+          .order('fecha_publicacion', { ascending: false });
+
+        if (!error && data) {
+          setAvisos(data as AvisoItem[]);
+        }
+      } catch (err) {
+        console.error('Error al cargar avisos:', err);
+      } finally {
+        setLoadingAvisos(false);
+      }
+    }
+
     loadGroups();
+    loadAvisos();
   }, [session]);
 
   function handlePasarLista(clase?: ClassDocente): void {
@@ -157,26 +188,33 @@ export default function InicioMaestro() {
                 <div className="card-icon-box">
                   <span className="material-symbols-outlined card-icon">campaign</span>
                 </div>
-                <h3 className="card-title">Avisos de Dirección</h3>
+                <h3 className="card-title">Avisos y Comunicados Oficiales de Dirección ({avisos.length})</h3>
               </div>
             </div>
 
-            <div className="announcements-list">
-              <div className="announcement">
-                <p className="announcement-title">Cierre de Calificaciones</p>
-                <p className="announcement-description">
-                  Se les recuerda que el sistema cerrará para el primer parcial el día viernes a las 23:59 hrs.
-                </p>
-                <p className="announcement-time">Hace 2 horas</p>
+            {loadingAvisos ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Cargando comunicados...</div>
+            ) : avisos.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>No hay comunicados oficiales en este momento.</div>
+            ) : (
+              <div className="announcements-list">
+                {avisos.map(aviso => (
+                  <div key={aviso.id} className="announcement" style={{ marginBottom: '12px' }}>
+                    <p className="announcement-title">{aviso.titulo}</p>
+                    <p className="announcement-description">{aviso.contenido || aviso.descripcion}</p>
+                    <p className="announcement-time">
+                      {new Date(aviso.fecha_publicacion).toLocaleDateString('es-MX', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                ))}
               </div>
-              <div className="announcement announcement--low">
-                <p className="announcement-title">Mantenimiento de Servidores</p>
-                <p className="announcement-description">
-                  El acceso al portal podrá verse interrumpido este sábado de 02:00 a 05:00 AM.
-                </p>
-                <p className="announcement-time">Ayer</p>
-              </div>
-            </div>
+            )}
           </div>
         </section>
       )}

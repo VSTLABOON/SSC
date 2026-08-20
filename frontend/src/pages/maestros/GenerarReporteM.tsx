@@ -48,6 +48,11 @@ export default function GenerarReporteM() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [comment, setComment] = useState('');
   const [locationName, setLocationName] = useState('Aula');
+  const [incidentDate, setIncidentDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [incidentTime, setIncidentTime] = useState<string>(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  });
   const [activeTab, setActiveTab] = useState<'clasificacion' | 'detalles'>('clasificacion');
 
   // Estados de éxito/advertencia
@@ -131,6 +136,9 @@ export default function GenerarReporteM() {
     setSelectedCategoryId('');
     setComment('');
     setLocationName('Aula');
+    setIncidentDate(new Date().toISOString().split('T')[0]);
+    const now = new Date();
+    setIncidentTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
     setActiveTab('clasificacion');
     setErrorMsg(null);
     setModalOpen(true);
@@ -145,6 +153,10 @@ export default function GenerarReporteM() {
     setSeverity(null);
     setSelectedCategoryId('');
     setComment('');
+    setLocationName('Aula');
+    setIncidentDate(new Date().toISOString().split('T')[0]);
+    const now = new Date();
+    setIncidentTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
     setActiveTab('clasificacion');
     setErrorMsg(null);
   }
@@ -194,6 +206,10 @@ export default function GenerarReporteM() {
       const selectedCategory = categories.find(c => c.id === selectedCategoryId);
       const impacto = selectedCategory ? selectedCategory.impacto_base : 0;
 
+      const combinedTimestamp = (incidentDate && incidentTime)
+        ? new Date(`${incidentDate}T${incidentTime}:00`).toISOString()
+        : new Date().toISOString();
+
       const { error } = await supabase
         .from('incidencias')
         .insert({
@@ -204,6 +220,7 @@ export default function GenerarReporteM() {
           lugar: locationName,
           impacto_puntos: impacto,
           periodo_id: periodoId,
+          created_at: combinedTimestamp,
         });
 
       if (error) throw error;
@@ -440,6 +457,38 @@ export default function GenerarReporteM() {
             {/* TAB 2: DETALLES Y UBICACIÓN */}
             {activeTab === 'detalles' && (
               <>
+                {/* Fecha y Hora del Suceso */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                  <div className="grm-form-group" style={{ marginBottom: 0 }}>
+                    <label className="grm-form-label" htmlFor="incident-date">
+                      <span className="material-symbols-outlined" style={{ fontSize: '15px', verticalAlign: 'middle', marginRight: '4px' }}>calendar_today</span>
+                      Fecha del Suceso
+                    </label>
+                    <input
+                      type="date"
+                      id="incident-date"
+                      className="grm-field-input"
+                      value={incidentDate}
+                      onChange={e => setIncidentDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grm-form-group" style={{ marginBottom: 0 }}>
+                    <label className="grm-form-label" htmlFor="incident-time">
+                      <span className="material-symbols-outlined" style={{ fontSize: '15px', verticalAlign: 'middle', marginRight: '4px' }}>schedule</span>
+                      Hora del Suceso
+                    </label>
+                    <input
+                      type="time"
+                      id="incident-time"
+                      className="grm-field-input"
+                      value={incidentTime}
+                      onChange={e => setIncidentTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
                 {/* Lugar de la incidencia + chips */}
                 <div className="grm-form-group">
                   <label className="grm-form-label" htmlFor="location">Lugar del Incidente</label>

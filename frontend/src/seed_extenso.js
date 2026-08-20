@@ -84,7 +84,7 @@ async function main() {
   // ---- Paso 3: Insertar Catálogos Base ----
   console.log('\n[3/10] Insertando catalogos base del plantel y periodo escolar...');
   
-  const { error: errPlantel } = await supabase.from('planteles').insert({
+  const { error: errPlantel } = await supabase.from('planteles').upsert({
     id: PLANTEL_ID,
     nombre: 'CONALEP Plantel Puebla I',
     clave_centro: '21ETH0001Q',
@@ -102,7 +102,7 @@ async function main() {
     { id: 'a3f12456-7c90-412f-8da1-ee0b15b3c5e6', plantel_id: PLANTEL_ID, nombre: 'Semestre A-2024', fecha_inicio: '2024-02-01', fecha_fin: '2024-07-31', activo: false },
     { id: 'a3f12456-7c90-412f-8da1-ee0b15b3c5e7', plantel_id: PLANTEL_ID, nombre: 'Semestre B-2023', fecha_inicio: '2023-08-01', fecha_fin: '2024-01-31', activo: false }
   ];
-  const { error: errPeriodos } = await supabase.from('periodos_escolares').insert(periodos);
+  const { error: errPeriodos } = await supabase.from('periodos_escolares').upsert(periodos);
   if (errPeriodos) throw errPeriodos;
 
   const carreras = [
@@ -112,7 +112,7 @@ async function main() {
     { id: 'c0000000-0000-0000-0000-000000000004', plantel_id: PLANTEL_ID, nombre: 'Mantenimiento Automotriz', clave: 'MANT-04' },
     { id: 'c0000000-0000-0000-0000-000000000005', plantel_id: PLANTEL_ID, nombre: 'Enfermeria General', clave: 'ENFE-05' }
   ];
-  const { error: errCarreras } = await supabase.from('carreras').insert(carreras);
+  const { error: errCarreras } = await supabase.from('carreras').upsert(carreras);
   if (errCarreras) throw errCarreras;
 
   const categorias = [
@@ -123,7 +123,7 @@ async function main() {
     { id: 'c5a55555-6666-7777-8888-999999999999', plantel_id: PLANTEL_ID, nombre: 'Participacion Excepcional', color_semaforo: 'verde', impacto_base: 15 },
     { id: 'c6a66666-7777-8888-9999-000000000000', plantel_id: PLANTEL_ID, nombre: 'Falta Conductual Extrema', color_semaforo: 'rojo', impacto_base: -20 }
   ];
-  const { error: errCategorias } = await supabase.from('categorias_incidencia').insert(categorias);
+  const { error: errCategorias } = await supabase.from('categorias_incidencia').upsert(categorias);
   if (errCategorias) throw errCategorias;
 
   const insignias = [
@@ -133,7 +133,7 @@ async function main() {
     { id: '44a44444-5555-6666-7777-888888888888', plantel_id: PLANTEL_ID, nombre: 'Esfuerzo Sobresaliente', icono_url: 'trending_up', puntos_requeridos: 115 },
     { id: '55a55555-6666-7777-8888-999999999999', plantel_id: PLANTEL_ID, nombre: 'Compromiso Civico', icono_url: 'diversity_3', puntos_requeridos: 100 }
   ];
-  const { error: errInsignias } = await supabase.from('insignias').insert(insignias);
+  const { error: errInsignias } = await supabase.from('insignias').upsert(insignias);
   if (errInsignias) throw errInsignias;
 
   // ---- Paso 4: Generar 30 Grupos / Salones Activos ----
@@ -157,6 +157,7 @@ async function main() {
   // ---- Paso 5: Cuentas Maestras de Acceso en Auth ----
   console.log('\n[5/10] Semillando cuentas maestras de acceso en Auth Admin...');
   const authAccounts = [
+    { email: 'admin@conalep.edu.mx', nombre: 'Carlos', apellido: 'Mendoza', rol: 'administrador', cargo: 'Administrador de Control Escolar y TI', activo: true },
     { email: 'director@conalep.edu.mx', nombre: 'Roberto', apellido: 'Hernandez', rol: 'directivo', cargo: 'Director General', activo: true },
     { email: 'subdirector.acad@conalep.edu.mx', nombre: 'Guillermo', apellido: 'Sosa', rol: 'directivo', cargo: 'Subdirector Academico', activo: true },
     { email: 'orientador@conalep.edu.mx', nombre: 'Sofia', apellido: 'Ramirez', rol: 'orientador', cargo: 'Orientador Turno Matutino', activo: true },
@@ -584,6 +585,34 @@ async function main() {
     }
   }
 
+  // Distribuir timestamps de incidencias a lo largo de Semanas, Meses y Ciclo Escolar
+  const now = new Date();
+  for (let i = 0; i < incidencias.length; i++) {
+    const ratio = i / incidencias.length;
+    let incidentDate;
+
+    if (ratio > 0.82) {
+      // 18% en los últimos 6 días (Esta Semana - lunes a domingo)
+      const daysAgo = Math.floor(Math.random() * 6);
+      incidentDate = new Date(now.getTime() - daysAgo * 86400000);
+    } else if (ratio > 0.55) {
+      // 27% en este mes (entre 7 y 20 días atrás)
+      const daysAgo = 7 + Math.floor(Math.random() * 13);
+      incidentDate = new Date(now.getTime() - daysAgo * 86400000);
+    } else {
+      // 55% en meses previos del semestre (Febrero a Julio 2026)
+      const daysAgo = 22 + Math.floor(Math.random() * 165);
+      incidentDate = new Date(now.getTime() - daysAgo * 86400000);
+    }
+
+    // Horas escolares realistas (07:30 a 16:30)
+    const hours = 7 + Math.floor(Math.random() * 9);
+    const minutes = [0, 10, 15, 25, 30, 40, 45, 55][Math.floor(Math.random() * 8)];
+    incidentDate.setHours(hours, minutes, 0, 0);
+
+    incidencias[i].created_at = incidentDate.toISOString();
+  }
+
   const batchSize = 1000;
   console.log(`  Insertando ${asistencias.length} asistencias en lotes de 1000...`);
   for (let i = 0; i < asistencias.length; i += batchSize) {
@@ -595,7 +624,7 @@ async function main() {
   const { error: errPart } = await supabase.from('participaciones').insert(participaciones);
   if (errPart) throw errPart;
 
-  console.log(`  Insertando ${incidencias.length} incidencias conductuales...`);
+  console.log(`  Insertando ${incidencias.length} incidencias conductuales con marcas temporales distribuidas...`);
   for (let i = 0; i < incidencias.length; i += 100) {
     const { error: errInc } = await supabase.from('incidencias').insert(incidencias.slice(i, i + 100));
     if (errInc) throw errInc;
@@ -605,35 +634,38 @@ async function main() {
   const { error: errSegs } = await supabase.from('seguimientos').insert(seguimientos);
   if (errSegs) throw errSegs;
 
-  // ---- Paso 10: Generar Comunicados Institucionales (Avisos) ----
-  console.log('\n[10/10] Generando avisos del plantel...');
+  // ---- Paso 10: Generar Comunicados Institucionales (Avisos) Dinámicos ----
+  console.log('\n[10/10] Generando avisos institucionales enriquecidos...');
   const directorId = authAccounts.find(a => a.email === 'director@conalep.edu.mx').finalId;
   const avisos = [];
   const avisosConfig = [
-    { title: 'Reunion de Consejo Tecnico Escolar', desc: 'Estimados docentes, se les convoca a la sesion ordinaria del CTE el proximo viernes.', audience: 'docentes' },
-    { title: 'Entrega de Reportes del Primer Parcial', desc: 'Padres de familia, los reportes de evaluacion del primer parcial estaran disponibles para su consulta fisica en el plantel.', audience: 'padres' },
-    { title: 'Campaña de Vacunacion y Salud', desc: 'Se realizara una jornada de vacunacion en el plantel para todos los alumnos. Traer cartilla de vacunacion.', audience: 'todos' },
-    { title: 'Convocatoria de Becas CONALEP', desc: 'Se abre el registro para las becas de excelencia y apoyo socioeconomico. Consultar bases en direccion.', audience: 'todos' },
-    { title: 'Charla de Convivencia Sana', desc: 'Se convoca a los alumnos con incidencias preventivas a la charla en la biblioteca del plantel.', audience: 'semaforo_naranja' },
-    { title: 'Taller de Regularizacion Conductual Urgente', desc: 'Cita obligatoria para alumnos en semaforo critico y sus respectivos tutores.', audience: 'semaforo_rojo' }
+    { title: 'Reunión Ordinaria de Consejo Técnico Escolar', desc: 'Estimados docentes, se les convoca a la sesión ordinaria de CTE el próximo viernes en la sala de juntas.', audience: 'docentes', offset: -1 },
+    { title: 'Publicación de Boletas y Reportes del Periodo', desc: 'Padres de familia: Las cédulas de seguimiento conductual y calificaciones del primer parcial se encuentran disponibles.', audience: 'padres', offset: -2 },
+    { title: 'Campaña Nacional de Vacunación y Salud Integral', desc: 'Se llevará a cabo una jornada de salud en la explanada cívica para todos los alumnos del plantel. Traer cartilla de salud.', audience: 'todos', offset: -3 },
+    { title: 'Convocatoria de Becas CONALEP y Excelencia', desc: 'Se encuentra abierto el registro para las becas de apoyo socioeconómico y rendimiento académico en Dirección Escolar.', audience: 'alumnos', offset: -5 },
+    { title: 'Taller de Convivencia Sana y Mediación Escolar', desc: 'Convocatoria para sesiones de acompañamiento psicopedagógico y regularización conductual.', audience: 'todos', offset: -7 },
+    { title: 'Simulacro Institucional de Protección Civil', desc: 'Aviso a toda la comunidad escolar: Se realizará el simulacro de evacuación conforme al protocolo estatal de seguridad.', audience: 'todos', offset: -10 }
   ];
 
-  for (let i = 1; i <= 20; i++) {
-    const config = avisosConfig[i % avisosConfig.length];
-    const dateOffset = i - 10;
-    const fecha = new Date(Date.now() + dateOffset * 86400000).toISOString().split('T')[0];
+  for (let i = 0; i < avisosConfig.length; i++) {
+    const config = avisosConfig[i];
+    const fecha = new Date(Date.now() + config.offset * 86400000).toISOString();
     
     avisos.push({
       id: crypto.randomUUID(),
       plantel_id: PLANTEL_ID,
       creado_por: directorId,
-      titulo: `${config.title} (Aviso ${i})`,
+      titulo: config.title,
+      contenido: config.desc,
       descripcion: config.desc,
-      fecha_evento: fecha,
+      destinatarios: config.audience,
       dirigido_a: config.audience,
+      fecha_publicacion: fecha,
+      fecha_evento: fecha,
       activo: true
     });
   }
+
   const { error: errAvisos } = await supabase.from('avisos').insert(avisos);
   if (errAvisos) throw errAvisos;
 

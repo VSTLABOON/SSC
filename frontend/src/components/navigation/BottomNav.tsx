@@ -19,6 +19,7 @@ export const BottomNav: React.FC = () => {
   const isDocente = rol === 'docente';
   const isOrientador = rol === 'orientador';
   const isDirectivo = rol === 'directivo';
+  const isAdministrador = rol === 'administrador';
   const isAlumno = rol === 'alumno';
   const isPadre = rol === 'padre';
 
@@ -37,12 +38,21 @@ export const BottomNav: React.FC = () => {
     ];
   } else if (isOrientador) {
     leftItems = [
-      { id: 'inicio', label: 'Inicio', icon: 'radar', path: '/orientador/inicio' },
+      { id: 'inicio', label: 'Casos', icon: 'psychology', path: '/orientador/inicio' },
       { id: 'reporte', label: 'Reporte', icon: 'edit_note', path: '/orientador/reporte' },
     ];
     rightItems = [
       { id: 'historial', label: 'Bitácora', icon: 'history', path: '/orientador/historial' },
-      { id: 'intervenciones', label: 'Acuerdos', icon: 'handshake', path: '/orientador/inicio' },
+      { id: 'perfil', label: 'Perfil', icon: 'account_circle', path: '/orientador/perfil' },
+    ];
+  } else if (isAdministrador) {
+    leftItems = [
+      { id: 'usuarios', label: 'Usuarios', icon: 'manage_accounts', path: '/admin/usuarios' },
+      { id: 'importar', label: 'Importar', icon: 'upload_file', path: '/admin/importar' },
+    ];
+    rightItems = [
+      { id: 'perfil', label: 'Perfil', icon: 'account_circle', path: '/admin/perfil' },
+      { id: 'gestion', label: 'Cuentas', icon: 'group', path: '/admin/usuarios' },
     ];
   } else if (isAlumno) {
     leftItems = [
@@ -63,14 +73,14 @@ export const BottomNav: React.FC = () => {
       { id: 'perfil', label: 'Perfil', icon: 'person', path: '/padre/perfil' },
     ];
   } else {
-    // Directivo por defecto
+    // Directivo
     leftItems = [
-      { id: 'inicio', label: 'Inicio', icon: 'dashboard', path: '/director/inicio' },
-      { id: 'reporte', label: 'Generar', icon: 'assessment', path: '/director/reporte' },
+      { id: 'inicio', label: 'BI Analytics', icon: 'analytics', path: '/director/inicio' },
+      { id: 'reporte', label: 'Reporte', icon: 'assessment', path: '/director/reporte' },
     ];
     rightItems = [
-      { id: 'historial', label: 'Historial', icon: 'history', path: '/director/historial' },
-      { id: 'usuarios', label: 'Usuarios', icon: 'manage_accounts', path: '/director/usuarios' },
+      { id: 'historial', label: 'Auditoría', icon: 'history', path: '/director/historial' },
+      { id: 'perfil', label: 'Perfil', icon: 'account_circle', path: '/director/perfil' },
     ];
   }
 

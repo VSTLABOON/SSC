@@ -8,9 +8,11 @@ import ParentLayout from './layouts/ParentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
 import CounselorLayout from './layouts/CounselorLayout';
 import DirectorLayout from './layouts/DirectorLayout';
+import AdminLayout from './layouts/AdminLayout';
 
 import Login from './pages/Login';
 import PendienteActivacion from './pages/PendienteActivacion';
+import Profile from './pages/Profile';
 
 // Dynamic lazy imports para code-splitting por rol (Escalabilidad Modular)
 // Rol: alumno
@@ -41,7 +43,10 @@ const HistorialOrientador = lazy(() => import('./pages/orientador/HistorialOrien
 const InicioDirectivo = lazy(() => import('./pages/directivo/InicioDirectivo'));
 const GenerarReporteDirectivo = lazy(() => import('./pages/directivo/GenerarReporteDirectivo'));
 const HistorialDirectivo = lazy(() => import('./pages/directivo/HistorialDirectivo'));
-const GestionUsuariosDirectivo = lazy(() => import('./pages/directivo/GestionUsuariosDirectivo'));
+
+// Rol: administrador (Control Escolar y TI)
+const GestionUsuariosAdmin = lazy(() => import('./pages/admin/GestionUsuariosAdmin'));
+const ImportarUsuariosAdmin = lazy(() => import('./pages/admin/ImportarUsuariosAdmin'));
 
 function LoadingSpinner() {
   return (
@@ -118,6 +123,7 @@ export default function App() {
             <Route path="asistencia" element={<PaseLista />} />
             <Route path="reporte" element={<GenerarReporteDocente />} />
             <Route path="historial" element={<HistorialDocente />} />
+            <Route path="perfil" element={<Profile />} />
           </Route>
 
           {/* 4. Portal exclusivo: ORIENTADOR */}
@@ -127,16 +133,27 @@ export default function App() {
             <Route path="inicio" element={<InicioOrientador />} />
             <Route path="reporte" element={<GenerarReporteOrientador />} />
             <Route path="historial" element={<HistorialOrientador />} />
+            <Route path="perfil" element={<Profile />} />
           </Route>
 
-          {/* 5. Portal exclusivo: DIRECTIVO */}
+          {/* 5. Portal exclusivo: DIRECTIVO (Gobernanza y BI Analytics) */}
           <Route path="/director" element={
             <RequireAuth allowedRoles={['directivo']}><DirectorLayout /></RequireAuth>
           }>
             <Route path="inicio" element={<InicioDirectivo />} />
             <Route path="reporte" element={<GenerarReporteDirectivo />} />
             <Route path="historial" element={<HistorialDirectivo />} />
-            <Route path="usuarios" element={<GestionUsuariosDirectivo />} />
+            <Route path="perfil" element={<Profile />} />
+          </Route>
+
+          {/* 6. Portal exclusivo: ADMINISTRADOR (Control Escolar y TI) */}
+          <Route path="/admin" element={
+            <RequireAuth allowedRoles={['administrador']}><AdminLayout /></RequireAuth>
+          }>
+            <Route index element={<Navigate to="/admin/usuarios" replace />} />
+            <Route path="usuarios" element={<GestionUsuariosAdmin />} />
+            <Route path="importar" element={<ImportarUsuariosAdmin />} />
+            <Route path="perfil" element={<Profile />} />
           </Route>
 
           <Route path="*" element={<DefaultRouteRedirect />} />

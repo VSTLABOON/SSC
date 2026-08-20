@@ -7,7 +7,7 @@ import type { JustificanteRecord } from '../../components/alumno/SolicitarJustif
 import type { CitaRecord } from '../../components/padre/SolicitarCitaModal';
 import '../DirectivosYAsesores/InicioDA.css';
 
-type TabType = 'intervenciones' | 'justificantes' | 'citas' | 'bi' | 'operacion';
+type TabType = 'intervenciones' | 'justificantes' | 'citas' | 'bi';
 
 export default function InicioOrientador() {
   const { nombre, plantelId } = useAuth();
@@ -176,14 +176,6 @@ export default function InicioOrientador() {
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>radar</span>
           Radar de Riesgo & Centro BI
-        </button>
-        <button
-          type="button"
-          className={`dedicated-tab-btn ${activeTab === 'operacion' ? 'dedicated-tab-btn--active' : ''}`}
-          onClick={() => setActiveTab('operacion')}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>assignment</span>
-          Acciones & Expedientes
         </button>
       </div>
 
@@ -458,29 +450,6 @@ export default function InicioOrientador() {
           ) : (
             <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Cargando datos del plantel...</div>
           )}
-        </section>
-      )}
-
-      {/* Pestaña 5: Acciones & Expedientes */}
-      {activeTab === 'operacion' && (
-        <section className="dedicated-tab-content">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-            <div className="op-card" onClick={() => navigate('/orientador/reporte')} style={{ cursor: 'pointer', background: 'var(--color-bg-card, #ffffff)', padding: '20px', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #e2e8f0)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#0284c7', background: '#e0f2fe', padding: '10px', borderRadius: '12px' }}>post_add</span>
-                <h4 style={{ margin: 0, fontSize: '15px', color: 'var(--color-text-main, #0f172a)' }}>Generar Reporte Disciplinario</h4>
-              </div>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>Registrar reportes de conducta o actas de seguimiento escolar.</p>
-            </div>
-
-            <div className="op-card" onClick={() => navigate('/orientador/historial')} style={{ cursor: 'pointer', background: 'var(--color-bg-card, #ffffff)', padding: '20px', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #e2e8f0)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#204785', background: '#eff6ff', padding: '10px', borderRadius: '12px' }}>history_edu</span>
-                <h4 style={{ margin: 0, fontSize: '15px', color: 'var(--color-text-main, #0f172a)' }}>Historial del Plantel</h4>
-              </div>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>Consultar expedientes y bitácora histórica de todos los alumnos.</p>
-            </div>
-          </div>
         </section>
       )}
 

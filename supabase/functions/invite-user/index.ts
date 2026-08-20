@@ -13,7 +13,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ROLES_VALIDOS = ['docente', 'orientador', 'alumno', 'padre'];
+const ROLES_VALIDOS = ['docente', 'orientador', 'alumno', 'padre', 'directivo', 'administrador'];
 
 serve(async (req: Request) => {
   // Preflight CORS
@@ -28,7 +28,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    // ── 1. Verificar que el solicitante es un directivo autenticado ──────────
+    // ── 1. Verificar que el solicitante es un directivo o administrador autenticado ──
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return json({ error: 'No autorizado: falta Authorization header.' }, 401);
@@ -57,8 +57,8 @@ serve(async (req: Request) => {
       return json({ error: 'No se encontró el perfil del solicitante.' }, 403);
     }
 
-    if (perfil.rol !== 'directivo') {
-      return json({ error: 'Solo los directivos pueden invitar usuarios.' }, 403);
+    if (perfil.rol !== 'directivo' && perfil.rol !== 'administrador') {
+      return json({ error: 'Solo los administradores y directivos pueden invitar usuarios.' }, 403);
     }
 
     // ── 2. Validar body de la petición ──────────────────────────────────────

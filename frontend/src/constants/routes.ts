@@ -9,6 +9,7 @@ export const RUTA_INICIO_POR_ROL: Record<string, string> = {
   docente: '/maestro/inicio',
   orientador: '/orientador/inicio',
   directivo: '/director/inicio',
+  administrador: '/admin/usuarios',
   pendiente: '/pendiente-activacion',
 };
 

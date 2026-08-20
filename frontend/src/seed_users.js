@@ -26,6 +26,7 @@ const CAT_VERDE   = 'c1a11111-2222-3333-4444-555555555555';
 const CAT_NARANJA = 'c2a22222-3333-4444-5555-666666666666';
 
 const USERS = [
+  { email: 'admin@conalep.edu.mx',      nombre: 'Ing. Carlos',    apellido: 'Mendoza',   rol: 'administrador' },
   { email: 'docente@conalep.edu.mx',    nombre: 'Prof. Francisco', apellido: 'Gomez',     rol: 'docente' },
   { email: 'director@conalep.edu.mx',   nombre: 'Ing. Roberto',   apellido: 'Hernandez', rol: 'directivo' },
   { email: 'orientador@conalep.edu.mx', nombre: 'Lic. Sofia',     apellido: 'Ramirez',   rol: 'orientador' },

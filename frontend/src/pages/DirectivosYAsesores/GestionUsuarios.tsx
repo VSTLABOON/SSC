@@ -20,9 +20,9 @@ interface Usuario {
   intentos_fallidos?: number | null;
 }
 
-type FiltroRol = 'todos' | 'pendiente' | 'docente' | 'alumno' | 'orientador' | 'padre';
+type FiltroRol = 'todos' | 'pendiente' | 'docente' | 'alumno' | 'orientador' | 'padre' | 'directivo' | 'administrador';
 
-const ROLES_ASIGNABLES = ['docente', 'orientador', 'alumno', 'padre'] as const;
+const ROLES_ASIGNABLES = ['docente', 'orientador', 'alumno', 'padre', 'directivo', 'administrador'] as const;
 
 const ETIQUETA_ROL: Record<string, string> = {
   docente: 'Docente',
@@ -31,6 +31,7 @@ const ETIQUETA_ROL: Record<string, string> = {
   padre: 'Padre/Tutor',
   pendiente: 'Pendiente',
   directivo: 'Directivo',
+  administrador: 'Administrador',
 };
 
 const FILTROS: { label: string; value: FiltroRol }[] = [
@@ -40,6 +41,8 @@ const FILTROS: { label: string; value: FiltroRol }[] = [
   { label: 'Alumnos', value: 'alumno' },
   { label: 'Orientadores', value: 'orientador' },
   { label: 'Padres/Tutores', value: 'padre' },
+  { label: 'Directivos', value: 'directivo' },
+  { label: 'Administradores', value: 'administrador' },
 ];
 
 // ── Componente ───────────────────────────────────────────────────────────────

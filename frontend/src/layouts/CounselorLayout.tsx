@@ -22,9 +22,10 @@ export default function CounselorLayout() {
   const location = useLocation();
 
   const navItems: NavItem[] = [
-    { id: 'inicio', icon: 'radar', label: 'Radar BI & Atención', path: '/orientador/inicio' },
-    { id: 'reporte', icon: 'edit_note', label: 'Generar Reporte', path: '/orientador/reporte' },
-    { id: 'historial', icon: 'history', label: 'Bitácora del Plantel', path: '/orientador/historial' },
+    { id: 'inicio',    icon: 'psychology',     label: 'Atención & Casos',        path: '/orientador/inicio' },
+    { id: 'reporte',  icon: 'edit_note',      label: 'Acta de Intervención',   path: '/orientador/reporte' },
+    { id: 'historial',icon: 'history',        label: 'Historial de Expedientes',path: '/orientador/historial' },
+    { id: 'perfil',   icon: 'account_circle',  label: 'Mi Perfil',               path: '/orientador/perfil' },
   ];
 
   const closeSidebar = () => setIsSidebarOpen(false);

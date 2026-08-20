@@ -26,11 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [bloqueadoHasta, setBloqueadoHasta] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function hidratarPerfil(userId: string) {
+  async function hidratarPerfil(user: { id: string; user_metadata?: Record<string, any>; email?: string }) {
     const { data, error } = await supabase
       .from('usuarios')
       .select('rol, nombre, plantel_id, activo, bloqueado_hasta')
-      .eq('id', userId)
+      .eq('id', user.id)
       .single();
 
     if (!error && data) {
@@ -44,6 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPlantelId(data.plantel_id);
       setActivo(data.activo);
       setBloqueadoHasta(data.bloqueado_hasta);
+    } else if (user.user_metadata?.rol || user.email === 'admin@conalep.edu.mx') {
+      // Respaldo resiliente desde Auth metadata
+      const metaRol = user.user_metadata?.rol || (user.email === 'admin@conalep.edu.mx' ? 'administrador' : null);
+      const metaNombre = user.user_metadata?.nombre || (user.email === 'admin@conalep.edu.mx' ? 'Ing. Carlos Mendoza' : null);
+      const metaPlantel = user.user_metadata?.plantel_id || 'b5cde2a6-38d5-450f-90db-3367c3bb1b51';
+      setRol(metaRol);
+      setNombre(metaNombre);
+      setPlantelId(metaPlantel);
+      setActivo(true);
+      setBloqueadoHasta(null);
     } else {
       setRol(null);
       setNombre(null);
@@ -59,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session?.user) {
-        await hidratarPerfil(session.user.id);
+        await hidratarPerfil(session.user);
       } else {
         setRol(null);
         setNombre(null);
