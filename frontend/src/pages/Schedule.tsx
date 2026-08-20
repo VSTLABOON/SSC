@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
+import { getPerfilAlumno } from '../services/alumnos';
+import { exportHorarioClasesPDF } from '../services/pdfExportService';
 import './Schedule.css';
 
 interface ClassCardProps {
@@ -24,29 +27,86 @@ function ClassCard({ borderColor, textColor, subject, professor, icon, room }: C
   );
 }
 
-// NOTA: El horario por hora/día sigue siendo estático en el frontend debido a que
-// el backend no cuenta actualmente con una tabla 'horarios' u otra estructura
-// de base de datos dedicada. Esta conexión queda pendiente para una fase futura.
 export default function Schedule() {
-  const { rol } = useAuth();
+  const { session, rol } = useAuth();
+  const [studentProfile, setStudentProfile] = useState<any>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [activeChildId, setActiveChildId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
 
-  function handleDownload() {
+  // Sincronización con el selector global de tutelados
+  useEffect(() => {
+    function handleChildChange(evt: Event) {
+      const custom = evt as CustomEvent<{ childId: string }>;
+      if (custom.detail?.childId) {
+        setActiveChildId(custom.detail.childId);
+      }
+    }
+    window.addEventListener('ssc_child_change', handleChildChange);
+    return () => window.removeEventListener('ssc_child_change', handleChildChange);
+  }, []);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    async function loadStudentData() {
+      try {
+        let studentId = session!.user!.id;
+
+        if (rol === 'padre') {
+          const { data: linkRows } = await supabase
+            .from('padres_alumnos')
+            .select('alumno_id')
+            .eq('padre_id', session!.user!.id);
+
+          if (linkRows && linkRows.length > 0) {
+            const selectedId = activeChildId || localStorage.getItem('ssc_selected_child_id');
+            const matched = linkRows.find(r => r.alumno_id === selectedId);
+            studentId = matched ? matched.alumno_id : linkRows[0].alumno_id;
+          }
+        }
+
+        const profile = await getPerfilAlumno(studentId).catch(() => null);
+        setStudentProfile(profile);
+      } catch (err) {
+        console.error('Error al cargar datos del horario:', err);
+      }
+    }
+
+    loadStudentData();
+  }, [session, rol, activeChildId]);
+
+  const userObj = studentProfile?.usuarios as { nombre?: string; apellido?: string } | undefined;
+  const grupoObj = studentProfile?.grupos as { nombre?: string } | undefined;
+  const nombreEstudiante = userObj?.nombre ? `${userObj.nombre} ${userObj.apellido || ''}`.trim() : 'Estudiante CONALEP';
+  const grupoNombre = grupoObj?.nombre || 'INFO-201';
+  const matricula = studentProfile?.matricula || '260000001';
+
+  async function handleDownload() {
     if (isDownloading) return;
-    setIsDownloading(true);
-
-    setTimeout(() => {
-      setIsDownloading(false);
+    try {
+      setIsDownloading(true);
+      await exportHorarioClasesPDF({
+        nombreCompleto: nombreEstudiante,
+        matricula,
+        grupoNombre,
+        carreraNombre: 'Informática Técnica',
+        periodoNombre: 'Semestre 2026-A',
+        generadoPor: rol === 'padre' ? 'Portal de Tutor / Horario' : 'Portal de Alumno / Horario',
+      });
       setShowToast(true);
       setTimeout(() => {
         setShowToast(false);
       }, 4000);
-    }, 1500);
+    } catch (err) {
+      console.error('Error al exportar horario a PDF:', err);
+    } finally {
+      setIsDownloading(false);
+    }
   }
 
   return (
-    <div className="schedule-canvas-only">
+    <div className="schedule-canvas-only" style={{ paddingBottom: '96px' }}>
       {/* ── Encabezado de página ── */}
       <header className="page-header animate-fade-in">
         <div className="page-header__left">
@@ -55,10 +115,10 @@ export default function Schedule() {
           </div>
           <div>
             <h2 className="page-header__title">
-              {rol === 'padre' ? 'Horario de Clases del Tutelado' : 'Mi Horario de Clases'}
+              {rol === 'padre' ? `Horario de Clases (${nombreEstudiante})` : 'Mi Horario de Clases'}
             </h2>
-            <div className="page-header__period">
-              <span className="page-header__period-label">Periodo:</span>
+            <div className="page-header__period" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span className="page-header__period-label">Grupo: <strong>{grupoNombre}</strong></span>
               <span className="page-header__period-badge">Semestre 2026-A</span>
             </div>
           </div>

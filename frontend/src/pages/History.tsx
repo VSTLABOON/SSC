@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getIncidenciasDelAlumno } from '../services/incidencias';
+import { getPerfilAlumno } from '../services/alumnos';
+import { exportHistorialBitacoraPDF } from '../services/pdfExportService';
 import './History.css';
 
 interface IncidentFromDB {
@@ -23,6 +25,7 @@ interface ProcessedReport {
   category: string;
   categoryLabel: string;
   description: string;
+  location: string;
   impact: number;
   status: 'registrado' | 'revision' | 'resuelto';
   statusLabel: string;
@@ -47,7 +50,7 @@ const Icon = ({ name, className = '', filled = false, style }: { name: string; c
 const CATEGORY_BADGE_CLASS: Record<string, string> = {
   inasistencia: 'badge badge--error',
   participacion: 'badge badge--secondary',
-  conducta: 'badge badge--neutral',
+  conducta: 'badge badge--amber',
   general: 'badge badge--neutral',
 };
 
@@ -78,7 +81,9 @@ function formatDateShort(dateStr: string) {
 export default function History() {
   const { session, rol } = useAuth();
   const [dbReports, setDbReports] = useState<IncidentFromDB[]>([]);
+  const [studentProfile, setStudentProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [incidentFilter, setIncidentFilter] = useState<IncidentFilter>('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [activeChildId, setActiveChildId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
@@ -122,8 +127,13 @@ export default function History() {
           studentId = matched ? matched.alumno_id : linkRows[0].alumno_id;
         }
 
-        const data = await getIncidenciasDelAlumno(studentId);
+        const [data, profileData] = await Promise.all([
+          getIncidenciasDelAlumno(studentId),
+          getPerfilAlumno(studentId).catch(() => null),
+        ]);
+
         setDbReports(data as unknown as IncidentFromDB[]);
+        setStudentProfile(profileData);
       } catch (err) {
         console.error('Error al cargar historial de reportes:', err);
       } finally {
@@ -139,21 +149,21 @@ export default function History() {
     return dbReports.map((r) => {
       const catRaw = r.categorias_incidencia;
       const cat = (Array.isArray(catRaw) ? catRaw[0] : catRaw) as { nombre?: string; color_semaforo?: string } | null;
-      const catName = cat?.nombre || 'General';
-      const color = cat?.color_semaforo || 'verde';
+      const catName = cat?.nombre || 'Observación Conductual';
+      const color = cat?.color_semaforo || (r.impacto_puntos > 0 ? 'verde' : 'naranja');
       
       let filterGroup: 'positive' | 'warning' | 'negative' = 'positive';
       if (r.impacto_puntos < 0) {
-        filterGroup = color === 'rojo' ? 'negative' : 'warning';
+        filterGroup = color === 'rojo' || r.impacto_puntos <= -15 ? 'negative' : 'warning';
       }
 
       let categoryKey = 'general';
       const lowerCat = catName.toLowerCase();
-      if (lowerCat.includes('inasistencia') || lowerCat.includes('falta')) {
+      if (lowerCat.includes('inasistencia') || lowerCat.includes('falta') || lowerCat.includes('retardo')) {
         categoryKey = 'inasistencia';
       } else if (r.impacto_puntos > 0) {
         categoryKey = 'participacion';
-      } else if (lowerCat.includes('conducta')) {
+      } else if (lowerCat.includes('conducta') || lowerCat.includes('respeto')) {
         categoryKey = 'conducta';
       }
 
@@ -163,9 +173,10 @@ export default function History() {
         dateGroupLabel: formatDateGroup(r.created_at),
         category: categoryKey,
         categoryLabel: catName.toUpperCase(),
-        description: r.descripcion,
+        description: r.descripcion || 'Sin descripción adicional.',
+        location: r.lugar || 'Aula',
         impact: r.impacto_puntos,
-        status: 'registrado', // Por defecto en el prototipo
+        status: 'registrado',
         statusLabel: 'Registrado',
         filterGroup,
       };
@@ -216,27 +227,95 @@ export default function History() {
   const positiveCount = useMemo(() => reports.filter((r) => r.impact > 0).length, [reports]);
   const negativeCount = useMemo(() => reports.filter((r) => r.impact < 0).length, [reports]);
 
+  const handleDownloadPDF = async () => {
+    try {
+      setIsExporting(true);
+      const userObj = studentProfile?.usuarios as { nombre?: string; apellido?: string } | undefined;
+      const grupoObj = studentProfile?.grupos as { nombre?: string } | undefined;
+      const nombreCompleto = userObj?.nombre ? `${userObj.nombre} ${userObj.apellido || ''}`.trim() : 'Estudiante CONALEP';
+      const matricula = studentProfile?.matricula || '260000001';
+      const grupoNombre = grupoObj?.nombre || 'INFO-201';
+
+      const filtroTipoLabel =
+        incidentFilter === 'positive'
+          ? 'Solo Participaciones Positivas'
+          : incidentFilter === 'warning'
+          ? 'Solo Faltas Leves'
+          : incidentFilter === 'negative'
+          ? 'Solo Faltas Graves'
+          : 'Todos los Registros';
+
+      const filtroPeriodoLabel =
+        timeFilter === 'today'
+          ? 'Últimas 24 Horas'
+          : timeFilter === 'week'
+          ? 'Última Semana'
+          : timeFilter === 'month'
+          ? 'Último Mes'
+          : 'Cualquier fecha';
+
+      const puntosPositivos = filteredReports.filter(r => r.impact > 0).reduce((sum, r) => sum + r.impact, 0);
+      const puntosNegativos = filteredReports.filter(r => r.impact < 0).reduce((sum, r) => sum + r.impact, 0);
+      const totalPuntosExtracto = filteredReports.reduce((sum, r) => sum + r.impact, 0);
+
+      await exportHistorialBitacoraPDF({
+        nombreCompleto,
+        matricula,
+        grupoNombre,
+        carreraNombre: 'Informática Técnica',
+        filtroTipo: filtroTipoLabel,
+        filtroPeriodo: filtroPeriodoLabel,
+        totalPuntos: totalPuntosExtracto,
+        puntosPositivos,
+        puntosNegativos,
+        items: filteredReports.map(r => ({
+          date: r.date,
+          categoryLabel: r.categoryLabel,
+          description: r.description,
+          location: r.location,
+          impact: r.impact,
+          statusLabel: r.statusLabel,
+        })),
+        generadoPor: rol === 'padre' ? 'Portal de Tutor / Historial' : 'Portal de Alumno / Historial',
+      });
+    } catch (err) {
+      console.error('Error al exportar bitácora a PDF:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (loading) {
-    return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando historial de reportes...</div>;
+    return (
+      <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
+        <div className="spinner" style={{ margin: '0 auto 12px' }} />
+        <p>Cargando historial de reportes...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="page-canvas">
+    <div className="page-canvas" style={{ paddingBottom: '96px' }}>
       {/* Encabezado de página */}
       <header className="page-header animate-fade-in">
         <div className="page-header__left">
           <div className="page-header__icon-box">
-            <span className="material-symbols-outlined page-header__icon">assignment_late</span>
+            <span className="material-symbols-outlined page-header__icon">history_edu</span>
           </div>
           <div>
-            <h2 className="page-header__title">Historial de Reportes</h2>
-            <p className="page-header__subtitle">Registro completo de incidencias y participaciones</p>
+            <h2 className="page-header__title">Historial de Incidencias</h2>
+            <p className="page-header__subtitle">Registro cronológico de méritos y observaciones de conducta</p>
           </div>
         </div>
         <div className="page-header__actions">
-          <button className="btn-download" onClick={() => window.print()} title="Imprimir / Guardar Historial en PDF">
-            <Icon name="download" />
-            Descargar Historial
+          <button
+            className="btn-download"
+            onClick={handleDownloadPDF}
+            disabled={isExporting}
+            title="Descargar Historial Oficial en PDF"
+          >
+            <Icon name={isExporting ? 'hourglass_top' : 'download'} />
+            {isExporting ? 'Generando PDF...' : 'Descargar Historial'}
           </button>
         </div>
       </header>
@@ -279,28 +358,28 @@ export default function History() {
             className={`segmented-btn ${incidentFilter === 'all' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('all')}
           >
-            <Icon name="list_alt" style={{ fontSize: '18px', marginRight: '6px' }} />
+            <Icon name="list_alt" style={{ fontSize: '16px' }} />
             Todos ({reports.length})
           </button>
           <button
             className={`segmented-btn ${incidentFilter === 'positive' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('positive')}
           >
-            <Icon name="check_circle" style={{ fontSize: '18px', color: '#10b981', marginRight: '6px' }} />
+            <Icon name="check_circle" style={{ fontSize: '16px', color: incidentFilter === 'positive' ? '#ffffff' : '#10b981' }} />
             Positivos ({positiveCount})
           </button>
           <button
             className={`segmented-btn ${incidentFilter === 'warning' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('warning')}
           >
-            <Icon name="warning" style={{ fontSize: '18px', color: '#f59e0b', marginRight: '6px' }} />
+            <Icon name="warning" style={{ fontSize: '16px', color: incidentFilter === 'warning' ? '#ffffff' : '#f59e0b' }} />
             Leves ({reports.filter(r => r.filterGroup === 'warning').length})
           </button>
           <button
             className={`segmented-btn ${incidentFilter === 'negative' ? 'segmented-btn--active' : ''}`}
             onClick={() => setIncidentFilter('negative')}
           >
-            <Icon name="error" style={{ fontSize: '18px', color: '#ef4444', marginRight: '6px' }} />
+            <Icon name="error" style={{ fontSize: '16px', color: incidentFilter === 'negative' ? '#ffffff' : '#ef4444' }} />
             Graves ({negativeCount})
           </button>
         </div>
@@ -323,9 +402,9 @@ export default function History() {
       {/* Tabla e Historial */}
       <section className="history-table-section animate-fade-in" style={{ animationDelay: '0.15s' }}>
         {groupedReports.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px', color: '#5c5f60', background: '#ffffff', borderRadius: '8px' }}>
-            <Icon name="search_off" style={{ fontSize: '48px', marginBottom: '8px' }} />
-            <p>No se encontraron reportes con los filtros seleccionados.</p>
+          <div style={{ textAlign: 'center', padding: '48px', color: 'var(--color-text-sub, #64748b)', background: 'var(--color-bg-card, #ffffff)', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #e2e8f0)' }}>
+            <Icon name="search_off" style={{ fontSize: '48px', marginBottom: '8px', color: '#94a3b8' }} />
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>No se encontraron reportes con los filtros seleccionados.</p>
           </div>
         ) : (
           groupedReports.map((group) => (
@@ -336,16 +415,16 @@ export default function History() {
                   <table className="reports-table">
                     <thead>
                       <tr>
-                        <th>Categoría</th>
-                        <th>Descripción / Acuerdos</th>
-                        <th>Impacto</th>
-                        <th>Estado</th>
+                        <th style={{ width: '180px' }}>Categoría</th>
+                        <th>Descripción y Ubicación</th>
+                        <th style={{ width: '110px', textAlign: 'center' }}>Impacto</th>
+                        <th style={{ width: '110px', textAlign: 'center' }}>Estado</th>
                       </tr>
                     </thead>
                     <tbody>
                       {group.items.map((report) => {
                         const badgeClass = CATEGORY_BADGE_CLASS[report.category] || CATEGORY_BADGE_CLASS.general;
-                        const impactClass = report.impact > 0 ? 'impact impact--positive' : 'impact impact--negative';
+                        const isPositive = report.impact > 0;
                         return (
                           <tr key={report.id}>
                             <td className="cell-category">
@@ -353,15 +432,18 @@ export default function History() {
                             </td>
                             <td className="cell-desc">
                               <p className="report-desc-text">{report.description}</p>
-                              <span className="report-meta-text">Código: {report.id.substring(0, 8)}</span>
-                            </td>
-                            <td className="cell-impact">
-                              <span className={impactClass}>
-                                {report.impact > 0 ? `+${report.impact}` : report.impact} pts
+                              <span className="report-meta-text">
+                                <Icon name="location_on" style={{ fontSize: '13px', verticalAlign: 'middle', marginRight: '2px' }} />
+                                {report.location} • {report.date}
                               </span>
                             </td>
-                            <td className="cell-status">
-                              <div className="status-cell">
+                            <td className="cell-impact" style={{ textAlign: 'center' }}>
+                              <span className={isPositive ? 'impact impact--positive' : 'impact impact--negative-strong'} style={{ fontSize: '13px', fontWeight: 800 }}>
+                                {isPositive ? `+${report.impact}` : report.impact} pts
+                              </span>
+                            </td>
+                            <td className="cell-status" style={{ textAlign: 'center' }}>
+                              <div className="status-cell" style={{ justifyContent: 'center' }}>
                                 <span className={STATUS_DOT_CLASS[report.status]} />
                                 <span className={STATUS_TEXT_CLASS[report.status]}>{report.statusLabel}</span>
                               </div>

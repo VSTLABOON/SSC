@@ -849,3 +849,43 @@ body.no-scroll {
     opacity: 1;
   }
 }
+
+/* ── Reglas de Modo Oscuro para Schedule ────────────────────────────────── */
+[data-theme='dark'] .schedule-wrapper {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .header-cell {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+
+[data-theme='dark'] .schedule-cell {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .schedule-cell--time {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .class-card {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .class-card__professor {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .class-card__room {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .schedule-cell--break {
+  background-color: rgba(51, 65, 85, 0.4) !important;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
+}

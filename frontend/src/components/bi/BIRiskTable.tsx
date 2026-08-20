@@ -108,7 +108,7 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
                         background: 'none',
                         border: 'none',
                         padding: 0,
-                        color: '#204785',
+                        color: 'var(--color-brand-chambray, #60a5fa)',
                         fontWeight: 600,
                         cursor: 'pointer',
                         display: 'inline-flex',
@@ -132,7 +132,7 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
                       <span style={{ textTransform: 'capitalize', marginLeft: '4px' }}>{student.nivel_semaforo}</span>
                     </span>
                   </td>
-                  <td style={{ fontWeight: 700, color: student.puntos_totales < 70 ? '#dc2626' : '#1e293b' }}>
+                  <td style={{ fontWeight: 700, color: student.puntos_totales < 70 ? '#ef4444' : 'var(--color-text-main, #f8fafc)' }}>
                     {student.puntos_totales} pts
                   </td>
                   <td>
@@ -146,15 +146,11 @@ export const BIRiskTable: React.FC<BIRiskTableProps> = ({ students, loading }) =
                           borderRadius: '6px',
                           fontSize: '11px',
                           fontWeight: 700,
-                          backgroundColor: student.risk_categoria === 'critico' ? '#fee2e2' : student.risk_categoria === 'alto' ? '#fef3c7' : '#dcfce7',
-                          color: student.risk_categoria === 'critico' ? '#991b1b' : student.risk_categoria === 'alto' ? '#92400e' : '#166534',
-                          border: `1px solid ${student.risk_categoria === 'critico' ? '#fca5a5' : student.risk_categoria === 'alto' ? '#fde68a' : '#86efac'}`,
+                          backgroundColor: student.risk_categoria === 'critico' ? 'rgba(239, 68, 68, 0.2)' : student.risk_categoria === 'alto' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                          color: student.risk_categoria === 'critico' ? '#f87171' : student.risk_categoria === 'alto' ? '#fbbf24' : '#34d399',
                         }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>
-                          {student.risk_categoria === 'critico' ? 'warning' : 'analytics'}
-                        </span>
-                        {student.risk_score}% ({student.risk_categoria})
+                        {student.risk_score} pts ({(student.risk_categoria || 'medio').toUpperCase()})
                       </span>
                     ) : (
                       <span style={{ fontSize: '11px', color: '#94a3b8' }}>N/A</span>

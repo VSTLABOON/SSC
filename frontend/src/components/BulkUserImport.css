@@ -322,9 +322,45 @@
 .bui-btn-submit:disabled { opacity: .55; cursor: not-allowed; }
 
 /* ── Dark Theme Overrides ────────────────────────────────────────────────── */
-[data-theme='dark'] .bui-dropzone {
-  background: var(--c-surface-low);
+[data-theme='dark'] .bui-modal {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
 }
+
+[data-theme='dark'] .bui-btn-outline,
+[data-theme='dark'] .bui-btn-cancel,
+[data-theme='dark'] .bui-filter-btn {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .bui-dropzone {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .bui-table-container {
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .bui-table thead,
+[data-theme='dark'] .bui-table th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme='dark'] .bui-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bui-table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.4) !important;
+}
+
 [data-theme='dark'] .bui-status-dot.valido { background: #34d399; }
 [data-theme='dark'] .bui-status-dot.aviso { background: #fbbf24; }
 [data-theme='dark'] .bui-result-card.success {

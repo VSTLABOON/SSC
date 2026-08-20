@@ -349,3 +349,53 @@
 .bi-risk-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
+
+/* ── Reglas de Modo Oscuro para BI Analytics ────────────────────────────── */
+[data-theme='dark'] .bi-filter-bar,
+[data-theme='dark'] .bi-kpi-card,
+[data-theme='dark'] .bi-chart-card,
+[data-theme='dark'] .bi-risk-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-filter-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .bi-filter-select,
+[data-theme='dark'] .bi-btn-reset {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-kpi-title,
+[data-theme='dark'] .bi-chart-title {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-kpi-value {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .bi-kpi-icon-wrap {
+  background-color: #0f172a !important;
+  color: #60a5fa !important;
+}
+
+[data-theme='dark'] .bi-table th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme='dark'] .bi-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bi-table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.4) !important;
+}

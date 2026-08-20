@@ -366,3 +366,70 @@
   .gu-table th:nth-child(3),
   .gu-table td:nth-child(3) { display: none; } /* Ocultar email en móvil */
 }
+
+/* ── Reglas de Modo Oscuro para Gestión de Usuarios ─────────────────────── */
+[data-theme='dark'] .gu-card,
+[data-theme='dark'] .gu-modal {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .gu-filter-btn {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .gu-filter-btn:hover {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .gu-filter-btn--active {
+  background-color: #204785 !important;
+  border-color: #204785 !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .gu-table thead {
+  background-color: #334155 !important;
+}
+
+[data-theme='dark'] .gu-table th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme='dark'] .gu-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .gu-table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.4) !important;
+}
+
+[data-theme='dark'] .gu-user-name {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .gu-user-email {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .gu-rol-select,
+[data-theme='dark'] .gu-input,
+[data-theme='dark'] .gu-select {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .gu-modal-header,
+[data-theme='dark'] .gu-modal-footer {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getPerfilAlumno } from '../services/alumnos';
@@ -22,7 +23,8 @@ interface AlumnoProfile {
 }
 
 export default function Profile() {
-  const { session, rol } = useAuth();
+  const { session, rol, signOut } = useAuth();
+  const navigate = useNavigate();
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeChildId, setActiveChildId] = useState<string>(() => localStorage.getItem('ssc_selected_child_id') || '');
@@ -281,6 +283,38 @@ export default function Profile() {
           </div>
         </div>
       </section>
+
+      {/* Botón de Cerrar Sesión Accesible */}
+      <div style={{ marginTop: '28px', marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+        <button
+          type="button"
+          onClick={async () => {
+            await signOut();
+            navigate('/login');
+          }}
+          style={{
+            background: 'rgba(239, 68, 68, 0.08)',
+            border: '1.5px solid rgba(239, 68, 68, 0.3)',
+            color: '#dc2626',
+            padding: '12px 28px',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            width: '100%',
+            maxWidth: '320px',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(220, 38, 38, 0.08)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>logout</span>
+          Cerrar Sesión
+        </button>
+      </div>
 
       {/* FOOTER */}
       <footer className="page-footer">

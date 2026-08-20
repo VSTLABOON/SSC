@@ -213,6 +213,28 @@ export default function ParentLayout() {
 
             <NotificationCenter />
             <ThemeToggle />
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Cerrar Sesión"
+              aria-label="Cerrar Sesión"
+              style={{
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                color: '#ef4444',
+                padding: '5px 10px',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+              <span className="topbar-logout-text">Salir</span>
+            </button>
           </div>
         </header>
 

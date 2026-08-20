@@ -11,6 +11,31 @@
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
 
+  --c-chambray: #204785;
+  --c-mystic: #f1f5f9;
+  --c-white: #ffffff;
+  --c-on-surface: #0f172a;
+  --c-on-surface-var: #475569;
+  --c-secondary: #64748b;
+  --c-outline: #94a3b8;
+  --c-outline-variant: #e2e8f0;
+  --c-surface-low: #f8fafc;
+  --c-surface-high: #e2e8f0;
+  --c-surface-cont: #f1f5f9;
+  --c-primary: #00492f;
+  --c-primary-cont: #006341;
+  --c-tertiary: #6d2928;
+  --c-error: #ef4444;
+  --c-error-container: #fee2e2;
+  --c-on-error-cont: #991b1b;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
   --heading: 'Inter', system-ui, -apple-system, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
@@ -117,6 +142,52 @@
   color: #f8fafc !important;
 }
 
+/* ── Reglas Globales de Alto Contraste para Tablas en Modo Oscuro ─────── */
+[data-theme='dark'] table {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] thead,
+[data-theme='dark'] table thead tr {
+  background-color: #334155 !important;
+}
+
+[data-theme='dark'] th {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+[data-theme='dark'] td {
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.45) !important;
+}
+
+[data-theme='dark'] .table-card,
+[data-theme='dark'] .table-responsive,
+[data-theme='dark'] .table-wrap {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] select,
+[data-theme='dark'] input[type="text"],
+[data-theme='dark'] input[type="search"],
+[data-theme='dark'] textarea {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
 /* ── MATRIZ GLOBAL DE CAPAS (Z-INDEX LAYER SYSTEM) ─────────────────────── */
 :root {
   --z-canvas: 0;
@@ -140,6 +211,10 @@
   .bi-dashboard,
   .gu-page {
     padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .topbar-logout-text {
+    display: none;
   }
 
   .app-modal-backdrop,

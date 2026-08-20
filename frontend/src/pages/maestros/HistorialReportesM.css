@@ -460,3 +460,53 @@ a      { text-decoration: none; }
   transition: color 0.15s;
 }
 .hrm-footer__links a:hover { color: var(--c-primary); }
+
+/* ── Reglas de Modo Oscuro para Historial de Docentes ───────────────────── */
+[data-theme='dark'] .hrm-table-container,
+[data-theme='dark'] .hrm-student-card,
+[data-theme='dark'] .hrm-report-card,
+[data-theme='dark'] .hrm-kpi-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .hrm-table thead {
+  background-color: #334155 !important;
+}
+
+[data-theme='dark'] .hrm-table th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme='dark'] .hrm-table td {
+  border-bottom-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .hrm-tr-clickable:hover {
+  background-color: rgba(51, 65, 85, 0.4) !important;
+}
+
+[data-theme='dark'] .hrm-student-name,
+[data-theme='dark'] .hrm-report-title,
+[data-theme='dark'] .hrm-detail-name {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .hrm-td-muted,
+[data-theme='dark'] .hrm-report-date__main,
+[data-theme='dark'] .hrm-report-body__value {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .hrm-report-comments {
+  background-color: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme='dark'] .hrm-report-comments__text {
+  color: #cbd5e1 !important;
+}
