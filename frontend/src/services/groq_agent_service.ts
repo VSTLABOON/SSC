@@ -20,8 +20,16 @@ export async function queryGroqAgent(payload: GroqAgentPayload): Promise<string>
       body: { kpiOrChartTitle, dbContextJson, userQuery, conversationHistory },
     });
 
-    if (!error && data?.reply) {
-      return data.reply.trim();
+    if (!error && data?.reply && typeof data.reply === 'string') {
+      const trimmed = data.reply.trim();
+      if (
+        trimmed.length > 0 &&
+        !trimmed.toLowerCase().includes('síntesis no disponible') &&
+        !trimmed.toLowerCase().includes('sintesis no disponible') &&
+        !trimmed.toLowerCase().includes('no disponible')
+      ) {
+        return trimmed;
+      }
     }
 
     // Log detallado para diagnóstico en consola del navegador

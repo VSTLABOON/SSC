@@ -157,8 +157,8 @@ Responde la pregunta con un tono ágil, claro y directo basándote en los datos 
 
     messagesPayload.push({ role: "user", content: userPrompt });
 
-    // AbortSignal timeout de 15 segundos para dar margen al análisis exhaustivo
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // Invocación a Groq API con modelo Llama 3.3 70B (y fallback a Llama 3.1 8B si 70B se satura)
+    let response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       signal: AbortSignal.timeout(15000),
       headers: {
@@ -173,6 +173,25 @@ Responde la pregunta con un tono ágil, claro y directo basándote en los datos 
       }),
     });
 
+    // Reintento con modelo instantáneo si el modelo 70B se satura o retorna error
+    if (!response.ok) {
+      console.warn(`[Groq API Warning]: Modelo 70B retornó status ${response.status}. Reintentando con llama-3.1-8b-instant...`);
+      response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        signal: AbortSignal.timeout(10000),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: messagesPayload,
+          temperature: 0.15,
+          max_tokens: 1200,
+        }),
+      });
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[Groq API Error ${response.status}]:`, errorText);
@@ -183,7 +202,14 @@ Responde la pregunta con un tono ágil, claro y directo basándote en los datos 
     }
 
     const data = await response.json();
-    const reply = data?.choices?.[0]?.message?.content || "Síntesis no disponible.";
+    const reply = data?.choices?.[0]?.message?.content?.trim();
+
+    if (!reply || reply.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Respuesta de IA vacía.", details: data }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 502 }
+      );
+    }
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
