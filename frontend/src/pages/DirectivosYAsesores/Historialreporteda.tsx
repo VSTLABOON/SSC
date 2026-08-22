@@ -219,6 +219,11 @@ export default function HistorialReporteDA() {
 
       {/* List view */}
       <div className="hrm-table-container animate-fade-in">
+        <div className="hrm-table-header" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>
+            Expedientes de Alumnos con Incidencias del Plantel
+          </h3>
+        </div>
         <div className="hrm-table-scroll">
           <table className="hrm-table">
             <thead>

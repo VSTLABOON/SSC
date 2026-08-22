@@ -208,15 +208,14 @@ a      { text-decoration: none; }
 /* Canvas */
 .hrm-canvas {
   flex: 1;
-  padding: 32px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 1280px;
+  max-width: 100%;
   width: 100%;
-  margin-inline: auto;
 }
-@media (max-width: 767px) { .hrm-canvas { padding: 16px; gap: 16px; } }
+@media (max-width: 767px) { .hrm-canvas { padding: 0; gap: 16px; } }
 
 /* Page header */
 .hrm-page-header {

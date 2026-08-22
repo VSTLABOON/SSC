@@ -738,6 +738,7 @@ table.history-table td {
 /* Cabecera superior de la tabla con título y filtros */
 .table-section-header,
 .grm-table-header,
+.hrm-table-header,
 .gu-header-actions,
 .attendance-header {
   padding: 18px 22px !important;
