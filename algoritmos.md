@@ -76,11 +76,9 @@ $$\text{ISC}(s, t) = \text{clamp}_{[0, 100]}\left( S_0 + \sum_{i=1}^{n} w_i \cdo
 
 Donde la función de saturación o acotamiento $\text{clamp}_{[a, b]}(x)$ está definida por:
 
-$$\text{clamp}_{[a, b]}(x) = \max\left(a, \min\left(b, x\right)\right) = \begin{cases} 
-b & \text{si } x > b \\ 
-x & \text{si } a \le x \le b \\ 
-a & \text{si } x < a 
-\end{cases}$$
+$$
+\text{clamp}_{[a, b]}(x) = \max(a, \min(b, x)) = \begin{cases} b & \text{si } x > b \\ x & \text{si } a \le x \le b \\ a & \text{si } x < a \end{cases}
+$$
 
 Con parámetros institucionales fijados en:
 * $S_0 = 100$ (Saldo base de presunción de conducta óptima).
@@ -98,11 +96,9 @@ Con parámetros institucionales fijados en:
   * Falta Crítica / Roja (ej. daño patrimonial, violencia escolar): $-25\text{ pts } (w = 1.0)$.
 
 #### C. Clasificación de Semáforo (Función Discreta por Tramos):
-$$\text{Semáforo}(\text{ISC}) = \begin{cases} 
-\text{Verde (Óptimo)} & \text{si } 90 \le \text{ISC} \le 100 \\ 
-\text{Naranja (Preventivo)} & \text{si } 70 \le \text{ISC} < 90 \\ 
-\text{Rojo (Crítico)} & \text{si } 0 \le \text{ISC} < 70 
-\end{cases}$$
+$$
+\text{Semaforo}(\text{ISC}) = \begin{cases} \text{Verde (Optimo)} & \text{si } 90 \le \text{ISC} \le 100 \\ \text{Naranja (Preventivo)} & \text{si } 70 \le \text{ISC} < 90 \\ \text{Rojo (Critico)} & \text{si } 0 \le \text{ISC} < 70 \end{cases}
+$$
 
 #### D. Implementación en Base de Datos (Trigger Reactivo PL/pgSQL):
 ```sql
@@ -167,10 +163,9 @@ Donde:
 * $N_{\text{total sesiones}} = C_{\text{asistencia}} + C_{\text{retardo}} + C_{\text{justificada}} + C_{\text{falta injustificada}}$.
 
 #### B. Condición de Evaluación del Reglamento CONALEP:
-$$\text{Elegibilidad}(\text{IARP}) = \begin{cases} 
-\text{Derecho a Evaluación Ordinaria} & \text{si } \text{IARP} \ge 80.0\% \\ 
-\text{Riesgo de Pérdida de Asignatura} & \text{si } \text{IARP} < 80.0\% 
-\end{cases}$$
+$$
+\text{Elegibilidad}(\text{IARP}) = \begin{cases} \text{Derecho a Evaluacion Ordinaria} & \text{si } \text{IARP} \ge 80.0\% \\ \text{Riesgo de Perdida de Asignatura} & \text{si } \text{IARP} < 80.0\% \end{cases}
+$$
 
 ---
 
@@ -191,11 +186,9 @@ Con coeficientes calibrados empíricamente para Educación Media Superior Técni
 * $w_a = 0.40$ (Ponderador de inasistencia).
 
 #### B. Espacio de Estados y Matriz de Riesgo:
-$$\text{Nivel de Riesgo}(\text{IRC}) = \begin{cases} 
-\text{Estable} & \text{si } 0 \le \text{IRC} < 15.0 \\ 
-\text{Atención Preventiva} & \text{si } 15.0 \le \text{IRC} < 30.0 \\ 
-\text{Atención Prioritaria (Top Risk)} & \text{si } \text{IRC} \ge 30.0 
-\end{cases}$$
+$$
+\text{NivelDeRiesgo}(\text{IRC}) = \begin{cases} \text{Estable} & \text{si } 0 \le \text{IRC} < 15.0 \\ \text{Atencion Preventiva} & \text{si } 15.0 \le \text{IRC} < 30.0 \\ \text{Atencion Prioritaria (Top Risk)} & \text{si } \text{IRC} \ge 30.0 \end{cases}
+$$
 
 #### C. Implementación en Kernel PostgreSQL (`fn_bi_get_kpis`):
 ```sql
@@ -483,9 +476,9 @@ $$\Delta p_i(t) = \Delta p_{0, i} \cdot e^{-\lambda_i \cdot \Delta t}$$
 Donde:
 * $\Delta p_{0, i}$ es la penalización nominal inicial.
 * $\lambda_i > 0$ es la tasa de decaimiento según la severidad:
-  * Faltas Leves: $\lambda = 0.05 \text{ días}^{-1}$ (vida media de recuperación $\approx 14\text{ días}$).
-  * Faltas Moderadas: $\lambda = 0.02 \text{ días}^{-1}$ (vida media de recuperación $\approx 35\text{ días}$).
-  * Faltas Graves: $\lambda = 0.00 \text{ días}^{-1}$ (sin decaimiento; requieren acta formal de mediación).
+  * Faltas Leves: $\lambda = 0.05 \text{ dias}^{-1}$ (vida media de recuperación $\approx 14\text{ dias}$).
+  * Faltas Moderadas: $\lambda = 0.02 \text{ dias}^{-1}$ (vida media de recuperación $\approx 35\text{ dias}$).
+  * Faltas Graves: $\lambda = 0.00 \text{ dias}^{-1}$ (sin decaimiento; requieren acta formal de mediación).
 
 ---
 
@@ -506,11 +499,9 @@ $$P(Y = 1 \mid \mathbf{X}) = \sigma\left( \boldsymbol{\beta}^T \mathbf{X} + \bet
 7. $x_7$: Historial de justificantes médicos solicitados.
 
 #### C. Umbral de Decisión y Disparo Automático:
-$$\text{Acción}(\hat{y}) = \begin{cases} 
-\text{Cita Obligatoria con Orientador} & \text{si } P(Y=1 \mid \mathbf{X}) \ge 0.70 \\ 
-\text{Alerta Preventiva al Tutor} & \text{si } 0.45 \le P(Y=1 \mid \mathbf{X}) < 0.70 \\ 
-\text{Monitoreo Regular} & \text{si } P(Y=1 \mid \mathbf{X}) < 0.45 
-\end{cases}$$
+$$
+\text{Accion}(\hat{y}) = \begin{cases} \text{Cita Obligatoria con Orientador} & \text{si } P(Y=1 \mid \mathbf{X}) \ge 0.70 \\ \text{Alerta Preventiva al Tutor} & \text{si } 0.45 \le P(Y=1 \mid \mathbf{X}) < 0.70 \\ \text{Monitoreo Regular} & \text{si } P(Y=1 \mid \mathbf{X}) < 0.45 \end{cases}
+$$
 
 ---
 
