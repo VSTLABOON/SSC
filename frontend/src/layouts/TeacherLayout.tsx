@@ -166,6 +166,7 @@ export default function TeacherLayout() {
             <button
               type="button"
               onClick={handleLogout}
+              className="topbar-logout-btn"
               title="Cerrar Sesión"
               aria-label="Cerrar Sesión"
               style={{

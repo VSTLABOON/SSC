@@ -143,6 +143,7 @@ export default function CounselorLayout() {
             <button
               type="button"
               onClick={handleLogout}
+              className="topbar-logout-btn"
               title="Cerrar Sesión"
               aria-label="Cerrar Sesión"
               style={{

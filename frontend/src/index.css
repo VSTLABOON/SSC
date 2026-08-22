@@ -213,8 +213,9 @@
     padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important;
   }
 
+  .topbar-logout-btn,
   .topbar-logout-text {
-    display: none;
+    display: none !important;
   }
 
   .app-modal-backdrop,

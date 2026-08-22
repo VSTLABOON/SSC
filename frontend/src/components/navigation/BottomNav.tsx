@@ -212,20 +212,25 @@ export const BottomNav: React.FC = () => {
               </>
             )}
 
-            <div style={{ height: '1px', background: 'var(--color-border-subtle, #e2e8f0)', margin: '6px 0' }} />
-            <button
-              type="button"
-              className="fab-action-btn"
-              style={{ color: '#ef4444', fontWeight: 600 }}
-              onClick={async () => {
-                setIsFabOpen(false);
-                await signOut();
-                navigate('/login');
-              }}
-            >
-              <span className="material-symbols-outlined fab-action-icon" style={{ color: '#ef4444' }}>logout</span>
-              Cerrar Sesión
-            </button>
+            {/* Botón de salida rápida únicamente en roles administrativos/docentes, no en perfiles de consulta (Alumno / Padre) */}
+            {!isAlumno && !isPadre && (
+              <>
+                <div style={{ height: '1px', background: 'var(--color-border-subtle, #e2e8f0)', margin: '6px 0' }} />
+                <button
+                  type="button"
+                  className="fab-action-btn"
+                  style={{ color: '#ef4444', fontWeight: 600 }}
+                  onClick={async () => {
+                    setIsFabOpen(false);
+                    await signOut();
+                    navigate('/login');
+                  }}
+                >
+                  <span className="material-symbols-outlined fab-action-icon" style={{ color: '#ef4444' }}>logout</span>
+                  Cerrar Sesión
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
