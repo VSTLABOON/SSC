@@ -74,11 +74,14 @@ El **Índice de Salud Conductual ($\text{ISC}$)** en el instante $t$ se define f
 
 $$\text{ISC}(s, t) = \text{clamp}_{[0, 100]}\left( S_0 + \sum_{i=1}^{n} w_i \cdot \Delta p_i \right)$$
 
-Donde la función de saturación o acotamiento $\text{clamp}_{[a, b]}(x)$ está definida por:
+Donde la función de saturación o acotamiento $\text{clamp}_{[a, b]}(x)$ está definida formalmente por:
 
-$$
-\text{clamp}_{[a, b]}(x) = \max(a, \min(b, x)) = \begin{cases} b & \text{si } x > b \\ x & \text{si } a \le x \le b \\ a & \text{si } x < a \end{cases}
-$$
+$$\text{clamp}_{[a, b]}(x) = \max(a, \min(b, x))$$
+
+Cuyo comportamiento por intervalos equivale a:
+* Si $x > b \implies \text{clamp}_{[a, b]}(x) = b$
+* Si $a \le x \le b \implies \text{clamp}_{[a, b]}(x) = x$
+* Si $x < a \implies \text{clamp}_{[a, b]}(x) = a$
 
 Con parámetros institucionales fijados en:
 * $S_0 = 100$ (Saldo base de presunción de conducta óptima).
@@ -96,9 +99,11 @@ Con parámetros institucionales fijados en:
   * Falta Crítica / Roja (ej. daño patrimonial, violencia escolar): $-25\text{ pts } (w = 1.0)$.
 
 #### C. Clasificación de Semáforo (Función Discreta por Tramos):
-$$
-\text{Semaforo}(\text{ISC}) = \begin{cases} \text{Verde (Optimo)} & \text{si } 90 \le \text{ISC} \le 100 \\ \text{Naranja (Preventivo)} & \text{si } 70 \le \text{ISC} < 90 \\ \text{Rojo (Critico)} & \text{si } 0 \le \text{ISC} < 70 \end{cases}
-$$
+
+$$\text{Semaforo}(\text{ISC}):$$
+* **Verde (Óptimo):** $90 \le \text{ISC} \le 100$
+* **Naranja (Preventivo):** $70 \le \text{ISC} < 90$
+* **Rojo (Crítico / Atención Prioritaria):** $0 \le \text{ISC} < 70$
 
 #### D. Implementación en Base de Datos (Trigger Reactivo PL/pgSQL):
 ```sql
@@ -163,9 +168,10 @@ Donde:
 * $N_{\text{total sesiones}} = C_{\text{asistencia}} + C_{\text{retardo}} + C_{\text{justificada}} + C_{\text{falta injustificada}}$.
 
 #### B. Condición de Evaluación del Reglamento CONALEP:
-$$
-\text{Elegibilidad}(\text{IARP}) = \begin{cases} \text{Derecho a Evaluacion Ordinaria} & \text{si } \text{IARP} \ge 80.0\% \\ \text{Riesgo de Perdida de Asignatura} & \text{si } \text{IARP} < 80.0\% \end{cases}
-$$
+
+$$\text{Elegibilidad}(\text{IARP}):$$
+* **Derecho a Evaluación Ordinaria:** $\text{IARP} \ge 80.0\%$
+* **Riesgo de Pérdida de Asignatura:** $\text{IARP} < 80.0\%$
 
 ---
 
@@ -186,9 +192,11 @@ Con coeficientes calibrados empíricamente para Educación Media Superior Técni
 * $w_a = 0.40$ (Ponderador de inasistencia).
 
 #### B. Espacio de Estados y Matriz de Riesgo:
-$$
-\text{NivelDeRiesgo}(\text{IRC}) = \begin{cases} \text{Estable} & \text{si } 0 \le \text{IRC} < 15.0 \\ \text{Atencion Preventiva} & \text{si } 15.0 \le \text{IRC} < 30.0 \\ \text{Atencion Prioritaria (Top Risk)} & \text{si } \text{IRC} \ge 30.0 \end{cases}
-$$
+
+$$\text{Nivel de Riesgo}(\text{IRC}):$$
+* **Estable:** $0 \le \text{IRC} < 15.0$
+* **Atención Preventiva:** $15.0 \le \text{IRC} < 30.0$
+* **Atención Prioritaria (Top Risk):** $\text{IRC} \ge 30.0$
 
 #### C. Implementación en Kernel PostgreSQL (`fn_bi_get_kpis`):
 ```sql
@@ -499,9 +507,11 @@ $$P(Y = 1 \mid \mathbf{X}) = \sigma\left( \boldsymbol{\beta}^T \mathbf{X} + \bet
 7. $x_7$: Historial de justificantes médicos solicitados.
 
 #### C. Umbral de Decisión y Disparo Automático:
-$$
-\text{Accion}(\hat{y}) = \begin{cases} \text{Cita Obligatoria con Orientador} & \text{si } P(Y=1 \mid \mathbf{X}) \ge 0.70 \\ \text{Alerta Preventiva al Tutor} & \text{si } 0.45 \le P(Y=1 \mid \mathbf{X}) < 0.70 \\ \text{Monitoreo Regular} & \text{si } P(Y=1 \mid \mathbf{X}) < 0.45 \end{cases}
-$$
+
+$$\text{Accion}(\hat{y}):$$
+* **Cita Obligatoria con Orientación Educativa:** $P(Y=1 \mid \mathbf{X}) \ge 0.70$
+* **Alerta Preventiva Temprana al Tutor:** $0.45 \le P(Y=1 \mid \mathbf{X}) < 0.70$
+* **Monitoreo Regular de Aula:** $P(Y=1 \mid \mathbf{X}) < 0.45$
 
 ---
 

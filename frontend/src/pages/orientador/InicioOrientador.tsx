@@ -106,168 +106,340 @@ export default function InicioOrientador() {
   return (
     <div className="ida-canvas-only animate-fade-in">
       {/* Welcome Hero Orientador */}
-      <section className={`ida-hero${heroVisible ? ' ida-hero--visible' : ''}`} style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.18)', padding: '3px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', color: '#ffffff' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>psychology</span>
+      <section className={`orientador-hero${heroVisible ? ' orientador-hero--visible' : ''}`}>
+        <div className="orientador-hero-body">
+          <div className="orientador-hero-content">
+            <div className="orientador-welcome-chip">
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>psychology</span>
               Orientación Educativa & Psicopedagogía
             </div>
-            <h2 className="ida-hero__title">
-              Panel de Acompañamiento & Prevención de Deserción
+            <h2 className="orientador-hero-title">
+              Panel de Acompañamiento & Prevención
             </h2>
-            <p className="ida-hero__subtitle">
-              Bienvenido(a), {nombre || 'Orientador(a)'}. Monitoreo focalizado de alumnos en riesgo, justificantes y compromisos con tutores.
+            <p className="orientador-hero-subtitle">
+              Hola, {nombre || 'Orientador(a)'}. Monitoreo integral de acuerdos, justificantes y atención psicopedagógica.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="orientador-hero-actions">
             <button
               type="button"
-              className="ida-btn-primary"
+              className="orientador-btn-action orientador-btn-action--primary"
               onClick={() => setModalIntervencionOpen(true)}
-              style={{ width: 'auto', display: 'inline-flex', padding: '10px 16px', fontSize: '13px', background: '#0284c7' }}
             >
-              <span className="material-symbols-outlined">psychology</span>
-              Registrar Acuerdo / Cita
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_circle</span>
+              <span>Registrar Acuerdo</span>
             </button>
             <button
               type="button"
-              className="ida-btn-primary"
+              className="orientador-btn-action orientador-btn-action--secondary"
               onClick={() => navigate('/orientador/reporte')}
-              style={{ width: 'auto', display: 'inline-flex', padding: '10px 16px', fontSize: '13px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}
             >
-              <span className="material-symbols-outlined">assignment_add</span>
-              Generar Reporte
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>assignment_add</span>
+              <span>Generar Reporte</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* Selector de Pestañas Dedicadas de Orientación */}
-      <div className="dedicated-tabs-container">
+      {/* Resumen Rápido de Casos / KPIs de Orientación */}
+      <div className="orientador-kpi-grid">
+        <div
+          className={`orientador-kpi-card ${activeTab === 'justificantes' ? 'orientador-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('justificantes')}
+        >
+          <div className="orientador-kpi-info">
+            <div className="orientador-kpi-label">Justificantes</div>
+            <div className="orientador-kpi-value">{justificantesPendientes.length}</div>
+            <div className="orientador-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: justificantesPendientes.length > 0 ? '#ef4444' : '#10b981' }}>
+                {justificantesPendientes.length > 0 ? 'pending_actions' : 'check_circle'}
+              </span>
+              <span>{justificantesPendientes.length > 0 ? 'Por validar' : 'Al día'}</span>
+            </div>
+          </div>
+          <div className="orientador-kpi-icon-wrap" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+            <span className="material-symbols-outlined">fact_check</span>
+          </div>
+        </div>
+
+        <div
+          className={`orientador-kpi-card ${activeTab === 'citas' ? 'orientador-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('citas')}
+        >
+          <div className="orientador-kpi-info">
+            <div className="orientador-kpi-label">Citas de Tutores</div>
+            <div className="orientador-kpi-value">{citasPendientes.length}</div>
+            <div className="orientador-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: citasPendientes.length > 0 ? '#f59e0b' : '#10b981' }}>
+                {citasPendientes.length > 0 ? 'schedule' : 'task_alt'}
+              </span>
+              <span>{citasPendientes.length > 0 ? 'Por confirmar' : 'Al día'}</span>
+            </div>
+          </div>
+          <div className="orientador-kpi-icon-wrap" style={{ background: '#fef3c7', color: '#d97706' }}>
+            <span className="material-symbols-outlined">calendar_month</span>
+          </div>
+        </div>
+
+        <div
+          className={`orientador-kpi-card ${activeTab === 'intervenciones' ? 'orientador-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('intervenciones')}
+        >
+          <div className="orientador-kpi-info">
+            <div className="orientador-kpi-label">Bitácora Activa</div>
+            <div className="orientador-kpi-value">{intervenciones.length}</div>
+            <div className="orientador-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#0284c7' }}>history_edu</span>
+              <span>Acuerdos registrados</span>
+            </div>
+          </div>
+          <div className="orientador-kpi-icon-wrap" style={{ background: '#e0e7ff', color: '#4338ca' }}>
+            <span className="material-symbols-outlined">handshake</span>
+          </div>
+        </div>
+
+        <div
+          className={`orientador-kpi-card ${activeTab === 'bi' ? 'orientador-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('bi')}
+        >
+          <div className="orientador-kpi-info">
+            <div className="orientador-kpi-label">Radar de Riesgo</div>
+            <div className="orientador-kpi-value" style={{ fontSize: '18px', paddingTop: '3px' }}>Centro BI</div>
+            <div className="orientador-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#10b981' }}>analytics</span>
+              <span>Métricas del plantel</span>
+            </div>
+          </div>
+          <div className="orientador-kpi-icon-wrap" style={{ background: '#dcfce7', color: '#15803d' }}>
+            <span className="material-symbols-outlined">radar</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Selector de Pestañas de Orientación */}
+      <nav className="orientador-tabs-nav" aria-label="Secciones de Orientación">
         <button
           type="button"
-          className={`dedicated-tab-btn ${activeTab === 'intervenciones' ? 'dedicated-tab-btn--active' : ''}`}
+          className={`orientador-tab-btn ${activeTab === 'intervenciones' ? 'orientador-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('intervenciones')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>handshake</span>
-          Bitácora de Acuerdos ({intervenciones.length})
+          <span>Acuerdos</span>
+          <span className="orientador-tab-badge">{intervenciones.length}</span>
         </button>
         <button
           type="button"
-          className={`dedicated-tab-btn ${activeTab === 'justificantes' ? 'dedicated-tab-btn--active' : ''}`}
+          className={`orientador-tab-btn ${activeTab === 'justificantes' ? 'orientador-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('justificantes')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fact_check</span>
-          Justificantes {justificantesPendientes.length > 0 && `(${justificantesPendientes.length} Pendientes)`}
+          <span>Justificantes</span>
+          {justificantesPendientes.length > 0 && (
+            <span className="orientador-tab-badge orientador-tab-badge--pending">{justificantesPendientes.length}</span>
+          )}
         </button>
         <button
           type="button"
-          className={`dedicated-tab-btn ${activeTab === 'citas' ? 'dedicated-tab-btn--active' : ''}`}
+          className={`orientador-tab-btn ${activeTab === 'citas' ? 'orientador-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('citas')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>calendar_month</span>
-          Citas con Tutores {citasPendientes.length > 0 && `(${citasPendientes.length} Pendientes)`}
+          <span>Citas</span>
+          {citasPendientes.length > 0 && (
+            <span className="orientador-tab-badge orientador-tab-badge--pending">{citasPendientes.length}</span>
+          )}
         </button>
         <button
           type="button"
-          className={`dedicated-tab-btn ${activeTab === 'bi' ? 'dedicated-tab-btn--active' : ''}`}
+          className={`orientador-tab-btn ${activeTab === 'bi' ? 'orientador-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('bi')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>radar</span>
-          Radar de Riesgo & Centro BI
+          <span>Radar BI</span>
         </button>
-      </div>
+      </nav>
 
-      {/* Pestaña 1: Bitácora de Intervenciones & Acuerdos con Tutores */}
+      {/* Pestaña 1: Bitácora de Intervenciones & Acuerdos */}
       {activeTab === 'intervenciones' && (
         <section className="dedicated-tab-content">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <div className="orientador-section-header">
             <div>
-              <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 className="orientador-section-title">
                 <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>clinical_notes</span>
                 Bitácora de Acuerdos y Seguimiento Psicopedagógico
-              </h4>
-              <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
+              </h3>
+              <p className="orientador-section-desc">
                 Compromisos firmados con tutores legales y planes de regularización conductual.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setModalIntervencionOpen(true)}
-              style={{ background: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              className="orientador-btn-action orientador-btn-action--primary"
+              style={{ padding: '8px 16px', fontSize: '13px', background: '#0284c7', color: '#ffffff' }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-              Nueva Intervención
+              <span>Nueva Intervención</span>
             </button>
           </div>
 
           {intervenciones.length === 0 ? (
-            <div style={{ background: 'var(--color-bg-card, #ffffff)', padding: '36px', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--color-border-subtle, #e2e8f0)', color: 'var(--color-text-sub, #64748b)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#38bdf8', marginBottom: '8px' }}>handshake</span>
-              <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>No hay sesiones de intervención registradas aún.</p>
-              <p style={{ margin: '6px 0 16px', fontSize: '13px' }}>Registra acuerdos formales con padres de familia de alumnos identificados en Semáforo Naranja o Rojo.</p>
+            <div className="orientador-empty-state">
+              <span className="material-symbols-outlined orientador-empty-icon">handshake</span>
+              <h4 className="orientador-empty-title">No hay sesiones de intervención registradas aún</h4>
+              <p className="orientador-empty-desc">
+                Registra acuerdos formales con padres de familia de alumnos identificados en Semáforo Naranja o Rojo.
+              </p>
               <button
                 type="button"
                 onClick={() => setModalIntervencionOpen(true)}
-                style={{ background: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '9px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                className="orientador-btn-action orientador-btn-action--primary"
+                style={{ background: '#0284c7', color: '#ffffff' }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>
-                Registrar Primera Intervención
+                <span>Registrar Primera Intervención</span>
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {intervenciones.map(item => (
-                <div
-                  key={item.id}
-                  style={{
-                    background: 'var(--color-bg-card, #ffffff)',
-                    padding: '18px 20px',
-                    borderRadius: '14px',
-                    border: '1px solid var(--color-border-subtle, #e2e8f0)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '4px' }}>
-                          {item.tipo}
-                        </span>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#204785' }}>
-                          Matrícula: {item.matricula}
-                        </span>
-                        <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
-                          • Grupo {item.grupo}
+            <div className="orientador-cards-list">
+              {intervenciones.map(item => {
+                const pillTypeClass =
+                  item.tipo === 'conductual'
+                    ? 'orientador-pill--conductual'
+                    : item.tipo === 'academico'
+                    ? 'orientador-pill--academico'
+                    : item.tipo === 'emocional'
+                    ? 'orientador-pill--emocional'
+                    : item.tipo === 'familiar'
+                    ? 'orientador-pill--familiar'
+                    : 'orientador-pill--default';
+
+                return (
+                  <div key={item.id} className="orientador-item-card">
+                    <div className="orientador-card-top">
+                      <div>
+                        <div className="orientador-pill-group">
+                          <span className={`orientador-pill ${pillTypeClass}`}>
+                            {item.tipo}
+                          </span>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#0284c7' }}>
+                            Matrícula: {item.matricula}
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
+                            • Grupo {item.grupo}
+                          </span>
+                        </div>
+                        <h4 className="orientador-card-title">
+                          {item.alumnoNombre}
+                        </h4>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #94a3b8)', display: 'block' }}>
+                          Sesión: {item.fechaSesion}
                         </span>
                       </div>
-                      <h5 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>
-                        {item.alumnoNombre}
-                      </h5>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--color-text-sub, #94a3b8)', display: 'block' }}>
-                        Fecha de Sesión: {item.fechaSesion}
+                    {item.fechaSeguimiento && (
+                      <div className="orientador-next-date-badge">
+                        <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>event_repeat</span>
+                        <span>Próxima Cita: {item.fechaSeguimiento}</span>
+                      </div>
+                    )}
+
+                    <div className="orientador-note-box">
+                      <strong>Acuerdos Establecidos:</strong>
+                      <div style={{ marginTop: '3px' }}>{item.acuerdos}</div>
+                    </div>
+
+                    <div className="orientador-card-footer">
+                      <span>Registrado por: {item.registradoPor}</span>
+                      <span>{new Date(item.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Pestaña 2: Bandeja de Justificantes */}
+      {activeTab === 'justificantes' && (
+        <section className="dedicated-tab-content">
+          <div className="orientador-section-header">
+            <div>
+              <h3 className="orientador-section-title">
+                <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>fact_check</span>
+                Bandeja de Aprobación de Justificantes
+              </h3>
+              <p className="orientador-section-desc">
+                Revisa y aprueba solicitudes de justificantes médicos y trámites oficiales emitidos por los alumnos.
+              </p>
+            </div>
+          </div>
+
+          {justificantes.length === 0 ? (
+            <div className="orientador-empty-state">
+              <span className="material-symbols-outlined orientador-empty-icon">verified</span>
+              <h4 className="orientador-empty-title">No hay solicitudes de justificantes pendientes</h4>
+              <p className="orientador-empty-desc">
+                Las solicitudes enviadas por los estudiantes aparecerán aquí para su validación inmediata.
+              </p>
+            </div>
+          ) : (
+            <div className="orientador-cards-list">
+              {justificantes.map(j => (
+                <div key={j.id} className="orientador-item-card">
+                  <div className="orientador-card-top">
+                    <div>
+                      <div className="orientador-pill-group">
+                        <span className="orientador-pill orientador-pill--emocional">
+                          {j.motivo}
+                        </span>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>
+                          Periodo: {j.fechaInicio} al {j.fechaFin}
+                        </span>
+                      </div>
+                      <p style={{ margin: '4px 0', fontSize: '13.5px', color: 'var(--color-text-main, #334155)', lineHeight: 1.45 }}>
+                        {j.descripcion}
+                      </p>
+                      <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #94a3b8)' }}>
+                        Solicitado el: {new Date(j.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </span>
-                      {item.fechaSeguimiento && (
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>event_repeat</span>
-                          Próxima Cita: {item.fechaSeguimiento}
+                    </div>
+
+                    <div className="orientador-action-btn-group">
+                      {j.estado === 'pendiente' ? (
+                        <>
+                          <button
+                            type="button"
+                            className="orientador-btn-reject"
+                            onClick={() => handleActualizarJustificante(j.id, 'rechazado')}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cancel</span>
+                            <span>Rechazar</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="orientador-btn-approve"
+                            onClick={() => handleActualizarJustificante(j.id, 'aprobado')}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
+                            <span>Aprobar Justificante</span>
+                          </button>
+                        </>
+                      ) : (
+                        <span className={`orientador-status-chip ${j.estado === 'aprobado' ? 'orientador-status-chip--success' : 'orientador-status-chip--danger'}`}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                            {j.estado === 'aprobado' ? 'verified' : 'cancel'}
+                          </span>
+                          <span>{j.estado === 'aprobado' ? 'Justificante Aprobado' : 'Justificante Rechazado'}</span>
                         </span>
                       )}
                     </div>
                   </div>
-
-                  <div style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--color-border-subtle, #f1f5f9)', fontSize: '13px', lineHeight: 1.5, color: 'var(--color-text-main, #334155)', whiteSpace: 'pre-line' }}>
-                    <strong>Acuerdos Establecidos:</strong> {item.acuerdos}
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', fontSize: '11px', color: 'var(--color-text-sub, #94a3b8)' }}>
-                    <span>Registrado por: {item.registradoPor}</span>
-                    <span>{new Date(item.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                  </div>
                 </div>
               ))}
             </div>
@@ -275,165 +447,69 @@ export default function InicioOrientador() {
         </section>
       )}
 
-      {/* Pestaña 2: Bandeja de Justificantes de Alumnos */}
-      {activeTab === 'justificantes' && (
-        <section className="dedicated-tab-content">
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>fact_check</span>
-              Bandeja de Aprobación de Justificantes de Inasistencia
-            </h4>
-            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
-              Revisa y aprueba solicitudes de justificantes médicos y trámites oficiales emitidos por los alumnos.
-            </p>
-          </div>
-
-          {justificantes.length === 0 ? (
-            <div style={{ background: 'var(--color-bg-card, #ffffff)', padding: '36px', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--color-border-subtle, #e2e8f0)', color: 'var(--color-text-sub, #64748b)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#0284c7', marginBottom: '8px' }}>verified</span>
-              <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>No hay solicitudes de justificantes pendientes.</p>
-              <p style={{ margin: '6px 0 0', fontSize: '13px' }}>Las solicitudes enviadas por los estudiantes aparecerán aquí para su validación.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {justificantes.map(j => (
-                <div
-                  key={j.id}
-                  style={{
-                    background: 'var(--color-bg-card, #ffffff)',
-                    padding: '18px 20px',
-                    borderRadius: '14px',
-                    border: '1px solid var(--color-border-subtle, #e2e8f0)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '12px',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: '280px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '4px' }}>
-                        {j.motivo}
-                      </span>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>
-                        Periodo: {j.fechaInicio} al {j.fechaFin}
-                      </span>
-                    </div>
-                    <p style={{ margin: '0 0 6px', fontSize: '13px', color: 'var(--color-text-main, #334155)', lineHeight: 1.4 }}>
-                      {j.descripcion}
-                    </p>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-sub, #94a3b8)' }}>
-                      Solicitado el: {new Date(j.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {j.estado === 'pendiente' ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleActualizarJustificante(j.id, 'rechazado')}
-                          style={{ background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cancel</span>
-                          Rechazar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleActualizarJustificante(j.id, 'aprobado')}
-                          style={{ background: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)' }}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
-                          Aprobar Justificante
-                        </button>
-                      </>
-                    ) : (
-                      <span style={{ fontSize: '12px', fontWeight: 700, padding: '4px 12px', borderRadius: '9999px', background: j.estado === 'aprobado' ? '#dcfce7' : '#fee2e2', color: j.estado === 'aprobado' ? '#166534' : '#991b1b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{j.estado === 'aprobado' ? 'verified' : 'cancel'}</span>
-                        {j.estado === 'aprobado' ? 'Justificante Aprobado' : 'Justificante Rechazado'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Pestaña 3: Citas Solicitadas por Tutores */}
+      {/* Pestaña 3: Citas de Tutores */}
       {activeTab === 'citas' && (
         <section className="dedicated-tab-content">
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>calendar_month</span>
-              Solicitudes de Cita de Padres de Familia y Tutores
-            </h4>
-            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
-              Agenda y confirma sesiones de atención psicopedagógica solicitadas por los tutores.
-            </p>
+          <div className="orientador-section-header">
+            <div>
+              <h3 className="orientador-section-title">
+                <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>calendar_month</span>
+                Solicitudes de Cita de Padres de Familia
+              </h3>
+              <p className="orientador-section-desc">
+                Agenda y confirma sesiones de atención psicopedagógica solicitadas por los tutores.
+              </p>
+            </div>
           </div>
 
           {citas.length === 0 ? (
-            <div style={{ background: 'var(--color-bg-card, #ffffff)', padding: '36px', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--color-border-subtle, #e2e8f0)', color: 'var(--color-text-sub, #64748b)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#0284c7', marginBottom: '8px' }}>event_available</span>
-              <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>No hay solicitudes de cita pendientes de tutores.</p>
-              <p style={{ margin: '6px 0 0', fontSize: '13px' }}>Cuando un padre de familia solicite una reunión, se listará aquí para su confirmación.</p>
+            <div className="orientador-empty-state">
+              <span className="material-symbols-outlined orientador-empty-icon">event_available</span>
+              <h4 className="orientador-empty-title">No hay solicitudes de cita pendientes</h4>
+              <p className="orientador-empty-desc">
+                Cuando un padre de familia solicite una reunión, se listará aquí para su confirmación inmediata.
+              </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="orientador-cards-list">
               {citas.map(c => (
-                <div
-                  key={c.id}
-                  style={{
-                    background: 'var(--color-bg-card, #ffffff)',
-                    padding: '18px 20px',
-                    borderRadius: '14px',
-                    border: '1px solid var(--color-border-subtle, #e2e8f0)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '12px',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: '280px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '4px' }}>
-                        {c.motivo}
-                      </span>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#204785' }}>
-                        Tutor: {c.padreNombre} (Alumno: {c.alumnoNombre})
-                      </span>
+                <div key={c.id} className="orientador-item-card">
+                  <div className="orientador-card-top">
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <div className="orientador-pill-group">
+                        <span className="orientador-pill orientador-pill--emocional">
+                          {c.motivo}
+                        </span>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#0284c7' }}>
+                          Tutor: {c.padreNombre} (Alumno: {c.alumnoNombre})
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#d97706', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>event</span>
+                        <span>Fecha propuesta: {c.fechaPropuesta} a las {c.horaPropuesta} hrs</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-main, #334155)', lineHeight: 1.45 }}>
+                        {c.detalles}
+                      </p>
                     </div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#d97706', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>event</span>
-                      Fecha propuesta: {c.fechaPropuesta} a las {c.horaPropuesta} hrs
-                    </div>
-                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-main, #334155)', lineHeight: 1.4 }}>
-                      {c.detalles}
-                    </p>
-                  </div>
 
-                  <div>
-                    {c.estado === 'pendiente' ? (
-                      <button
-                        type="button"
-                        onClick={() => handleConfirmarCita(c.id)}
-                        style={{ background: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 6px rgba(2, 132, 199, 0.25)' }}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
-                        Confirmar Cita
-                      </button>
-                    ) : (
-                      <span style={{ fontSize: '12px', fontWeight: 700, padding: '4px 12px', borderRadius: '9999px', background: '#dcfce7', color: '#166534', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
-                        Cita Confirmada
-                      </span>
-                    )}
+                    <div className="orientador-action-btn-group">
+                      {c.estado === 'pendiente' ? (
+                        <button
+                          type="button"
+                          className="orientador-btn-confirm"
+                          onClick={() => handleConfirmarCita(c.id)}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
+                          <span>Confirmar Cita</span>
+                        </button>
+                      ) : (
+                        <span className="orientador-status-chip orientador-status-chip--success">
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
+                          <span>Cita Confirmada</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -121,126 +121,86 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
   }
 
   const modalJSX = (
-    <div
-      className="modal-backdrop-animated"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        zIndex: 2000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="modal-box-animated"
-        style={{
-          backgroundColor: 'var(--color-bg-card, #ffffff)',
-          color: 'var(--color-text-main, #0f172a)',
-          borderRadius: '20px',
-          maxWidth: '780px',
-          width: '100%',
-          maxHeight: '85vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          zIndex: 2010,
-          position: 'relative',
-          overflow: 'hidden',
-          border: '1px solid var(--color-border-subtle, #e2e8f0)',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
+    <div className="ecm-backdrop" onClick={onClose}>
+      <div className="ecm-box" onClick={e => e.stopPropagation()}>
         {/* Header del Agente IA */}
-        <div style={{ background: 'var(--color-brand-chambray, #204785)', color: '#ffffff', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#a2f4c7' }}>smart_toy</span>
+        <header className="ecm-header">
+          <div className="ecm-header-left">
+            <div className="ecm-avatar-wrap">
+              <span className="material-symbols-outlined ecm-avatar-icon">smart_toy</span>
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#a2f4c7', fontWeight: 800 }}>
+            <div className="ecm-header-info">
+              <div className="ecm-header-tags">
+                <span className="ecm-header-tag-role">
                   Asistente IA • Inteligencia Conductual
                 </span>
-                <span style={{ fontSize: '9px', background: '#10b981', color: '#ffffff', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                <span className="ecm-header-tag-online">
                   En Línea
                 </span>
               </div>
-              <h3 style={{ margin: '2px 0 0', fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
+              <h3 className="ecm-header-title" title={target.title}>
                 {target.title}
               </h3>
             </div>
           </div>
           <button
             type="button"
+            className="ecm-btn-close"
             onClick={onClose}
-            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff' }}
+            aria-label="Cerrar modal"
+            title="Cerrar asistente"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
           </button>
-        </div>
+        </header>
 
-        {/* Subtitle Bar */}
-        <div style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '8px 20px', borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)', fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-brand-chambray, #60a5fa)' }}>analytics</span>
-            {target.subtitle}
+        {/* Subtitle / Context Bar */}
+        <div className="ecm-context-bar">
+          <div className="ecm-context-target" title={target.subtitle}>
+            <span className="material-symbols-outlined ecm-context-target-icon">analytics</span>
+            <span>{target.subtitle}</span>
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--color-text-main, #f8fafc)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>verified</span>
-            Análisis sobre Datos en Tiempo Real
+          <span className="ecm-context-badge">
+            <span className="material-symbols-outlined ecm-context-badge-icon">verified</span>
+            Análisis en Tiempo Real
           </span>
         </div>
 
         {/* Chat del Agente IA */}
-        <div ref={chatContainerRef} style={{ flex: 1, minHeight: 0, padding: '16px 20px', overflowY: 'auto', overscrollBehavior: 'contain', display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: 'var(--color-bg-app, #0f172a)' }}>
-          {messages.map(m => (
-            <div
-              key={m.id}
-              style={{
-                alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: m.sender === 'user' ? '80%' : '92%',
-                backgroundColor: m.sender === 'user' ? 'var(--color-brand-chambray, #204785)' : 'var(--color-bg-card, #1e293b)',
-                color: m.sender === 'user' ? '#ffffff' : 'var(--color-text-main, #f8fafc)',
-                padding: '12px 16px',
-                borderRadius: m.sender === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                border: m.sender === 'ai' ? '1px solid var(--color-border-subtle, #334155)' : 'none',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', gap: '12px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: m.sender === 'user' ? '#a2f4c7' : 'var(--color-brand-chambray, #60a5fa)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-                    {m.sender === 'user' ? 'person' : 'smart_toy'}
+        <div ref={chatContainerRef} className="ecm-chat-container">
+          {messages.map(m => {
+            const isUser = m.sender === 'user';
+            return (
+              <div
+                key={m.id}
+                className={`ecm-bubble ${isUser ? 'ecm-bubble-user' : 'ecm-bubble-ai'}`}
+              >
+                <div className="ecm-bubble-meta">
+                  <span className="ecm-bubble-sender">
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+                      {isUser ? 'person' : 'smart_toy'}
+                    </span>
+                    {isUser ? 'Tú' : 'Asistente IA'}
                   </span>
-                  {m.sender === 'user' ? 'Usuario' : 'Asistente IA'}
-                </span>
-                <span style={{ fontSize: '10px', opacity: 0.7, color: 'var(--color-text-sub, #cbd5e1)' }}>{m.timestamp}</span>
+                  <span className="ecm-bubble-timestamp">{m.timestamp}</span>
+                </div>
+                <div className="ecm-bubble-text">
+                  {m.text}
+                </div>
               </div>
-              <div style={{ fontSize: '13px', lineHeight: 1.55, whiteSpace: 'pre-line', color: m.sender === 'user' ? '#ffffff' : 'var(--color-text-main, #f8fafc)' }}>
-                {m.text}
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           {isThinking && (
-            <div style={{ alignSelf: 'flex-start', backgroundColor: 'var(--color-bg-card, #1e293b)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #334155)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--color-brand-chambray, #60a5fa)', animation: 'spin 1s linear infinite' }}>sync</span>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #cbd5e1)', fontWeight: 600 }}>El Asistente está consultando la información...</span>
+            <div className="ecm-thinking-bubble">
+              <span className="material-symbols-outlined ecm-spin-icon">sync</span>
+              <span className="ecm-thinking-text">El Asistente está consultando la información...</span>
             </div>
           )}
         </div>
 
         {/* Botones de Sugerencia Rápida */}
-        <div style={{ padding: '8px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '6px', overflowX: 'auto', flexShrink: 0 }}>
+        <div className="ecm-suggestions-strip">
           {[
             '¿Qué acciones recomiendas hoy?',
             '¿Cuáles son los grupos con mayor riesgo?',
@@ -249,64 +209,31 @@ export const ExecutiveChartAgentModal: React.FC<ExecutiveChartAgentModalProps> =
             <button
               key={idx}
               type="button"
+              className="ecm-chip-btn"
               onClick={() => handleSendQueryText(promptText)}
               disabled={isThinking}
-              style={{
-                padding: '5px 10px',
-                borderRadius: '9999px',
-                border: '1px solid var(--color-border-subtle, #475569)',
-                background: 'var(--color-bg-app, #0f172a)',
-                color: 'var(--color-text-sub, #cbd5e1)',
-                fontSize: '11px',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
             >
               {promptText}
             </button>
           ))}
         </div>
 
-        {/* Chat Input Bar */}
-        <form onSubmit={handleSendMessage} style={{ padding: '12px 16px', background: 'var(--color-bg-card, #1e293b)', borderTop: '1px solid var(--color-border-subtle, #334155)', display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
+        {/* Formulario de Entrada */}
+        <form onSubmit={handleSendMessage} className="ecm-input-form">
           <input
             type="text"
+            className="ecm-input-field"
             placeholder="Escribe tu duda sobre estos datos..."
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '10px 14px',
-              borderRadius: '10px',
-              border: '1px solid var(--color-border-subtle, #475569)',
-              background: 'var(--color-bg-app, #0f172a)',
-              color: 'var(--color-text-main, #f8fafc)',
-              fontSize: '13px',
-              outline: 'none',
-            }}
           />
           <button
             type="submit"
+            className="ecm-btn-send"
             disabled={!inputQuery.trim() || isThinking}
-            style={{
-              background: 'var(--color-brand-chambray, #204785)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '10px',
-              padding: '10px 16px',
-              fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              opacity: !inputQuery.trim() || isThinking ? 0.6 : 1,
-            }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>send</span>
-            Enviar
+            <span>Enviar</span>
           </button>
         </form>
       </div>

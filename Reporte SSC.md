@@ -595,11 +595,10 @@ El puntaje del alumno evoluciona dinámicamente con cada reporte:
 
 $$\text{Puntaje Acumulado} = 100 + \sum \text{Puntos Positivos} - \sum \text{Faltas Disciplinarias}$$
 
-$$\text{Categorización} = \begin{cases} 
-\mathbf{Verde} & \text{si } \text{Puntos} \ge 80 \\
-\mathbf{Naranja} & \text{si } 50 \le \text{Puntos} \le 79 \\
-\mathbf{Rojo} & \text{si } \text{Puntos} < 50 
-\end{cases}$$
+$$\text{Categorización:}$$
+* **Verde:** $\text{Puntos} \ge 80$
+* **Naranja:** $50 \le \text{Puntos} \le 79$
+* **Rojo:** $\text{Puntos} < 50$
 
 ### 3.5 Funciones Almacenadas (RPCs PL/pgSQL) del Centro BI
 

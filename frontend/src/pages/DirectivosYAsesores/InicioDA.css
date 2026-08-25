@@ -492,3 +492,672 @@ a      { text-decoration: none; }
   color: var(--c-secondary);
   line-height: 1.5;
 }
+
+/* ============================================================================
+   ORIENTADOR DASHBOARD - MOBILE-FIRST ENHANCED DESIGN SYSTEM (.orientador-*)
+   ============================================================================ */
+
+/* ── Hero Banner Orientador ──────────────────────────────────────────────── */
+.orientador-hero {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-radius: 20px;
+  padding: 24px 28px;
+  color: #ffffff;
+  box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.25);
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.orientador-hero--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.orientador-hero-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.orientador-hero-content {
+  flex: 1;
+  min-width: 260px;
+}
+
+.orientador-welcome-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.orientador-hero-title {
+  margin: 0 0 6px;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.orientador-hero-subtitle {
+  margin: 0;
+  font-size: clamp(0.85rem, 1.8vw, 0.95rem);
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.orientador-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.orientador-btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.orientador-btn-action--primary {
+  background: #ffffff;
+  color: #0369a1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.orientador-btn-action--primary:hover {
+  background: #f0f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+}
+
+.orientador-btn-action--secondary {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.orientador-btn-action--secondary:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-2px);
+}
+
+/* ── Resumen Rápido / KPIs de Orientación ─────────────────────────────────── */
+.orientador-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.orientador-kpi-card {
+  background: var(--color-bg-card, #ffffff);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.orientador-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.1);
+  border-color: #38bdf8;
+}
+
+.orientador-kpi-card--active {
+  border-color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.04) !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.18) !important;
+}
+
+.orientador-kpi-info {
+  min-width: 0;
+}
+
+.orientador-kpi-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-sub, #64748b);
+  margin-bottom: 4px;
+}
+
+.orientador-kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text-main, #0f172a);
+  line-height: 1.1;
+}
+
+.orientador-kpi-subtext {
+  font-size: 11px;
+  color: var(--color-text-sub, #94a3b8);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.orientador-kpi-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Pestañas de Orientación ─────────────────────────────────────────────── */
+.orientador-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-card, #ffffff);
+  padding: 6px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.orientador-tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.orientador-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-sub, #64748b);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.orientador-tab-btn:hover {
+  color: var(--color-text-main, #0f172a);
+  background: var(--color-bg-app, #f1f5f9);
+}
+
+.orientador-tab-btn--active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.orientador-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.orientador-tab-btn--active .orientador-tab-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.orientador-tab-btn:not(.orientador-tab-btn--active) .orientador-tab-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.orientador-tab-badge--pending {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.orientador-tab-btn--active .orientador-tab-badge--pending {
+  background: #ffffff !important;
+  color: #b91c1c !important;
+}
+
+/* ── Encabezado de Sección ────────────────────────────────────────────────── */
+.orientador-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.orientador-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-main, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orientador-section-desc {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--color-text-sub, #64748b);
+}
+
+/* ── Estado Vacío ─────────────────────────────────────────────────────────── */
+.orientador-empty-state {
+  background: var(--color-bg-card, #ffffff);
+  padding: 40px 24px;
+  border-radius: 18px;
+  text-align: center;
+  border: 1px dashed var(--color-border-subtle, #cbd5e1);
+  color: var(--color-text-sub, #64748b);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.orientador-empty-icon {
+  font-size: 52px;
+  color: #38bdf8;
+  margin-bottom: 12px;
+}
+
+.orientador-empty-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-main, #0f172a);
+}
+
+.orientador-empty-desc {
+  margin: 0 0 18px;
+  font-size: 13px;
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+/* ── Tarjetas de Registros (Bitácora, Justificantes, Citas) ───────────────── */
+.orientador-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.orientador-item-card {
+  background: var(--color-bg-card, #ffffff);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.orientador-item-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.orientador-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.orientador-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.orientador-pill {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.orientador-pill--conductual {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.orientador-pill--academico {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.orientador-pill--emocional {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.orientador-pill--familiar {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.orientador-pill--default {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.orientador-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-main, #0f172a);
+}
+
+.orientador-note-box {
+  background: var(--color-bg-app, #f8fafc);
+  border-left: 3px solid #0284c7;
+  padding: 12px 16px;
+  border-radius: 0 10px 10px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text-main, #334155);
+  margin-bottom: 12px;
+}
+
+.orientador-next-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.orientador-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  color: var(--color-text-sub, #94a3b8);
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-subtle, #f1f5f9);
+}
+
+/* ── Botones de Acción para Justificantes y Citas ─────────────────────────── */
+.orientador-action-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.orientador-btn-approve {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+  transition: all 0.15s ease;
+}
+
+.orientador-btn-approve:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.orientador-btn-reject {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.orientador-btn-reject:hover {
+  background: #fca5a5;
+  color: #7f1d1d;
+}
+
+.orientador-btn-confirm {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  transition: all 0.15s ease;
+}
+
+.orientador-btn-confirm:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+}
+
+.orientador-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.orientador-status-chip--success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.orientador-status-chip--danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ============================================================================
+   ADAPTACIONES PARA MÓVILES (<= 640px)
+   ============================================================================ */
+@media (max-width: 640px) {
+  .orientador-hero {
+    padding: 16px 18px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  .orientador-hero-title {
+    font-size: 1.2rem;
+  }
+
+  .orientador-hero-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .orientador-hero-actions {
+    width: 100%;
+  }
+
+  .orientador-btn-action {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+
+  .orientador-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .orientador-kpi-card {
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .orientador-kpi-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .orientador-kpi-icon-wrap .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .orientador-kpi-value {
+    font-size: 20px;
+  }
+
+  .orientador-kpi-label {
+    font-size: 10.5px;
+  }
+
+  .orientador-tabs-nav {
+    padding: 4px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+
+  .orientador-tab-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .orientador-item-card {
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+
+  .orientador-card-title {
+    font-size: 14.5px;
+  }
+
+  .orientador-action-btn-group {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .orientador-btn-approve,
+  .orientador-btn-reject,
+  .orientador-btn-confirm {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+}
+
+/* ============================================================================
+   MODO OSCURO PARA EL PANEL DE ORIENTADOR
+   ============================================================================ */
+[data-theme='dark'] .orientador-kpi-card,
+[data-theme='dark'] .orientador-tabs-nav,
+[data-theme='dark'] .orientador-empty-state,
+[data-theme='dark'] .orientador-item-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .orientador-kpi-card--active {
+  background-color: rgba(2, 132, 199, 0.12) !important;
+  border-color: #38bdf8 !important;
+}
+
+[data-theme='dark'] .orientador-kpi-label,
+[data-theme='dark'] .orientador-section-desc {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .orientador-kpi-value,
+[data-theme='dark'] .orientador-section-title,
+[data-theme='dark'] .orientador-empty-title,
+[data-theme='dark'] .orientador-card-title {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .orientador-note-box {
+  background-color: #0f172a !important;
+  border-left-color: #38bdf8 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme='dark'] .orientador-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .orientador-tab-btn:hover:not(.orientador-tab-btn--active) {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .orientador-tab-btn:not(.orientador-tab-btn--active) .orientador-tab-badge {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+}
