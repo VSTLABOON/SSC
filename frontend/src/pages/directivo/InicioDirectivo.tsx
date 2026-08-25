@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { BIAnalyticsDashboard } from '../../components/bi/BIAnalyticsDashboard';
 import { PublicarAvisoModal } from '../../components/directivo/PublicarAvisoModal';
+import { GenerarReporteRapidoModal } from '../../components/orientador/GenerarReporteRapidoModal';
 import '../DirectivosYAsesores/InicioDA.css';
 
 type TabType = 'bi' | 'comunicados';
@@ -18,10 +18,10 @@ interface AvisoItem {
 
 export default function InicioDirectivo() {
   const { nombre, plantelId } = useAuth();
-  const navigate = useNavigate();
   const [heroVisible, setHeroVisible] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('bi');
   const [modalAvisoOpen, setModalAvisoOpen] = useState(false);
+  const [modalReporteOpen, setModalReporteOpen] = useState(false);
   const [avisos, setAvisos] = useState<AvisoItem[]>([]);
   const [loadingAvisos, setLoadingAvisos] = useState(false);
 
@@ -67,64 +67,117 @@ export default function InicioDirectivo() {
   }
 
   return (
-    <div className="ida-canvas-only animate-fade-in">
+    <div className="ssc-page-canvas animate-fade-in">
       {/* Welcome Hero Directivo */}
-      <section className={`ida-hero${heroVisible ? ' ida-hero--visible' : ''}`}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.18)', padding: '3px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', color: '#ffffff' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>admin_panel_settings</span>
-              Dirección General de Plantel
+      <section className={`ssc-hero ssc-hero--directivo${heroVisible ? ' ssc-hero--visible' : ''}`}>
+        <div className="ssc-hero-body">
+          <div className="ssc-hero-content">
+            <div className="ssc-welcome-chip">
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>admin_panel_settings</span>
+              Dirección General & Gobernanza
             </div>
-            <h2 className="ida-hero__title">
+            <h2 className="ssc-hero-title">
               Panel Ejecutivo de Inteligencia & Control Directivo
             </h2>
-            <p className="ida-hero__subtitle">
+            <p className="ssc-hero-subtitle">
               Bienvenido(a), {nombre || 'Director(a)'}. Supervisión integral de salud conductual, tendencias analíticas y gobernanza del plantel.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="ssc-hero-actions">
             <button
               type="button"
-              className="ida-btn-primary"
+              className="ssc-btn-action ssc-btn-action--primary"
               onClick={() => setModalAvisoOpen(true)}
-              style={{ width: 'auto', display: 'inline-flex', padding: '10px 16px', fontSize: '13px', background: '#059669' }}
             >
-              <span className="material-symbols-outlined">campaign</span>
-              Publicar Aviso
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>campaign</span>
+              <span>Publicar Aviso</span>
             </button>
             <button
               type="button"
-              className="ida-btn-primary"
-              onClick={() => navigate('/director/reporte')}
-              style={{ width: 'auto', display: 'inline-flex', padding: '10px 16px', fontSize: '13px' }}
+              className="ssc-btn-action ssc-btn-action--secondary"
+              onClick={() => setModalReporteOpen(true)}
             >
-              <span className="material-symbols-outlined">assignment_add</span>
-              Generar Reporte
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>assignment_add</span>
+              <span>Generar Reporte</span>
             </button>
           </div>
         </div>
       </section>
 
+      {/* Resumen Rápido / KPIs Directivos */}
+      <div className="ssc-kpi-grid">
+        <div
+          className={`ssc-kpi-card ${activeTab === 'bi' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('bi')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Centro BI & Radar</div>
+            <div className="ssc-kpi-value" style={{ fontSize: '18px', paddingTop: '3px' }}>En línea</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>analytics</span>
+              <span>Métricas del plantel</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#dbeafe', color: '#1d4ed8' }}>
+            <span className="material-symbols-outlined">insights</span>
+          </div>
+        </div>
+
+        <div
+          className={`ssc-kpi-card ${activeTab === 'comunicados' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('comunicados')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Comunicados Activos</div>
+            <div className="ssc-kpi-value">{avisos.length}</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#0284c7' }}>campaign</span>
+              <span>Avisos institucionales</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#fef3c7', color: '#d97706' }}>
+            <span className="material-symbols-outlined">campaign</span>
+          </div>
+        </div>
+
+        <div
+          className="ssc-kpi-card"
+          onClick={() => setModalReporteOpen(true)}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Emisión Disciplinaria</div>
+            <div className="ssc-kpi-value" style={{ fontSize: '18px', paddingTop: '3px' }}>Rápida</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>add_circle</span>
+              <span>Emitir incidencia</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#dcfce7', color: '#15803d' }}>
+            <span className="material-symbols-outlined">assignment_add</span>
+          </div>
+        </div>
+      </div>
+
       {/* Selector de Pestañas de Vista Dedicada */}
-      <div className="dedicated-tabs-container">
+      <nav className="ssc-tabs-nav" aria-label="Secciones Directivas">
         <button
           type="button"
-          className={`dedicated-tab-btn ${activeTab === 'bi' ? 'dedicated-tab-btn--active' : ''}`}
+          className={`ssc-tab-btn ${activeTab === 'bi' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('bi')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>analytics</span>
-          Centro BI & KPIs Globales
+          <span>Centro BI & Radar Global</span>
         </button>
         <button
           type="button"
-          className={`dedicated-tab-btn ${activeTab === 'comunicados' ? 'dedicated-tab-btn--active' : ''}`}
+          className={`ssc-tab-btn ${activeTab === 'comunicados' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('comunicados')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>campaign</span>
-          Avisos del Plantel ({avisos.length})
+          <span>Avisos del Plantel</span>
+          <span className="ssc-tab-badge">{avisos.length}</span>
         </button>
-      </div>
+      </nav>
 
       {/* Pestaña 1: BI & KPIs */}
       {activeTab === 'bi' && (
@@ -137,61 +190,81 @@ export default function InicioDirectivo() {
         </section>
       )}
 
-      {/* Pestaña 3: Avisos y Comunicados Institucionales */}
+      {/* Pestaña 2: Avisos y Comunicados Institucionales */}
       {activeTab === 'comunicados' && (
         <section className="dedicated-tab-content">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-            <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ color: '#204785' }}>campaign</span>
-              Comunicados Activos del Plantel
-            </h4>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-symbols-outlined" style={{ color: '#2563eb' }}>campaign</span>
+                Comunicados Oficiales del Plantel
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+                Gestiona avisos visibles para alumnos, tutores y personal docente.
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setModalAvisoOpen(true)}
-              style={{ background: '#204785', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              className="ssc-btn-action ssc-btn-action--primary"
+              style={{ background: '#2563eb', color: '#ffffff', padding: '8px 16px', fontSize: '13px' }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-              Nuevo Comunicado
+              <span>Nuevo Comunicado</span>
             </button>
           </div>
 
           {loadingAvisos ? (
             <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Cargando avisos...</div>
           ) : avisos.length === 0 ? (
-            <div style={{ background: 'var(--color-bg-card, #ffffff)', padding: '32px', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--color-border-subtle, #e2e8f0)', color: 'var(--color-text-sub, #64748b)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '42px', color: '#94a3b8', marginBottom: '8px' }}>campaign</span>
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>No hay avisos publicados actualmente.</p>
-              <p style={{ margin: '4px 0 0', fontSize: '12px' }}>Haz clic en "Publicar Aviso" para emitir el primer comunicado oficial.</p>
+            <div className="ssc-empty-state">
+              <span className="material-symbols-outlined ssc-empty-icon">campaign</span>
+              <h4 className="ssc-empty-title">No hay avisos publicados actualmente</h4>
+              <p className="ssc-empty-desc">
+                Publica el primer aviso institucional para notificar a la comunidad escolar sobre fechas clave, avisos o circulares.
+              </p>
+              <button
+                type="button"
+                className="ssc-btn-action ssc-btn-action--primary"
+                onClick={() => setModalAvisoOpen(true)}
+                style={{ background: '#2563eb', color: '#ffffff' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>campaign</span>
+                <span>Publicar Primer Aviso</span>
+              </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="ssc-cards-list">
               {avisos.map(a => (
-                <div key={a.id} style={{ background: 'var(--color-bg-card, #ffffff)', padding: '18px 20px', borderRadius: '14px', border: '1px solid var(--color-border-subtle, #e2e8f0)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', background: '#eff6ff', color: '#204785', padding: '2px 8px', borderRadius: '4px' }}>
-                        Audiencia: {a.destinatarios}
-                      </span>
-                      <span style={{ fontSize: '11px', color: 'var(--color-text-sub, #94a3b8)' }}>
-                        {new Date(a.fecha_publicacion).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                <div key={a.id} className="ssc-item-card">
+                  <div className="ssc-card-top">
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
+                          Audiencia: {a.destinatarios}
+                        </span>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #94a3b8)' }}>
+                          {new Date(a.fecha_publicacion).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <h4 className="ssc-card-title" style={{ marginBottom: '6px' }}>
+                        {a.titulo}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--color-text-main, #334155)', whiteSpace: 'pre-line' }}>
+                        {a.contenido}
+                      </p>
                     </div>
-                    <h5 style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>
-                      {a.titulo}
-                    </h5>
-                    <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--color-text-main, #334155)', whiteSpace: 'pre-line' }}>
-                      {a.contenido}
-                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => handleEliminarAviso(a.id)}
+                      title="Eliminar aviso"
+                      style={{ background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
+                      <span>Eliminar</span>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleEliminarAviso(a.id)}
-                    title="Eliminar aviso"
-                    style={{ background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
-                    Eliminar
-                  </button>
                 </div>
               ))}
             </div>
@@ -204,6 +277,12 @@ export default function InicioDirectivo() {
         isOpen={modalAvisoOpen}
         onClose={() => setModalAvisoOpen(false)}
         onAvisoPublicado={loadAvisos}
+      />
+
+      {/* Modal Generación Rápida de Reportes */}
+      <GenerarReporteRapidoModal
+        isOpen={modalReporteOpen}
+        onClose={() => setModalReporteOpen(false)}
       />
     </div>
   );

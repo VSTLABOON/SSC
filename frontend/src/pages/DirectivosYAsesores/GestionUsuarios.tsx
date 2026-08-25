@@ -34,22 +34,23 @@ const ETIQUETA_ROL: Record<string, string> = {
   administrador: 'Administrador',
 };
 
-const FILTROS: { label: string; value: FiltroRol }[] = [
-  { label: 'Todos', value: 'todos' },
-  { label: 'Pendientes', value: 'pendiente' },
-  { label: 'Docentes', value: 'docente' },
-  { label: 'Alumnos', value: 'alumno' },
-  { label: 'Orientadores', value: 'orientador' },
-  { label: 'Padres/Tutores', value: 'padre' },
-  { label: 'Directivos', value: 'directivo' },
-  { label: 'Administradores', value: 'administrador' },
+const FILTROS: { label: string; value: FiltroRol; icon: string }[] = [
+  { label: 'Todos', value: 'todos', icon: 'groups' },
+  { label: 'Pendientes', value: 'pendiente', icon: 'pending' },
+  { label: 'Docentes', value: 'docente', icon: 'school' },
+  { label: 'Alumnos', value: 'alumno', icon: 'person' },
+  { label: 'Orientadores', value: 'orientador', icon: 'psychology' },
+  { label: 'Padres/Tutores', value: 'padre', icon: 'family_restroom' },
+  { label: 'Directivos', value: 'directivo', icon: 'admin_panel_settings' },
+  { label: 'Administradores', value: 'administrador', icon: 'manage_accounts' },
 ];
 
 // ── Componente ───────────────────────────────────────────────────────────────
 
 export default function GestionUsuarios() {
-  const { plantelId, session } = useAuth();
+  const { plantelId } = useAuth();
 
+  const [heroVisible, setHeroVisible] = useState(false);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState<FiltroRol>('todos');
@@ -71,6 +72,11 @@ export default function GestionUsuarios() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
   useLockBodyScroll(modalOpen);
+
+  useEffect(() => {
+    const t = setTimeout(() => setHeroVisible(true), 80);
+    return () => clearTimeout(t);
+  }, []);
 
   // ── Carga de usuarios ──────────────────────────────────────────────────────
   const fetchUsuarios = useCallback(async () => {
@@ -123,7 +129,6 @@ export default function GestionUsuarios() {
 
     const userActual = usuarios.find(u => u.id === userId);
     const updates: { rol: string; activo?: boolean } = { rol: nuevoRol };
-    // Si el usuario estaba pendiente de activación, al asignarle rol formal se activa automáticamente
     if (userActual?.rol === 'pendiente') {
       updates.activo = true;
     }
@@ -187,7 +192,6 @@ export default function GestionUsuarios() {
     setInvError(null);
     setInvLoading(true);
 
-    // MEDIO-3: Validaciones client-side
     const cleanNombre = invNombre.trim();
     const cleanApellido = invApellido.trim();
     const cleanEmail = invEmail.trim();
@@ -234,10 +238,8 @@ export default function GestionUsuarios() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Error al enviar invitación.');
 
-      // Resetear y cerrar modal
       setInvEmail(''); setInvNombre(''); setInvApellido(''); setInvRol('docente');
       setModalOpen(false);
-      // Recargar lista para mostrar el nuevo usuario en estado pendiente
       await cargarUsuarios();
     } catch (err: unknown) {
       setInvError(err instanceof Error ? err.message : 'Error desconocido.');
@@ -251,7 +253,6 @@ export default function GestionUsuarios() {
     ? usuarios
     : usuarios.filter(u => u.rol === filtro);
 
-  // ── Iniciales del avatar ───────────────────────────────────────────────────
   function iniciales(u: Usuario) {
     return `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
   }
@@ -260,7 +261,6 @@ export default function GestionUsuarios() {
     return Boolean(u.bloqueado_hasta && new Date(u.bloqueado_hasta) > new Date());
   }
 
-  // ── Badge de estado ────────────────────────────────────────────────────────
   function badgeClase(u: Usuario) {
     if (isBloqueado(u)) return 'gu-badge gu-badge--bloqueado';
     if (!u.activo) return 'gu-badge gu-badge--inactivo';
@@ -268,77 +268,179 @@ export default function GestionUsuarios() {
     return 'gu-badge gu-badge--activo';
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const countPendientes = usuarios.filter(u => u.rol === 'pendiente').length;
+  const countDocentes = usuarios.filter(u => u.rol === 'docente').length;
+  const countAlumnos = usuarios.filter(u => u.rol === 'alumno').length;
+
   return (
-    <div className="gu-page">
+    <div className="ssc-page-canvas animate-fade-in">
       {actionError && (
         <InlineAlert type="error" message={actionError} onClose={() => setActionError(null)} />
       )}
-      {/* Header */}
-      <div className="gu-header">
-        <div className="gu-header-text">
-          <h2>Gestión de Usuarios</h2>
-          <p>Invita, asigna roles y administra los usuarios de tu plantel.</p>
+
+      {/* Welcome Hero Admin */}
+      <section className={`ssc-hero ssc-hero--admin${heroVisible ? ' ssc-hero--visible' : ''}`}>
+        <div className="ssc-hero-body">
+          <div className="ssc-hero-content">
+            <div className="ssc-welcome-chip">
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>manage_accounts</span>
+              Control Escolar & TI
+            </div>
+            <h2 className="ssc-hero-title">
+              Gestión de Usuarios & Asignación de Roles
+            </h2>
+            <p className="ssc-hero-subtitle">
+              Administración centralizada de cuentas, asignación de privilegios y alta masiva de estudiantes y docentes.
+            </p>
+          </div>
+          <div className="ssc-hero-actions">
+            <button
+              type="button"
+              className="ssc-btn-action ssc-btn-action--primary"
+              onClick={() => { setModalOpen(true); setInvError(null); }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
+              <span>Invitar Usuario</span>
+            </button>
+            <button
+              type="button"
+              className="ssc-btn-action ssc-btn-action--secondary"
+              onClick={() => setBulkModalOpen(true)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>group_add</span>
+              <span>Alta Masiva</span>
+            </button>
+          </div>
         </div>
-        <button className="gu-invite-btn" onClick={() => { setModalOpen(true); setInvError(null); }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span>
-          Invitar usuario
-        </button>
-        <button className="gu-invite-btn" style={{ background: 'var(--c-chambray)' }} onClick={() => setBulkModalOpen(true)}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>group_add</span>
-          Alta Masiva
-        </button>
-      </div>
+      </section>
 
-      {/* Filtros */}
-      <div className="gu-filters">
-        {FILTROS.map(f => (
-          <button
-            key={f.value}
-            className={`gu-filter-btn ${filtro === f.value ? 'gu-filter-btn--active' : ''}`}
-            onClick={() => setFiltro(f.value)}
-          >
-            {f.label}
-            {f.value !== 'todos' && (
-              <span style={{ marginLeft: 6, fontWeight: 700 }}>
-                ({usuarios.filter(u => u.rol === f.value).length})
+      {/* Resumen Rápido / KPIs Admin */}
+      <div className="ssc-kpi-grid">
+        <div
+          className={`ssc-kpi-card ${filtro === 'todos' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setFiltro('todos')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Total de Usuarios</div>
+            <div className="ssc-kpi-value">{usuarios.length}</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#204785' }}>groups</span>
+              <span>Comunidad escolar</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#dbeafe', color: '#1d4ed8' }}>
+            <span className="material-symbols-outlined">groups</span>
+          </div>
+        </div>
+
+        <div
+          className={`ssc-kpi-card ${filtro === 'alumno' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setFiltro('alumno')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Alumnos Activos</div>
+            <div className="ssc-kpi-value">{countAlumnos}</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#0f766e' }}>school</span>
+              <span>Matrícula inscrita</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#ccfbf1', color: '#0f766e' }}>
+            <span className="material-symbols-outlined">person</span>
+          </div>
+        </div>
+
+        <div
+          className={`ssc-kpi-card ${filtro === 'docente' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setFiltro('docente')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Cuerpo Docente</div>
+            <div className="ssc-kpi-value">{countDocentes}</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#006341' }}>assignment_ind</span>
+              <span>Profesores</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#dcfce7', color: '#00492f' }}>
+            <span className="material-symbols-outlined">school</span>
+          </div>
+        </div>
+
+        <div
+          className={`ssc-kpi-card ${filtro === 'pendiente' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setFiltro('pendiente')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Pendientes</div>
+            <div className="ssc-kpi-value" style={{ color: countPendientes > 0 ? '#b91c1c' : '#0f172a' }}>
+              {countPendientes}
+            </div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: countPendientes > 0 ? '#dc2626' : '#64748b' }}>
+                {countPendientes > 0 ? 'priority_high' : 'check_circle'}
               </span>
-            )}
-          </button>
-        ))}
+              <span>{countPendientes > 0 ? 'Por activar' : 'Al corriente'}</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: countPendientes > 0 ? '#fee2e2' : '#f1f5f9', color: countPendientes > 0 ? '#b91c1c' : '#64748b' }}>
+            <span className="material-symbols-outlined">pending</span>
+          </div>
+        </div>
       </div>
 
-      {/* Tabla */}
+      {/* Selector de Pestañas / Filtros por Rol */}
+      <nav className="ssc-tabs-nav" aria-label="Filtrar por Rol">
+        {FILTROS.map(f => {
+          const count = f.value === 'todos' ? usuarios.length : usuarios.filter(u => u.rol === f.value).length;
+          return (
+            <button
+              key={f.value}
+              type="button"
+              className={`ssc-tab-btn ${filtro === f.value ? 'ssc-tab-btn--active' : ''}`}
+              onClick={() => setFiltro(f.value)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>{f.icon}</span>
+              <span>{f.label}</span>
+              <span className={`ssc-tab-badge ${f.value === 'pendiente' && count > 0 ? 'ssc-tab-badge--pending' : ''}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Tabla de Usuarios */}
       <div className="gu-card">
         <div className="gu-table-wrap">
           <table className="gu-table">
             <thead>
               <tr>
                 <th>Usuario</th>
-                <th>Email</th>
-                <th>Rol</th>
+                <th>Rol Actual</th>
+                <th>Correo Electrónico</th>
                 <th>Estado</th>
-                <th>Acción</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="gu-skeleton-row">
-                    <td><div className="gu-skeleton-line" style={{ width: '70%' }} /></td>
-                    <td><div className="gu-skeleton-line" style={{ width: '90%' }} /></td>
-                    <td><div className="gu-skeleton-line" style={{ width: '50%' }} /></td>
-                    <td><div className="gu-skeleton-line" style={{ width: '40%' }} /></td>
-                    <td><div className="gu-skeleton-line" style={{ width: '60%' }} /></td>
+                    <td><div className="gu-skeleton-line" style={{ width: '140px' }} /></td>
+                    <td><div className="gu-skeleton-line" style={{ width: '100px' }} /></td>
+                    <td><div className="gu-skeleton-line" style={{ width: '180px' }} /></td>
+                    <td><div className="gu-skeleton-line" style={{ width: '70px' }} /></td>
+                    <td><div className="gu-skeleton-line" style={{ width: '80px' }} /></td>
                   </tr>
                 ))
               ) : usuariosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={5}>
-                    <div className="gu-empty">
-                      <span className="material-symbols-outlined">group_off</span>
-                      <p>No hay usuarios en esta categoría.</p>
-                    </div>
+                  <td colSpan={5} style={{ padding: '36px', textAlign: 'center', color: '#64748b' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '36px', color: '#94a3b8', display: 'block', marginBottom: '8px' }}>
+                      person_search
+                    </span>
+                    No se encontraron usuarios en esta categoría.
                   </td>
                 </tr>
               ) : (
@@ -347,75 +449,62 @@ export default function GestionUsuarios() {
                     <td>
                       <div className="gu-user-cell">
                         <div className="gu-avatar">{iniciales(u)}</div>
-                        <div>
-                          <div className="gu-user-name">{u.nombre} {u.apellido}</div>
+                        <div className="gu-user-info">
+                          <span className="gu-user-name">{u.nombre} {u.apellido}</span>
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <span className="gu-user-email">{u.email}</span>
-                    </td>
+
                     <td>
                       <select
                         className="gu-rol-select"
                         value={u.rol}
-                        disabled={updatingId === u.id || u.rol === 'directivo'}
+                        disabled={updatingId === u.id}
                         onChange={e => handleCambiarRol(u.id, e.target.value)}
                       >
                         {u.rol === 'pendiente' && (
-                          <option value="pendiente" disabled>— Asignar rol —</option>
+                          <option value="pendiente">Pendiente</option>
                         )}
                         {ROLES_ASIGNABLES.map(r => (
                           <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>
                         ))}
                       </select>
                     </td>
+
+                    <td className="gu-user-email">{u.email}</td>
+
                     <td>
                       <span className={badgeClase(u)}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '13px', verticalAlign: 'middle', marginRight: '4px' }}>
-                          {isBloqueado(u) ? 'lock' : !u.activo ? 'block' : u.rol === 'pendiente' ? 'hourglass_empty' : 'check_circle'}
-                        </span>
-                        {isBloqueado(u)
-                          ? 'Bloqueado'
-                          : !u.activo
-                          ? 'Inactivo'
-                          : u.rol === 'pendiente'
-                          ? 'Pendiente'
-                          : 'Activo'}
+                        {isBloqueado(u) ? 'Bloqueado' : !u.activo ? 'Inactivo' : u.rol === 'pendiente' ? 'Pendiente' : 'Activo'}
                       </span>
                     </td>
+
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <div className="gu-actions-cell">
                         {isBloqueado(u) && (
                           <button
-                            className="gu-action-btn"
-                            style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}
+                            type="button"
+                            className="gu-action-btn gu-action-btn--unlock"
                             disabled={updatingId === u.id}
                             onClick={() => handleDesbloquearUsuario(u.id)}
-                            title="Desbloquear usuario por límite de intentos de contraseña"
+                            title="Desbloquear cuenta"
                           >
-                            Desbloquear
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>lock_open</span>
+                            <span>Desbloquear</span>
                           </button>
                         )}
-                        {!u.activo ? (
-                          <button
-                            className="gu-action-btn gu-action-btn--activate"
-                            disabled={updatingId === u.id}
-                            onClick={() => handleToggleActivo(u.id, true)}
-                            title="Reactivar acceso"
-                          >
-                            Reactivar →
-                          </button>
-                        ) : (
-                          <button
-                            className="gu-action-btn gu-action-btn--deactivate"
-                            disabled={updatingId === u.id || u.id === session?.user?.id}
-                            onClick={() => handleToggleActivo(u.id, false)}
-                            title="Suspender acceso"
-                          >
-                            Suspender
-                          </button>
-                        )}
+
+                        <button
+                          type="button"
+                          className={`gu-action-btn ${u.activo ? 'gu-action-btn--deactivate' : 'gu-action-btn--activate'}`}
+                          disabled={updatingId === u.id}
+                          onClick={() => handleToggleActivo(u.id, !u.activo)}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                            {u.activo ? 'block' : 'check_circle'}
+                          </span>
+                          <span>{u.activo ? 'Desactivar' : 'Activar'}</span>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -426,83 +515,88 @@ export default function GestionUsuarios() {
         </div>
       </div>
 
-      {/* Modal Invitar */}
+      {/* Modal Invitar Usuario */}
       {modalOpen && (
-        <div className="gu-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setModalOpen(false); }}>
-          <div className="gu-modal">
+        <div className="gu-modal-overlay" onClick={() => setModalOpen(false)}>
+          <div className="gu-modal" onClick={e => e.stopPropagation()}>
             <div className="gu-modal-header">
-              <h3>Invitar usuario al plantel</h3>
-              <button className="gu-modal-close" onClick={() => setModalOpen(false)}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#2563eb' }}>person_add</span>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800 }}>Invitar Nuevo Usuario</h3>
+              </div>
+              <button type="button" className="gu-modal-close" onClick={() => setModalOpen(false)}>
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <form onSubmit={handleInvitar}>
-              <div className="gu-form-grid">
-                {invError && <div className="gu-form-error">{invError}</div>}
+            <form onSubmit={handleInvitar} className="gu-modal-form">
+              {invError && <div className="gu-form-error">{invError}</div>}
 
-                 <div className="gu-form-field">
-                  <label htmlFor="inv-nombre">Nombre</label>
+              <div className="gu-form-grid">
+                <div className="gu-field">
+                  <label>Nombre(s)</label>
                   <input
-                    id="inv-nombre"
                     type="text"
+                    className="gu-input"
+                    placeholder="Ej. Carlos"
                     value={invNombre}
                     onChange={e => setInvNombre(e.target.value)}
-                    placeholder="Ej: Francisco"
-                    maxLength={100}
                     required
                   />
                 </div>
 
-                <div className="gu-form-field">
-                  <label htmlFor="inv-apellido">Apellido(s)</label>
+                <div className="gu-field">
+                  <label>Apellido(s)</label>
                   <input
-                    id="inv-apellido"
                     type="text"
+                    className="gu-input"
+                    placeholder="Ej. Mendoza"
                     value={invApellido}
                     onChange={e => setInvApellido(e.target.value)}
-                    placeholder="Ej: Gómez Ruiz"
-                    maxLength={100}
                     required
                   />
-                </div>
-
-                <div className="gu-form-field gu-form-field--full">
-                  <label htmlFor="inv-email">Correo electrónico</label>
-                  <input
-                    id="inv-email"
-                    type="email"
-                    value={invEmail}
-                    onChange={e => setInvEmail(e.target.value)}
-                    placeholder="correo@conalep.edu.mx"
-                    maxLength={150}
-                    required
-                  />
-                </div>
-
-                <div className="gu-form-field gu-form-field--full">
-                  <label htmlFor="inv-rol">Rol inicial</label>
-                  <select
-                    id="inv-rol"
-                    value={invRol}
-                    onChange={e => setInvRol(e.target.value as typeof ROLES_ASIGNABLES[number])}
-                  >
-                    {ROLES_ASIGNABLES.map(r => (
-                      <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>
-                    ))}
-                  </select>
-                  <span style={{ fontSize: 12, color: 'var(--c-secondary)', marginTop: 4 }}>
-                    El usuario recibirá un correo de invitación. Su acceso será activado al aceptarlo.
-                  </span>
                 </div>
               </div>
 
+              <div className="gu-field" style={{ marginTop: '12px' }}>
+                <label>Correo Institucional</label>
+                <input
+                  type="email"
+                  className="gu-input"
+                  placeholder="usuario@conalep.edu.mx"
+                  value={invEmail}
+                  onChange={e => setInvEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="gu-field" style={{ marginTop: '12px' }}>
+                <label>Rol Inicial Asignado</label>
+                <select
+                  className="gu-select"
+                  value={invRol}
+                  onChange={e => setInvRol(e.target.value as any)}
+                >
+                  {ROLES_ASIGNABLES.map(r => (
+                    <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="gu-modal-actions">
-                <button type="button" className="gu-btn-cancel" onClick={() => setModalOpen(false)}>
+                <button
+                  type="button"
+                  className="gu-btn-cancel"
+                  onClick={() => setModalOpen(false)}
+                >
                   Cancelar
                 </button>
-                <button type="submit" className="gu-btn-submit" disabled={invLoading}>
-                  {invLoading ? 'Enviando...' : 'Enviar invitación'}
+                <button
+                  type="submit"
+                  className="gu-btn-submit"
+                  disabled={invLoading}
+                >
+                  {invLoading ? 'Enviando...' : 'Enviar Invitación'}
                 </button>
               </div>
             </form>
@@ -511,12 +605,14 @@ export default function GestionUsuarios() {
       )}
 
       {/* Modal Alta Masiva */}
-      <BulkUserImport
-        isOpen={bulkModalOpen}
-        onClose={() => setBulkModalOpen(false)}
-        onComplete={() => cargarUsuarios()}
-        plantelId={plantelId || ''}
-      />
+      {bulkModalOpen && (
+        <BulkUserImport
+          isOpen={bulkModalOpen}
+          onClose={() => setBulkModalOpen(false)}
+          onComplete={cargarUsuarios}
+          plantelId={plantelId || ''}
+        />
+      )}
     </div>
   );
 }

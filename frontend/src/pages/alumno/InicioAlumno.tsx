@@ -74,6 +74,7 @@ interface AlumnoProfile {
 export default function InicioAlumno() {
   const { session } = useAuth();
   const pageRef = useRef<HTMLDivElement>(null);
+  const [heroVisible, setHeroVisible] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [incidencias, setIncidencias] = useState<IncidentFromDB[]>([]);
@@ -82,6 +83,13 @@ export default function InicioAlumno() {
   const [modalJustificanteOpen, setModalJustificanteOpen] = useState(false);
   const [justificantes, setJustificantes] = useState<JustificanteRecord[]>([]);
   const [avisos, setAvisos] = useState<Array<{ id: string; titulo: string; contenido: string; fecha_publicacion: string }>>([]);
+  const [activeTab, setActiveTab] = useState<'resumen' | 'bitacora' | 'justificantes' | 'avisos'>('resumen');
+  const [incFilter, setIncFilter] = useState<'all' | 'verde' | 'naranja' | 'rojo'>('all');
+
+  useEffect(() => {
+    const t = setTimeout(() => setHeroVisible(true), 80);
+    return () => clearTimeout(t);
+  }, []);
 
   const loadJustificantes = useCallback((alumnoId: string) => {
     try {
@@ -109,7 +117,7 @@ export default function InicioAlumno() {
             .select('id, titulo, contenido, fecha_publicacion')
             .in('destinatarios', ['todos', 'alumnos'])
             .order('fecha_publicacion', { ascending: false })
-            .limit(3),
+            .limit(10),
         ]);
 
         setIncidencias((incList || []) as unknown as IncidentFromDB[]);
@@ -136,29 +144,14 @@ export default function InicioAlumno() {
   useEffect(() => {
     loadData();
 
-    // 1. Suscripción en tiempo real a cambios en incidencias y saldo de puntos
+    // Sincronización en tiempo real
     const channel = supabase
       .channel('realtime-alumno-home')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'incidencias' },
-        () => {
-          loadData();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'alumnos' },
-        () => {
-          loadData();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'incidencias' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alumnos' }, () => loadData())
       .subscribe();
 
-    // 2. Escucha de eventos locales
-    const handleDataChanged = () => {
-      loadData();
-    };
+    const handleDataChanged = () => loadData();
     window.addEventListener('ssc_data_changed', handleDataChanged);
 
     return () => {
@@ -197,11 +190,7 @@ export default function InicioAlumno() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<'todos' | 'resumen' | 'bitacora' | 'justificantes' | 'avisos'>('todos');
-  const [incFilter, setIncFilter] = useState<'all' | 'verde' | 'naranja' | 'rojo'>('all');
-
   const puntosTotales = alumno?.puntos_totales ?? 100;
-  // Semáforo dinámico calculado con base en los puntos reales
   const semaforoKey = puntosTotales < 70 ? 'rojo' : puntosTotales < 90 ? 'naranja' : 'verde';
   const semTheme = SEMAPHORE_THEME[semaforoKey] || SEMAPHORE_THEME.verde;
   const userObj = alumno?.usuarios as { nombre?: string; apellido?: string } | undefined;
@@ -213,509 +202,432 @@ export default function InicioAlumno() {
   const countNaranjas = incidencias.filter(i => (i.categorias_incidencia?.color_semaforo === 'naranja' && i.impacto_puntos <= 0)).length;
   const countRojas = incidencias.filter(i => (i.categorias_incidencia?.color_semaforo === 'rojo' || i.impacto_puntos <= -15)).length;
 
+  const filteredIncidencias = incidencias.filter(i => {
+    if (incFilter === 'all') return true;
+    if (incFilter === 'verde') return i.categorias_incidencia?.color_semaforo === 'verde' || i.impacto_puntos > 0;
+    if (incFilter === 'naranja') return i.categorias_incidencia?.color_semaforo === 'naranja';
+    if (incFilter === 'rojo') return i.categorias_incidencia?.color_semaforo === 'rojo' || i.impacto_puntos <= -15;
+    return true;
+  });
+
   if (loadingData) {
     return (
-      <div className="home-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+      <div className="ssc-page-canvas" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <div style={{ textAlign: 'center', color: '#64748b' }}>
           <div className="spinner" style={{ margin: '0 auto 12px' }} />
-          <p>Cargando información escolar...</p>
+          <p style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>Cargando información del estudiante...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="home-container" ref={pageRef}>
-      {/* Botones de Acción Superior */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={() => setModalJustificanteOpen(true)}
-          style={{
-            background: '#00492f',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '8px 16px',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            boxShadow: '0 2px 8px rgba(0, 73, 47, 0.25)',
-          }}
-        >
-          <Icon name="edit_calendar" style={{ fontSize: '18px' }} />
-          Solicitar Justificante
-        </button>
+    <div className="ssc-page-canvas animate-fade-in" ref={pageRef}>
+      {/* Welcome Hero Alumno */}
+      <section className={`ssc-hero ssc-hero--alumno${heroVisible ? ' ssc-hero--visible' : ''}`}>
+        <div className="ssc-hero-body">
+          <div className="ssc-hero-content">
+            <div className="ssc-welcome-chip">
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>school</span>
+              Estudiante CONALEP • {grupoNombre}
+            </div>
+            <h2 className="ssc-hero-title">
+              ¡Hola, {nombreEstudiante}!
+            </h2>
+            <p className="ssc-hero-subtitle">
+              Matrícula: {alumno?.matricula || '---'} • Monitoreo de salud conductual, asistencia y trámites.
+            </p>
+          </div>
+          <div className="ssc-hero-actions">
+            <button
+              type="button"
+              className="ssc-btn-action ssc-btn-action--primary"
+              onClick={() => setModalJustificanteOpen(true)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_calendar</span>
+              <span>Solicitar Justificante</span>
+            </button>
+            <button
+              type="button"
+              className="ssc-btn-action ssc-btn-action--secondary"
+              onClick={handleExportPDF}
+              disabled={isExporting}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+              <span>{isExporting ? 'Generando...' : 'Descargar Ficha'}</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
-        <button
-          type="button"
-          onClick={handleExportPDF}
-          disabled={isExporting}
-          style={{
-            background: 'var(--color-brand-chambray, #204785)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '8px 16px',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            opacity: isExporting ? 0.7 : 1,
-          }}
+      {/* Resumen Rápido / KPIs Estudiante */}
+      <div className="ssc-kpi-grid">
+        <div
+          className={`ssc-kpi-card ${activeTab === 'resumen' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('resumen')}
         >
-          <Icon name="download" style={{ fontSize: '18px' }} />
-          {isExporting ? 'Generando PDF...' : 'Descargar Ficha'}
-        </button>
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Semáforo Conductual</div>
+            <div className="ssc-kpi-value" style={{ color: semaforoKey === 'verde' ? '#15803d' : semaforoKey === 'naranja' ? '#b45309' : '#b91c1c' }}>
+              {puntosTotales} <span style={{ fontSize: '13px', fontWeight: 600 }}>/ 100 pts</span>
+            </div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: semaforoKey === 'verde' ? '#16a34a' : semaforoKey === 'naranja' ? '#d97706' : '#dc2626' }}>
+                {semTheme.icon}
+              </span>
+              <span>Nivel {semTheme.label}</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: semaforoKey === 'verde' ? '#dcfce7' : semaforoKey === 'naranja' ? '#fef3c7' : '#fee2e2', color: semaforoKey === 'verde' ? '#15803d' : semaforoKey === 'naranja' ? '#b45309' : '#b91c1c' }}>
+            <span className="material-symbols-outlined">{semTheme.icon}</span>
+          </div>
+        </div>
+
+        <div
+          className={`ssc-kpi-card ${activeTab === 'resumen' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('resumen')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Asistencia Estimada</div>
+            <div className="ssc-kpi-value">{asistenciaPorcentaje}%</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#0d9488' }}>event_available</span>
+              <span>Semestre en curso</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#ccfbf1', color: '#0f766e' }}>
+            <span className="material-symbols-outlined">how_to_reg</span>
+          </div>
+        </div>
+
+        <div
+          className={`ssc-kpi-card ${activeTab === 'bitacora' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('bitacora')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Incidencias Registradas</div>
+            <div className="ssc-kpi-value">{incidencias.length}</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#64748b' }}>history_edu</span>
+              <span>{countRojas} faltas graves</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#f1f5f9', color: '#475569' }}>
+            <span className="material-symbols-outlined">history_edu</span>
+          </div>
+        </div>
+
+        <div
+          className={`ssc-kpi-card ${activeTab === 'justificantes' ? 'ssc-kpi-card--active' : ''}`}
+          onClick={() => setActiveTab('justificantes')}
+        >
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Mis Justificantes</div>
+            <div className="ssc-kpi-value">{justificantes.length}</div>
+            <div className="ssc-kpi-subtext">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#0284c7' }}>assignment</span>
+              <span>{justificantes.filter(j => j.estado === 'pendiente').length} en revisión</span>
+            </div>
+          </div>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+            <span className="material-symbols-outlined">assignment</span>
+          </div>
+        </div>
       </div>
 
-      {/* Barra de División Principal por Píldoras */}
-      <nav aria-label="Secciones del portal" style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '8px 12px', borderRadius: '14px', marginBottom: '20px', display: 'flex', gap: '8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
+      {/* Selector de Pestañas */}
+      <nav className="ssc-tabs-nav" aria-label="Secciones del Alumno">
         <button
           type="button"
-          onClick={() => setActiveTab('todos')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 16px',
-            borderRadius: '9999px',
-            border: activeTab === 'todos' ? '2px solid #00492f' : '1px solid #cbd5e1',
-            background: activeTab === 'todos' ? '#00492f' : '#f8fafc',
-            color: activeTab === 'todos' ? '#ffffff' : '#334155',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <Icon name="view_cozy" style={{ fontSize: '18px' }} />
-          Vista Completa
-        </button>
-
-        <button
-          type="button"
+          className={`ssc-tab-btn ${activeTab === 'resumen' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('resumen')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 16px',
-            borderRadius: '9999px',
-            border: activeTab === 'resumen' ? '2px solid #00492f' : '1px solid #cbd5e1',
-            background: activeTab === 'resumen' ? '#00492f' : '#f8fafc',
-            color: activeTab === 'resumen' ? '#ffffff' : '#334155',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.15s ease',
-          }}
         >
-          <Icon name="dashboard" style={{ fontSize: '18px' }} />
-          Semáforo & Perfil
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>dashboard</span>
+          <span>Semáforo & Perfil</span>
         </button>
 
         <button
           type="button"
+          className={`ssc-tab-btn ${activeTab === 'bitacora' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('bitacora')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 16px',
-            borderRadius: '9999px',
-            border: activeTab === 'bitacora' ? '2px solid #00492f' : '1px solid #cbd5e1',
-            background: activeTab === 'bitacora' ? '#00492f' : '#f8fafc',
-            color: activeTab === 'bitacora' ? '#ffffff' : '#334155',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.15s ease',
-          }}
         >
-          <Icon name="history_edu" style={{ fontSize: '18px' }} />
-          Bitácora Conductual ({incidencias.length})
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>history_edu</span>
+          <span>Bitácora Conductual</span>
+          <span className="ssc-tab-badge">{incidencias.length}</span>
         </button>
 
         <button
           type="button"
+          className={`ssc-tab-btn ${activeTab === 'justificantes' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('justificantes')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 16px',
-            borderRadius: '9999px',
-            border: activeTab === 'justificantes' ? '2px solid #00492f' : '1px solid #cbd5e1',
-            background: activeTab === 'justificantes' ? '#00492f' : '#f8fafc',
-            color: activeTab === 'justificantes' ? '#ffffff' : '#334155',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.15s ease',
-          }}
         >
-          <Icon name="assignment" style={{ fontSize: '18px' }} />
-          Justificantes ({justificantes.length})
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>assignment</span>
+          <span>Justificantes</span>
+          <span className="ssc-tab-badge">{justificantes.length}</span>
         </button>
 
         <button
           type="button"
+          className={`ssc-tab-btn ${activeTab === 'avisos' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('avisos')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 16px',
-            borderRadius: '9999px',
-            border: activeTab === 'avisos' ? '2px solid #00492f' : '1px solid #cbd5e1',
-            background: activeTab === 'avisos' ? '#00492f' : '#f8fafc',
-            color: activeTab === 'avisos' ? '#ffffff' : '#334155',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.15s ease',
-          }}
         >
-          <Icon name="campaign" style={{ fontSize: '18px' }} />
-          Avisos ({avisos.length})
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>campaign</span>
+          <span>Avisos del Plantel</span>
+          <span className="ssc-tab-badge">{avisos.length}</span>
         </button>
       </nav>
 
-      {/* Grid Principal (Resumen / Semáforo) */}
-      {(activeTab === 'todos' || activeTab === 'resumen') && (
-        <div className="home-grid" style={{ marginBottom: '24px' }}>
-          {/* Panel de Semáforo Conductual */}
-          <section className={semTheme.panelClass}>
-            <div className="semaphore-visual">
-              <div className={semTheme.circleClass}>
-                <Icon name={semTheme.icon} className="semaphore-icon" />
+      {/* Pestaña 1: Resumen & Semáforo */}
+      {activeTab === 'resumen' && (
+        <section className="dedicated-tab-content">
+          <div className="home-grid" style={{ marginBottom: '16px' }}>
+            {/* Panel de Semáforo Conductual */}
+            <div className={semTheme.panelClass}>
+              <div className="semaphore-visual">
+                <div className={semTheme.circleClass}>
+                  <Icon name={semTheme.icon} className="semaphore-icon" />
+                </div>
+                <div className="semaphore-badge">
+                  <span className={semTheme.labelClass}>{semTheme.label}</span>
+                  <span className={semTheme.sublabelClass}>Estado Actual</span>
+                </div>
               </div>
-              <div className="semaphore-badge">
-                <span className={semTheme.labelClass}>{semTheme.label}</span>
-                <span className={semTheme.sublabelClass}>Estado Actual</span>
-              </div>
-            </div>
-            <p className="semaphore-desc">{semTheme.desc}</p>
+              <p className="semaphore-desc">{semTheme.desc}</p>
 
-            <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '11px', opacity: 0.8, display: 'block' }}>Puntos de Salud Conductual</span>
-                <strong style={{ fontSize: '18px' }}>{alumno?.puntos_totales ?? 100} / 100 pts</strong>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '11px', opacity: 0.8, display: 'block' }}>Asistencia Estimada</span>
-                <strong style={{ fontSize: '18px' }}>{asistenciaPorcentaje}%</strong>
-              </div>
-            </div>
-          </section>
-
-          {/* Hero Card del Estudiante */}
-          <section className="hero-card">
-            <div className="hero-card__badge">
-              <Icon name="school" className="hero-card__badge-icon" />
-              <span>Perfil del Estudiante • CONALEP Puebla I</span>
-            </div>
-            <h2 className="hero-card__title">¡Hola, {nombreEstudiante}!</h2>
-            <p className="hero-card__subtitle">
-              Matrícula: <strong>{alumno?.matricula || '---'}</strong> • Grupo: <strong>{grupoNombre}</strong>
-            </p>
-            <div className="hero-stats">
-              <div className="hero-stat-item">
-                <span className="hero-stat-value">{incidencias.length}</span>
-                <span className="hero-stat-label">Registros Conductuales</span>
-              </div>
-              <div className="hero-stat-item">
-                <span className="hero-stat-value">{justificantes.length}</span>
-                <span className="hero-stat-label">Justificantes Tramitados</span>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* Sección de Solicitudes de Justificantes Tramitados */}
-      {(activeTab === 'todos' || activeTab === 'justificantes') && justificantes.length > 0 && (
-        <section style={{ marginBottom: '24px', background: 'var(--color-bg-card, #ffffff)', padding: '20px', borderRadius: '16px', border: '1px solid var(--color-border-subtle, #e2e8f0)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-main, #0f172a)' }}>
-              <Icon name="assignment" style={{ color: '#00492f' }} />
-              Mis Solicitudes de Justificante ({justificantes.length})
-            </h3>
-            <button
-              type="button"
-              onClick={() => setModalJustificanteOpen(true)}
-              style={{
-                background: '#e0f2fe',
-                color: '#0369a1',
-                border: '1px solid #bae6fd',
-                borderRadius: '8px',
-                padding: '5px 12px',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              <Icon name="add" style={{ fontSize: '16px' }} />
-              Nueva Solicitud
-            </button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {justificantes.map(j => (
-              <div key={j.id} style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--color-border-subtle, #f1f5f9)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0369a1', padding: '1px 6px', borderRadius: '4px' }}>
-                      {j.motivo}
-                    </span>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-main, #0f172a)' }}>
-                      Periodo: {j.fechaInicio} al {j.fechaFin}
-                    </span>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>{j.descripcion}</p>
+                  <span style={{ fontSize: '11px', opacity: 0.8, display: 'block' }}>Puntos de Salud Conductual</span>
+                  <strong style={{ fontSize: '18px' }}>{alumno?.puntos_totales ?? 100} / 100 pts</strong>
                 </div>
-                <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '9999px', background: j.estado === 'aprobado' ? '#dcfce7' : j.estado === 'rechazado' ? '#fee2e2' : '#fef3c7', color: j.estado === 'aprobado' ? '#166534' : j.estado === 'rechazado' ? '#991b1b' : '#92400e' }}>
-                  {j.estado === 'aprobado' ? 'Aprobado' : j.estado === 'rechazado' ? 'Rechazado' : 'En Revisión por Orientación'}
-                </span>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: '11px', opacity: 0.8, display: 'block' }}>Asistencia Estimada</span>
+                  <strong style={{ fontSize: '18px' }}>{asistenciaPorcentaje}%</strong>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Hero Card del Estudiante */}
+            <div className="hero-card">
+              <div className="hero-card__badge">
+                <Icon name="school" className="hero-card__badge-icon" />
+                <span>Perfil del Estudiante • CONALEP Puebla I</span>
+              </div>
+              <h3 className="hero-card__title">¡Hola, {nombreEstudiante}!</h3>
+              <p className="hero-card__subtitle">
+                Matrícula: <strong>{alumno?.matricula || '---'}</strong> • Grupo: <strong>{grupoNombre}</strong>
+              </p>
+              <div className="hero-stats">
+                <div className="hero-stat-item">
+                  <span className="hero-stat-value">{incidencias.length}</span>
+                  <span className="hero-stat-label">Registros Conductuales</span>
+                </div>
+                <div className="hero-stat-item">
+                  <span className="hero-stat-value">{justificantes.length}</span>
+                  <span className="hero-stat-label">Justificantes Tramitados</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       )}
 
-      {/* Avisos del Plantel */}
-      {/* Avisos y Comunicados Oficiales */}
-      {(activeTab === 'todos' || activeTab === 'avisos') && avisos.length > 0 && (
-        <section style={{ marginBottom: '24px', background: 'var(--color-bg-card, #ffffff)', padding: '22px 20px', borderRadius: '18px', border: '1px solid var(--color-border-subtle, #e2e8f0)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--color-border-subtle, #f1f5f9)', paddingBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0369a1' }}>
-                <Icon name="campaign" style={{ fontSize: '22px' }} />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)' }}>
-                  Comunicados Oficiales
-                </h3>
-                <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
-                  Avisos institucionales y convocatorias del plantel
-                </p>
-              </div>
-            </div>
-            <span style={{ fontSize: '12px', fontWeight: 800, background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', padding: '3px 10px', borderRadius: '9999px' }}>
-              {avisos.length} {avisos.length === 1 ? 'comunicado' : 'comunicados'}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {avisos.map(a => (
-              <article key={a.id} style={{ background: 'var(--color-bg-app, #f8fafc)', padding: '16px 18px', borderRadius: '14px', border: '1px solid var(--color-border-subtle, #e2e8f0)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {/* Fila Superior: Badge + Fecha */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: '#0369a1', background: '#e0f2fe', padding: '2px 8px', borderRadius: '6px' }}>
-                    <Icon name="notifications_active" style={{ fontSize: '13px' }} />
-                    Aviso Oficial
-                  </span>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-sub, #64748b)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <Icon name="calendar_today" style={{ fontSize: '13px' }} />
-                    {formatDate(a.fecha_publicacion)}
-                  </span>
-                </div>
-
-                {/* Título de ancho completo */}
-                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, lineHeight: 1.35, color: 'var(--color-text-main, #0f172a)' }}>
-                  {a.titulo}
-                </h4>
-
-                {/* Contenido con legibilidad y aire visual */}
-                <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.55, color: 'var(--color-text-main, #334155)', whiteSpace: 'pre-line' }}>
-                  {a.contenido}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Bitácora de Observaciones Recientes: Separación Nítida Positiva vs Negativa */}
-      {(activeTab === 'todos' || activeTab === 'bitacora') && (
-        <section className="incidents-card" style={{ marginBottom: '24px' }}>
-          <div className="incidents-card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-            <div className="incidents-card__title-group">
-              <h3 className="incidents-card__title">Bitácora de Actividad Escolar</h3>
-              <p className="incidents-card__subtitle">Desglose nítido y separado de reconocimientos positivos y reportes de conducta.</p>
+      {/* Pestaña 2: Bitácora Conductual */}
+      {activeTab === 'bitacora' && (
+        <section className="dedicated-tab-content">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-symbols-outlined" style={{ color: '#0f766e' }}>history_edu</span>
+                Bitácora de Seguimiento Conductual ({incidencias.length})
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+                Historial de reconocimientos, llamados de atención y reportes disciplinarios.
+              </p>
             </div>
 
-            {/* Píldoras de Filtro de Polaridad */}
+            {/* Filtros rápidos */}
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={() => setIncFilter('all')}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: '9999px',
-                  border: incFilter === 'all' ? '2px solid #00492f' : '1px solid #cbd5e1',
-                  background: incFilter === 'all' ? '#00492f' : '#f8fafc',
-                  color: incFilter === 'all' ? '#ffffff' : '#334155',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
+                style={{ fontSize: '11.5px', fontWeight: 700, padding: '4px 10px', borderRadius: '8px', border: incFilter === 'all' ? '1.5px solid #0f766e' : '1px solid #cbd5e1', background: incFilter === 'all' ? '#0f766e' : 'transparent', color: incFilter === 'all' ? '#ffffff' : '#64748b', cursor: 'pointer' }}
               >
-                <Icon name="splitscreen" style={{ fontSize: '16px' }} />
-                2 Columnas (Todo: {incidencias.length})
+                Todas ({incidencias.length})
               </button>
-
               <button
                 type="button"
-                onClick={() => setIncFilter('verde')}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: '9999px',
-                  border: incFilter === 'verde' ? '2px solid #15803d' : '1px solid #cbd5e1',
-                  background: incFilter === 'verde' ? '#15803d' : '#f8fafc',
-                  color: incFilter === 'verde' ? '#ffffff' : '#15803d',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
+                onClick={() => setIncFilter('rojo')}
+                style={{ fontSize: '11.5px', fontWeight: 700, padding: '4px 10px', borderRadius: '8px', border: incFilter === 'rojo' ? '1.5px solid #dc2626' : '1px solid #cbd5e1', background: incFilter === 'rojo' ? '#fee2e2' : 'transparent', color: '#b91c1c', cursor: 'pointer' }}
               >
-                <Icon name="workspace_premium" style={{ fontSize: '16px' }} />
-                Solo Méritos (+{countVerdes})
+                Graves ({countRojas})
               </button>
-
               <button
                 type="button"
                 onClick={() => setIncFilter('naranja')}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: '9999px',
-                  border: (incFilter === 'naranja' || incFilter === 'rojo') ? '2px solid #b45309' : '1px solid #cbd5e1',
-                  background: (incFilter === 'naranja' || incFilter === 'rojo') ? '#b45309' : '#f8fafc',
-                  color: (incFilter === 'naranja' || incFilter === 'rojo') ? '#ffffff' : '#b45309',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
+                style={{ fontSize: '11.5px', fontWeight: 700, padding: '4px 10px', borderRadius: '8px', border: incFilter === 'naranja' ? '1.5px solid #d97706' : '1px solid #cbd5e1', background: incFilter === 'naranja' ? '#fef3c7' : 'transparent', color: '#b45309', cursor: 'pointer' }}
               >
-                <Icon name="warning" style={{ fontSize: '16px' }} />
-                Solo Observaciones (-{countNaranjas + countRojas})
+                Moderadas ({countNaranjas})
+              </button>
+              <button
+                type="button"
+                onClick={() => setIncFilter('verde')}
+                style={{ fontSize: '11.5px', fontWeight: 700, padding: '4px 10px', borderRadius: '8px', border: incFilter === 'verde' ? '1.5px solid #16a34a' : '1px solid #cbd5e1', background: incFilter === 'verde' ? '#dcfce7' : 'transparent', color: '#15803d', cursor: 'pointer' }}
+              >
+                Positivas ({countVerdes})
               </button>
             </div>
           </div>
 
-          {/* Grid de 2 Columnas Independientes */}
-          <div style={{ display: 'grid', gridTemplateColumns: incFilter === 'all' ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr', gap: '20px', marginTop: '16px' }}>
-            
-            {/* COLUMNA 1: ACTIVIDAD POSITIVA (+ Puntos) */}
-            {(incFilter === 'all' || incFilter === 'verde') && (
-              <div className="activity-col activity-col--positive">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid currentColor', opacity: 0.9, paddingBottom: '10px' }}>
-                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Icon name="workspace_premium" style={{ color: '#166534' }} />
-                    Méritos y Participaciones Positivas
-                  </h4>
-                  <span style={{ fontSize: '12px', fontWeight: 800, background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '9999px' }}>
-                    {countVerdes} registros
-                  </span>
-                </div>
-
-                {incidencias.filter(i => (i.categorias_incidencia?.color_semaforo === 'verde' || i.impacto_puntos > 0)).length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '24px 16px', color: '#166534', opacity: 0.8 }}>
-                    <Icon name="stars" style={{ fontSize: '32px', marginBottom: '6px' }} />
-                    <p style={{ margin: 0, fontSize: '13px' }}>Aún no hay participaciones destacadas registradas en este periodo.</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {incidencias.filter(i => (i.categorias_incidencia?.color_semaforo === 'verde' || i.impacto_puntos > 0)).map((inc) => (
-                      <article key={inc.id} className="activity-card-item">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px' }}>
-                            {inc.categorias_incidencia?.nombre || 'Mérito Escolar'}
+          {filteredIncidencias.length === 0 ? (
+            <div className="ssc-empty-state">
+              <span className="material-symbols-outlined ssc-empty-icon">verified_user</span>
+              <h4 className="ssc-empty-title">Sin registros en este filtro</h4>
+              <p className="ssc-empty-desc">Mantienes un expediente limpio en esta categoría de seguimiento.</p>
+            </div>
+          ) : (
+            <div className="ssc-cards-list">
+              {filteredIncidencias.map(i => {
+                const colorTag = i.categorias_incidencia?.color_semaforo || (i.impacto_puntos > 0 ? 'verde' : i.impacto_puntos < -10 ? 'rojo' : 'naranja');
+                return (
+                  <div key={i.id} className="ssc-item-card">
+                    <div className="ssc-card-top">
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', padding: '2px 8px', borderRadius: '4px', background: colorTag === 'verde' ? '#dcfce7' : colorTag === 'naranja' ? '#fef3c7' : '#fee2e2', color: colorTag === 'verde' ? '#15803d' : colorTag === 'naranja' ? '#b45309' : '#b91c1c' }}>
+                            {i.categorias_incidencia?.nombre || 'Incidencia Registrada'}
                           </span>
-                          <span style={{ fontSize: '12px', fontWeight: 800, color: '#15803d' }}>
-                            +{inc.impacto_puntos} pts
+                          <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #94a3b8)' }}>
+                            {formatDate(i.created_at)} • {i.lugar || 'Plantel'}
                           </span>
                         </div>
-                        {inc.descripcion && <p className="activity-card-desc">{inc.descripcion}</p>}
-                        <div className="activity-card-meta">
-                          <span>{formatDate(inc.created_at)}</span>
-                          {inc.lugar && <span>{inc.lugar}</span>}
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                        <h4 className="ssc-card-title">{i.descripcion}</h4>
+                      </div>
 
-            {/* COLUMNA 2: ACTIVIDAD PREVENTIVA Y OBSERVACIONES (- Puntos) */}
-            {(incFilter === 'all' || incFilter === 'naranja' || incFilter === 'rojo') && (
-              <div className="activity-col activity-col--negative">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid currentColor', opacity: 0.9, paddingBottom: '10px' }}>
-                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Icon name="warning" style={{ color: '#b45309' }} />
-                    Observaciones y Faltas Disciplinarias
-                  </h4>
-                  <span style={{ fontSize: '12px', fontWeight: 800, background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '9999px' }}>
-                    {countNaranjas + countRojas} registros
-                  </span>
-                </div>
-
-                {incidencias.filter(i => (i.impacto_puntos <= 0 && i.categorias_incidencia?.color_semaforo !== 'verde')).length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '24px 16px', color: '#92400e', opacity: 0.8 }}>
-                    <Icon name="verified" style={{ fontSize: '32px', marginBottom: '6px', color: '#15803d' }} />
-                    <p style={{ margin: 0, fontSize: '13px', color: '#15803d', fontWeight: 600 }}>Excelente conducta. 0 faltas u observaciones registradas.</p>
+                      <span style={{ fontSize: '13px', fontWeight: 800, padding: '4px 10px', borderRadius: '8px', background: i.impacto_puntos > 0 ? '#dcfce7' : '#fee2e2', color: i.impacto_puntos > 0 ? '#15803d' : '#b91c1c' }}>
+                        {i.impacto_puntos > 0 ? `+${i.impacto_puntos}` : i.impacto_puntos} pts
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {incidencias.filter(i => (i.impacto_puntos <= 0 && i.categorias_incidencia?.color_semaforo !== 'verde')).map((inc) => {
-                      const isCritical = inc.impacto_puntos <= -15 || inc.categorias_incidencia?.color_semaforo === 'rojo';
-                      return (
-                        <article key={inc.id} className="activity-card-item" style={{ borderLeft: isCritical ? '3px solid #ef4444' : '3px solid #f59e0b' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', background: isCritical ? '#fee2e2' : '#fef3c7', color: isCritical ? '#991b1b' : '#b45309', padding: '2px 8px', borderRadius: '4px' }}>
-                              {inc.categorias_incidencia?.nombre || 'Observación Conductual'}
-                            </span>
-                            <span style={{ fontSize: '12px', fontWeight: 800, color: isCritical ? '#b91c1c' : '#b45309' }}>
-                              {inc.impacto_puntos} pts
-                            </span>
-                          </div>
-                          {inc.descripcion && <p className="activity-card-desc">{inc.descripcion}</p>}
-                          <div className="activity-card-meta">
-                            <span>{formatDate(inc.created_at)}</span>
-                            {inc.lugar && <span>{inc.lugar}</span>}
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
+      {/* Pestaña 3: Justificantes */}
+      {activeTab === 'justificantes' && (
+        <section className="dedicated-tab-content">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-symbols-outlined" style={{ color: '#0f766e' }}>assignment</span>
+                Mis Solicitudes de Justificante ({justificantes.length})
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+                Estado de trámites de inasistencia presentados ante Orientación Educativa.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setModalJustificanteOpen(true)}
+              className="ssc-btn-action ssc-btn-action--primary"
+              style={{ background: '#0f766e', color: '#ffffff', padding: '8px 16px', fontSize: '13px' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+              <span>Nueva Solicitud</span>
+            </button>
           </div>
+
+          {justificantes.length === 0 ? (
+            <div className="ssc-empty-state">
+              <span className="material-symbols-outlined ssc-empty-icon">edit_calendar</span>
+              <h4 className="ssc-empty-title">No tienes justificantes registrados</h4>
+              <p className="ssc-empty-desc">Si tuviste una falta por salud, trámite o causa mayor, puedes justificarla aquí.</p>
+              <button
+                type="button"
+                className="ssc-btn-action ssc-btn-action--primary"
+                onClick={() => setModalJustificanteOpen(true)}
+                style={{ background: '#0f766e', color: '#ffffff' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_calendar</span>
+                <span>Solicitar Mi Primer Justificante</span>
+              </button>
+            </div>
+          ) : (
+            <div className="ssc-cards-list">
+              {justificantes.map(j => (
+                <div key={j.id} className="ssc-item-card">
+                  <div className="ssc-card-top">
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '4px' }}>
+                          Motivo: {j.motivo}
+                        </span>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #64748b)' }}>
+                          Periodo: {j.fechaInicio} al {j.fechaFin}
+                        </span>
+                      </div>
+                      <div className="ssc-note-box" style={{ borderLeftColor: '#0f766e', margin: '4px 0 8px' }}>
+                        {j.descripcion}
+                      </div>
+                    </div>
+
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', background: j.estado === 'aprobado' ? '#dcfce7' : j.estado === 'rechazado' ? '#fee2e2' : '#fef3c7', color: j.estado === 'aprobado' ? '#166534' : j.estado === 'rechazado' ? '#991b1b' : '#92400e' }}>
+                      {j.estado === 'aprobado' ? 'Aprobado' : j.estado === 'rechazado' ? 'Rechazado' : 'En Revisión por Orientación'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Pestaña 4: Avisos */}
+      {activeTab === 'avisos' && (
+        <section className="dedicated-tab-content">
+          <div style={{ marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="material-symbols-outlined" style={{ color: '#0f766e' }}>campaign</span>
+              Comunicados Oficiales del Plantel ({avisos.length})
+            </h3>
+            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+              Avisos, circulares y convocatorias dirigidas a la comunidad estudiantil.
+            </p>
+          </div>
+
+          {avisos.length === 0 ? (
+            <div className="ssc-empty-state">
+              <span className="material-symbols-outlined ssc-empty-icon">campaign</span>
+              <h4 className="ssc-empty-title">No hay comunicados oficiales en este momento</h4>
+              <p className="ssc-empty-desc">Las publicaciones de la dirección y áreas escolares aparecerán aquí.</p>
+            </div>
+          ) : (
+            <div className="ssc-cards-list">
+              {avisos.map(aviso => (
+                <div key={aviso.id} className="ssc-item-card">
+                  <div className="ssc-card-top">
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <div style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #94a3b8)', marginBottom: '4px' }}>
+                        {new Date(aviso.fecha_publicacion).toLocaleDateString('es-MX', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                      <h4 className="ssc-card-title" style={{ marginBottom: '6px' }}>{aviso.titulo}</h4>
+                      <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--color-text-main, #334155)', whiteSpace: 'pre-line' }}>
+                        {aviso.contenido}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -724,8 +636,8 @@ export default function InicioAlumno() {
         isOpen={modalJustificanteOpen}
         onClose={() => setModalJustificanteOpen(false)}
         alumnoDbId={alumno?.id || ''}
-        onJustificanteEnviado={() => {
-          if (alumno?.id) loadJustificantes(alumno.id);
+        onJustificanteEnviado={(newRecord) => {
+          setJustificantes(prev => [newRecord, ...prev]);
         }}
       />
     </div>

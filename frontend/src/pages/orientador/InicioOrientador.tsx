@@ -69,7 +69,6 @@ export default function InicioOrientador() {
     const updated = justificantes.map(j => (j.id === id ? { ...j, estado: nuevoEstado } : j));
     setJustificantes(updated);
 
-    // Actualizar en localStorage
     Object.keys(localStorage)
       .filter(k => k.startsWith('ssc_justificantes_'))
       .forEach(k => {
@@ -78,7 +77,7 @@ export default function InicioOrientador() {
           const modified = items.map(item => (item.id === id ? { ...item, estado: nuevoEstado } : item));
           localStorage.setItem(k, JSON.stringify(modified));
         } catch {
-          // Ignorar error de parseo en claves no relacionadas
+          // Ignorar
         }
       });
   }
@@ -95,7 +94,7 @@ export default function InicioOrientador() {
           const modified = items.map(item => (item.id === id ? { ...item, estado: 'confirmada' as const } : item));
           localStorage.setItem(k, JSON.stringify(modified));
         } catch {
-          // Ignorar error
+          // Ignorar
         }
       });
   }
@@ -104,26 +103,26 @@ export default function InicioOrientador() {
   const citasPendientes = citas.filter(c => c.estado === 'pendiente');
 
   return (
-    <div className="ida-canvas-only animate-fade-in">
+    <div className="ssc-page-canvas animate-fade-in">
       {/* Welcome Hero Orientador */}
-      <section className={`orientador-hero${heroVisible ? ' orientador-hero--visible' : ''}`}>
-        <div className="orientador-hero-body">
-          <div className="orientador-hero-content">
-            <div className="orientador-welcome-chip">
+      <section className={`ssc-hero ssc-hero--orientador${heroVisible ? ' ssc-hero--visible' : ''}`}>
+        <div className="ssc-hero-body">
+          <div className="ssc-hero-content">
+            <div className="ssc-welcome-chip">
               <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>psychology</span>
               Orientación Educativa & Psicopedagogía
             </div>
-            <h2 className="orientador-hero-title">
+            <h2 className="ssc-hero-title">
               Panel de Acompañamiento & Prevención
             </h2>
-            <p className="orientador-hero-subtitle">
+            <p className="ssc-hero-subtitle">
               Hola, {nombre || 'Orientador(a)'}. Monitoreo integral de acuerdos, justificantes y atención psicopedagógica.
             </p>
           </div>
-          <div className="orientador-hero-actions">
+          <div className="ssc-hero-actions">
             <button
               type="button"
-              className="orientador-btn-action orientador-btn-action--primary"
+              className="ssc-btn-action ssc-btn-action--primary"
               onClick={() => setModalIntervencionOpen(true)}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_circle</span>
@@ -131,7 +130,7 @@ export default function InicioOrientador() {
             </button>
             <button
               type="button"
-              className="orientador-btn-action orientador-btn-action--secondary"
+              className="ssc-btn-action ssc-btn-action--secondary"
               onClick={() => setModalReporteOpen(true)}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>assignment_add</span>
@@ -142,304 +141,272 @@ export default function InicioOrientador() {
       </section>
 
       {/* Resumen Rápido de Casos / KPIs de Orientación */}
-      <div className="orientador-kpi-grid">
+      <div className="ssc-kpi-grid">
         <div
-          className={`orientador-kpi-card ${activeTab === 'justificantes' ? 'orientador-kpi-card--active' : ''}`}
+          className={`ssc-kpi-card ${activeTab === 'justificantes' ? 'ssc-kpi-card--active' : ''}`}
           onClick={() => setActiveTab('justificantes')}
         >
-          <div className="orientador-kpi-info">
-            <div className="orientador-kpi-label">Justificantes</div>
-            <div className="orientador-kpi-value">{justificantesPendientes.length}</div>
-            <div className="orientador-kpi-subtext">
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Justificantes</div>
+            <div className="ssc-kpi-value">{justificantesPendientes.length}</div>
+            <div className="ssc-kpi-subtext">
               <span className="material-symbols-outlined" style={{ fontSize: '13px', color: justificantesPendientes.length > 0 ? '#ef4444' : '#10b981' }}>
                 {justificantesPendientes.length > 0 ? 'pending_actions' : 'check_circle'}
               </span>
               <span>{justificantesPendientes.length > 0 ? 'Por validar' : 'Al día'}</span>
             </div>
           </div>
-          <div className="orientador-kpi-icon-wrap" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#e0f2fe', color: '#0284c7' }}>
             <span className="material-symbols-outlined">fact_check</span>
           </div>
         </div>
 
         <div
-          className={`orientador-kpi-card ${activeTab === 'citas' ? 'orientador-kpi-card--active' : ''}`}
+          className={`ssc-kpi-card ${activeTab === 'citas' ? 'ssc-kpi-card--active' : ''}`}
           onClick={() => setActiveTab('citas')}
         >
-          <div className="orientador-kpi-info">
-            <div className="orientador-kpi-label">Citas de Tutores</div>
-            <div className="orientador-kpi-value">{citasPendientes.length}</div>
-            <div className="orientador-kpi-subtext">
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Citas de Tutores</div>
+            <div className="ssc-kpi-value">{citasPendientes.length}</div>
+            <div className="ssc-kpi-subtext">
               <span className="material-symbols-outlined" style={{ fontSize: '13px', color: citasPendientes.length > 0 ? '#f59e0b' : '#10b981' }}>
                 {citasPendientes.length > 0 ? 'schedule' : 'task_alt'}
               </span>
               <span>{citasPendientes.length > 0 ? 'Por confirmar' : 'Al día'}</span>
             </div>
           </div>
-          <div className="orientador-kpi-icon-wrap" style={{ background: '#fef3c7', color: '#d97706' }}>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#fef3c7', color: '#d97706' }}>
             <span className="material-symbols-outlined">calendar_month</span>
           </div>
         </div>
 
         <div
-          className={`orientador-kpi-card ${activeTab === 'intervenciones' ? 'orientador-kpi-card--active' : ''}`}
+          className={`ssc-kpi-card ${activeTab === 'intervenciones' ? 'ssc-kpi-card--active' : ''}`}
           onClick={() => setActiveTab('intervenciones')}
         >
-          <div className="orientador-kpi-info">
-            <div className="orientador-kpi-label">Bitácora Activa</div>
-            <div className="orientador-kpi-value">{intervenciones.length}</div>
-            <div className="orientador-kpi-subtext">
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Bitácora Activa</div>
+            <div className="ssc-kpi-value">{intervenciones.length}</div>
+            <div className="ssc-kpi-subtext">
               <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#0284c7' }}>history_edu</span>
               <span>Acuerdos registrados</span>
             </div>
           </div>
-          <div className="orientador-kpi-icon-wrap" style={{ background: '#e0e7ff', color: '#4338ca' }}>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#e0e7ff', color: '#4338ca' }}>
             <span className="material-symbols-outlined">handshake</span>
           </div>
         </div>
 
         <div
-          className={`orientador-kpi-card ${activeTab === 'bi' ? 'orientador-kpi-card--active' : ''}`}
+          className={`ssc-kpi-card ${activeTab === 'bi' ? 'ssc-kpi-card--active' : ''}`}
           onClick={() => setActiveTab('bi')}
         >
-          <div className="orientador-kpi-info">
-            <div className="orientador-kpi-label">Radar de Riesgo</div>
-            <div className="orientador-kpi-value" style={{ fontSize: '18px', paddingTop: '3px' }}>Centro BI</div>
-            <div className="orientador-kpi-subtext">
+          <div className="ssc-kpi-info">
+            <div className="ssc-kpi-label">Radar de Riesgo</div>
+            <div className="ssc-kpi-value" style={{ fontSize: '18px', paddingTop: '3px' }}>Centro BI</div>
+            <div className="ssc-kpi-subtext">
               <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#10b981' }}>analytics</span>
               <span>Métricas del plantel</span>
             </div>
           </div>
-          <div className="orientador-kpi-icon-wrap" style={{ background: '#dcfce7', color: '#15803d' }}>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#dcfce7', color: '#15803d' }}>
             <span className="material-symbols-outlined">radar</span>
           </div>
         </div>
       </div>
 
       {/* Selector de Pestañas de Orientación */}
-      <nav className="orientador-tabs-nav" aria-label="Secciones de Orientación">
+      <nav className="ssc-tabs-nav" aria-label="Secciones de Orientación">
         <button
           type="button"
-          className={`orientador-tab-btn ${activeTab === 'intervenciones' ? 'orientador-tab-btn--active' : ''}`}
+          className={`ssc-tab-btn ${activeTab === 'intervenciones' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('intervenciones')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>handshake</span>
-          <span>Acuerdos</span>
-          <span className="orientador-tab-badge">{intervenciones.length}</span>
+          <span>Acuerdos y Bitácora</span>
+          <span className="ssc-tab-badge">{intervenciones.length}</span>
         </button>
+
         <button
           type="button"
-          className={`orientador-tab-btn ${activeTab === 'justificantes' ? 'orientador-tab-btn--active' : ''}`}
+          className={`ssc-tab-btn ${activeTab === 'justificantes' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('justificantes')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fact_check</span>
-          <span>Justificantes</span>
-          {justificantesPendientes.length > 0 && (
-            <span className="orientador-tab-badge orientador-tab-badge--pending">{justificantesPendientes.length}</span>
-          )}
+          <span>Validación de Justificantes</span>
+          <span className={`ssc-tab-badge ${justificantesPendientes.length > 0 ? 'ssc-tab-badge--pending' : ''}`}>
+            {justificantesPendientes.length}
+          </span>
         </button>
+
         <button
           type="button"
-          className={`orientador-tab-btn ${activeTab === 'citas' ? 'orientador-tab-btn--active' : ''}`}
+          className={`ssc-tab-btn ${activeTab === 'citas' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('citas')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>calendar_month</span>
-          <span>Citas</span>
-          {citasPendientes.length > 0 && (
-            <span className="orientador-tab-badge orientador-tab-badge--pending">{citasPendientes.length}</span>
-          )}
+          <span>Citas con Tutores</span>
+          <span className={`ssc-tab-badge ${citasPendientes.length > 0 ? 'ssc-tab-badge--pending' : ''}`}>
+            {citasPendientes.length}
+          </span>
         </button>
+
         <button
           type="button"
-          className={`orientador-tab-btn ${activeTab === 'bi' ? 'orientador-tab-btn--active' : ''}`}
+          className={`ssc-tab-btn ${activeTab === 'bi' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('bi')}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>radar</span>
-          <span>Radar BI</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>analytics</span>
+          <span>Radar de Riesgo BI</span>
         </button>
       </nav>
 
-      {/* Pestaña 1: Bitácora de Intervenciones & Acuerdos */}
+      {/* Pestaña 1: Bitácora de Acuerdos */}
       {activeTab === 'intervenciones' && (
         <section className="dedicated-tab-content">
-          <div className="orientador-section-header">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
             <div>
-              <h3 className="orientador-section-title">
-                <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>clinical_notes</span>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>handshake</span>
                 Bitácora de Acuerdos y Seguimiento Psicopedagógico
               </h3>
-              <p className="orientador-section-desc">
-                Compromisos firmados con tutores legales y planes de regularización conductual.
+              <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+                Historial de sesiones y compromisos acordados con estudiantes y padres de familia.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setModalIntervencionOpen(true)}
-              className="orientador-btn-action orientador-btn-action--primary"
-              style={{ padding: '8px 16px', fontSize: '13px', background: '#0284c7', color: '#ffffff' }}
+              className="ssc-btn-action ssc-btn-action--primary"
+              style={{ background: '#0284c7', color: '#ffffff', padding: '8px 16px', fontSize: '13px' }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-              <span>Nueva Intervención</span>
+              <span>Nuevo Acuerdo</span>
             </button>
           </div>
 
           {intervenciones.length === 0 ? (
-            <div className="orientador-empty-state">
-              <span className="material-symbols-outlined orientador-empty-icon">handshake</span>
-              <h4 className="orientador-empty-title">No hay sesiones de intervención registradas aún</h4>
-              <p className="orientador-empty-desc">
-                Registra acuerdos formales con padres de familia de alumnos identificados en Semáforo Naranja o Rojo.
+            <div className="ssc-empty-state">
+              <span className="material-symbols-outlined ssc-empty-icon">history_edu</span>
+              <h4 className="ssc-empty-title">No hay acuerdos registrados en la bitácora</h4>
+              <p className="ssc-empty-desc">
+                Comienza a registrar las sesiones de orientación para dar seguimiento conductual y académico personalizado.
               </p>
               <button
                 type="button"
+                className="ssc-btn-action ssc-btn-action--primary"
                 onClick={() => setModalIntervencionOpen(true)}
-                className="orientador-btn-action orientador-btn-action--primary"
                 style={{ background: '#0284c7', color: '#ffffff' }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>
-                <span>Registrar Primera Intervención</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_circle</span>
+                <span>Registrar Primer Acuerdo</span>
               </button>
             </div>
           ) : (
-            <div className="orientador-cards-list">
-              {intervenciones.map(item => {
-                const pillTypeClass =
-                  item.tipo === 'conductual'
-                    ? 'orientador-pill--conductual'
-                    : item.tipo === 'academico'
-                    ? 'orientador-pill--academico'
-                    : item.tipo === 'emocional'
-                    ? 'orientador-pill--emocional'
-                    : item.tipo === 'familiar'
-                    ? 'orientador-pill--familiar'
-                    : 'orientador-pill--default';
-
-                return (
-                  <div key={item.id} className="orientador-item-card">
-                    <div className="orientador-card-top">
-                      <div>
-                        <div className="orientador-pill-group">
-                          <span className={`orientador-pill ${pillTypeClass}`}>
-                            {item.tipo}
-                          </span>
-                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#0284c7' }}>
-                            Matrícula: {item.matricula}
-                          </span>
-                          <span style={{ fontSize: '12px', color: 'var(--color-text-sub, #64748b)' }}>
-                            • Grupo {item.grupo}
-                          </span>
-                        </div>
-                        <h4 className="orientador-card-title">
-                          {item.alumnoNombre}
-                        </h4>
-                      </div>
-
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #94a3b8)', display: 'block' }}>
+            <div className="ssc-cards-list">
+              {intervenciones.map(item => (
+                <div key={item.id} className="ssc-item-card">
+                  <div className="ssc-card-top">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '4px' }}>
+                          Área: {item.tipo}
+                        </span>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #64748b)' }}>
                           Sesión: {item.fechaSesion}
                         </span>
                       </div>
+                      <h4 className="ssc-card-title">{item.alumnoNombre}</h4>
                     </div>
 
                     {item.fechaSeguimiento && (
-                      <div className="orientador-next-date-badge">
-                        <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>event_repeat</span>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '8px', fontSize: '11.5px', fontWeight: 700 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>event</span>
                         <span>Próxima Cita: {item.fechaSeguimiento}</span>
                       </div>
                     )}
-
-                    <div className="orientador-note-box">
-                      <strong>Acuerdos Establecidos:</strong>
-                      <div style={{ marginTop: '3px' }}>{item.acuerdos}</div>
-                    </div>
-
-                    <div className="orientador-card-footer">
-                      <span>Registrado por: {item.registradoPor}</span>
-                      <span>{new Date(item.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                    </div>
                   </div>
-                );
-              })}
+
+                  <div className="ssc-note-box" style={{ borderLeftColor: '#0284c7' }}>
+                    <strong>Acuerdos y Compromisos:</strong> {item.acuerdos}
+                  </div>
+
+                  <div className="ssc-card-footer">
+                    <span>Registrado por: <strong>{item.registradoPor}</strong></span>
+                    <span>Fecha: {new Date(item.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </section>
       )}
 
-      {/* Pestaña 2: Bandeja de Justificantes */}
+      {/* Pestaña 2: Validación de Justificantes */}
       {activeTab === 'justificantes' && (
         <section className="dedicated-tab-content">
-          <div className="orientador-section-header">
-            <div>
-              <h3 className="orientador-section-title">
-                <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>fact_check</span>
-                Bandeja de Aprobación de Justificantes
-              </h3>
-              <p className="orientador-section-desc">
-                Revisa y aprueba solicitudes de justificantes médicos y trámites oficiales emitidos por los alumnos.
-              </p>
-            </div>
+          <div style={{ marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>fact_check</span>
+              Solicitudes de Justificantes Médicos y Familiares ({justificantes.length})
+            </h3>
+            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+              Revisa, aprueba o rechaza los justificantes presentados por los estudiantes del plantel.
+            </p>
           </div>
 
           {justificantes.length === 0 ? (
-            <div className="orientador-empty-state">
-              <span className="material-symbols-outlined orientador-empty-icon">verified</span>
-              <h4 className="orientador-empty-title">No hay solicitudes de justificantes pendientes</h4>
-              <p className="orientador-empty-desc">
-                Las solicitudes enviadas por los estudiantes aparecerán aquí para su validación inmediata.
-              </p>
+            <div className="ssc-empty-state">
+              <span className="material-symbols-outlined ssc-empty-icon">task_alt</span>
+              <h4 className="ssc-empty-title">Bandeja de justificantes al día</h4>
+              <p className="ssc-empty-desc">No hay solicitudes de inasistencia pendientes de revisión en este momento.</p>
             </div>
           ) : (
-            <div className="orientador-cards-list">
+            <div className="ssc-cards-list">
               {justificantes.map(j => (
-                <div key={j.id} className="orientador-item-card">
-                  <div className="orientador-card-top">
+                <div key={j.id} className="ssc-item-card">
+                  <div className="ssc-card-top">
                     <div>
-                      <div className="orientador-pill-group">
-                        <span className="orientador-pill orientador-pill--emocional">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '4px' }}>
                           {j.motivo}
                         </span>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)' }}>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #64748b)' }}>
                           Periodo: {j.fechaInicio} al {j.fechaFin}
                         </span>
                       </div>
-                      <p style={{ margin: '4px 0', fontSize: '13.5px', color: 'var(--color-text-main, #334155)', lineHeight: 1.45 }}>
-                        {j.descripcion}
-                      </p>
-                      <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #94a3b8)' }}>
-                        Solicitado el: {new Date(j.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </span>
+                      <h4 className="ssc-card-title">Estudiante ID: {j.alumnoId}</h4>
                     </div>
 
-                    <div className="orientador-action-btn-group">
-                      {j.estado === 'pendiente' ? (
-                        <>
-                          <button
-                            type="button"
-                            className="orientador-btn-reject"
-                            onClick={() => handleActualizarJustificante(j.id, 'rechazado')}
-                          >
-                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cancel</span>
-                            <span>Rechazar</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="orientador-btn-approve"
-                            onClick={() => handleActualizarJustificante(j.id, 'aprobado')}
-                          >
-                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
-                            <span>Aprobar Justificante</span>
-                          </button>
-                        </>
-                      ) : (
-                        <span className={`orientador-status-chip ${j.estado === 'aprobado' ? 'orientador-status-chip--success' : 'orientador-status-chip--danger'}`}>
-                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                            {j.estado === 'aprobado' ? 'verified' : 'cancel'}
-                          </span>
-                          <span>{j.estado === 'aprobado' ? 'Justificante Aprobado' : 'Justificante Rechazado'}</span>
-                        </span>
-                      )}
-                    </div>
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', background: j.estado === 'aprobado' ? '#dcfce7' : j.estado === 'rechazado' ? '#fee2e2' : '#fef3c7', color: j.estado === 'aprobado' ? '#166534' : j.estado === 'rechazado' ? '#991b1b' : '#92400e' }}>
+                      {j.estado === 'aprobado' ? 'Aprobado' : j.estado === 'rechazado' ? 'Rechazado' : 'Pendiente de Validación'}
+                    </span>
                   </div>
+
+                  <div className="ssc-note-box" style={{ borderLeftColor: '#0284c7' }}>
+                    <strong>Motivo expuesto:</strong> {j.descripcion}
+                  </div>
+
+                  {j.estado === 'pendiente' && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleActualizarJustificante(j.id, 'aprobado')}
+                        style={{ background: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
+                        <span>Aprobar Justificante</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleActualizarJustificante(j.id, 'rechazado')}
+                        style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cancel</span>
+                        <span>Rechazar</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -450,67 +417,60 @@ export default function InicioOrientador() {
       {/* Pestaña 3: Citas de Tutores */}
       {activeTab === 'citas' && (
         <section className="dedicated-tab-content">
-          <div className="orientador-section-header">
-            <div>
-              <h3 className="orientador-section-title">
-                <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>calendar_month</span>
-                Solicitudes de Cita de Padres de Familia
-              </h3>
-              <p className="orientador-section-desc">
-                Agenda y confirma sesiones de atención psicopedagógica solicitadas por los tutores.
-              </p>
-            </div>
+          <div style={{ marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>calendar_month</span>
+              Solicitudes de Citas con Padres de Familia ({citas.length})
+            </h3>
+            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+              Agenda y confirma entrevistas presenciales o virtuales con los tutores de los alumnos.
+            </p>
           </div>
 
           {citas.length === 0 ? (
-            <div className="orientador-empty-state">
-              <span className="material-symbols-outlined orientador-empty-icon">event_available</span>
-              <h4 className="orientador-empty-title">No hay solicitudes de cita pendientes</h4>
-              <p className="orientador-empty-desc">
-                Cuando un padre de familia solicite una reunión, se listará aquí para su confirmación inmediata.
-              </p>
+            <div className="ssc-empty-state">
+              <span className="material-symbols-outlined ssc-empty-icon">event_available</span>
+              <h4 className="ssc-empty-title">Agenda de citas al día</h4>
+              <p className="ssc-empty-desc">No hay solicitudes de entrevista familiar pendientes por confirmar.</p>
             </div>
           ) : (
-            <div className="orientador-cards-list">
+            <div className="ssc-cards-list">
               {citas.map(c => (
-                <div key={c.id} className="orientador-item-card">
-                  <div className="orientador-card-top">
-                    <div style={{ flex: 1, minWidth: '240px' }}>
-                      <div className="orientador-pill-group">
-                        <span className="orientador-pill orientador-pill--emocional">
+                <div key={c.id} className="ssc-item-card">
+                  <div className="ssc-card-top">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '4px' }}>
                           {c.motivo}
                         </span>
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#0284c7' }}>
-                          Tutor: {c.padreNombre} (Alumno: {c.alumnoNombre})
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #64748b)' }}>
+                          Fecha Propuesta: {c.fechaPropuesta} a las {c.horaPropuesta} hrs
                         </span>
                       </div>
-                      <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#d97706', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>event</span>
-                        <span>Fecha propuesta: {c.fechaPropuesta} a las {c.horaPropuesta} hrs</span>
-                      </div>
-                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-main, #334155)', lineHeight: 1.45 }}>
-                        {c.detalles}
-                      </p>
+                      <h4 className="ssc-card-title">{c.padreNombre} (Tutor de {c.alumnoNombre})</h4>
                     </div>
 
-                    <div className="orientador-action-btn-group">
-                      {c.estado === 'pendiente' ? (
-                        <button
-                          type="button"
-                          className="orientador-btn-confirm"
-                          onClick={() => handleConfirmarCita(c.id)}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
-                          <span>Confirmar Cita</span>
-                        </button>
-                      ) : (
-                        <span className="orientador-status-chip orientador-status-chip--success">
-                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
-                          <span>Cita Confirmada</span>
-                        </span>
-                      )}
-                    </div>
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', background: c.estado === 'confirmada' ? '#dcfce7' : c.estado === 'reprogramada' ? '#fee2e2' : '#fef3c7', color: c.estado === 'confirmada' ? '#166534' : c.estado === 'reprogramada' ? '#991b1b' : '#92400e' }}>
+                      {c.estado === 'confirmada' ? 'Confirmada' : c.estado === 'reprogramada' ? 'Reprogramada' : 'Por Confirmar'}
+                    </span>
                   </div>
+
+                  <div className="ssc-note-box" style={{ borderLeftColor: '#0284c7' }}>
+                    <strong>Asunto a tratar:</strong> {c.detalles}
+                  </div>
+
+                  {c.estado === 'pendiente' && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmarCita(c.id)}
+                        style={{ background: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>event_available</span>
+                        <span>Confirmar Cita</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -518,9 +478,19 @@ export default function InicioOrientador() {
         </section>
       )}
 
-      {/* Pestaña 4: Radar de Riesgo & Centro BI */}
+      {/* Pestaña 4: Centro BI Radar */}
       {activeTab === 'bi' && (
         <section className="dedicated-tab-content">
+          <div style={{ marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>analytics</span>
+              Radar de Salud Conductual & Analítica BI
+            </h3>
+            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
+              Indicadores globales del plantel, semáforos de riesgo y métricas de desempeño conductual.
+            </p>
+          </div>
+
           {plantelId ? (
             <BIAnalyticsDashboard userRole="orientador" plantelId={plantelId} />
           ) : (
@@ -529,23 +499,19 @@ export default function InicioOrientador() {
         </section>
       )}
 
-      {/* Modal Nueva Intervención */}
+      {/* Modal Bitácora de Intervención */}
       <BitacoraIntervencionModal
         isOpen={modalIntervencionOpen}
         onClose={() => setModalIntervencionOpen(false)}
-        onIntervencionGuardada={() => {
-          loadData();
-          setActiveTab('intervenciones');
+        onIntervencionGuardada={(newRecord) => {
+          setIntervenciones(prev => [newRecord, ...prev]);
         }}
       />
 
-      {/* Modal Emisión Rápida de Reporte */}
+      {/* Modal Generar Reporte Rápido */}
       <GenerarReporteRapidoModal
         isOpen={modalReporteOpen}
         onClose={() => setModalReporteOpen(false)}
-        onReporteGenerado={() => {
-          loadData();
-        }}
       />
     </div>
   );
