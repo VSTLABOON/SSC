@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
@@ -20,6 +20,15 @@ export interface IntervencionRecord {
   createdAt: string;
 }
 
+interface AlumnoOption {
+  id: string;
+  nombre: string;
+  matricula: string;
+  grupo: string;
+  nivel_semaforo: string;
+  puntos_totales: number;
+}
+
 interface BitacoraIntervencionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,13 +43,17 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
   preselectedAlumnoId,
 }) => {
   const { nombre, plantelId } = useAuth();
-  const [alumnosList, setAlumnosList] = useState<Array<{ id: string; nombre: string; matricula: string; grupo: string }>>([]);
+  const [alumnosList, setAlumnosList] = useState<AlumnoOption[]>([]);
   const [selectedAlumnoId, setSelectedAlumnoId] = useState(preselectedAlumnoId || '');
+  const [isSearching, setIsSearching] = useState(!preselectedAlumnoId);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [riskFilter, setRiskFilter] = useState<'all' | 'rojo' | 'naranja' | 'verde'>('all');
   const [tipo, setTipo] = useState<'conductual' | 'academico' | 'emocional' | 'familiar'>('conductual');
   const [fechaSesion, setFechaSesion] = useState(new Date().toISOString().split('T')[0]);
   const [acuerdos, setAcuerdos] = useState('');
   const [fechaSeguimiento, setFechaSeguimiento] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingAlumnos, setLoadingAlumnos] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useLockBodyScroll(isOpen);
@@ -49,6 +62,7 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
   useEffect(() => {
     if (preselectedAlumnoId) {
       setSelectedAlumnoId(preselectedAlumnoId);
+      setIsSearching(false);
     }
   }, [preselectedAlumnoId]);
 
@@ -56,38 +70,101 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
     if (!isOpen || !plantelId) return;
 
     async function loadAlumnos() {
+      setLoadingAlumnos(true);
       try {
+        // Consulta resiliente a la tabla de alumnos vinculada al plantel mediante grupos
         const { data, error: err } = await supabase
           .from('alumnos')
-          .select('id, matricula, grupos(nombre), usuarios(nombre, apellido)')
-          .eq('plantel_id', plantelId)
+          .select('id, matricula, nivel_semaforo, puntos_totales, usuarios!alumnos_usuario_id_fkey(nombre, apellido), grupos!inner(plantel_id, nombre)')
+          .eq('grupos.plantel_id', plantelId)
           .order('matricula');
 
         if (!err && data) {
-          const list = data.map((r: any) => {
+          const list: AlumnoOption[] = data.map((r: any) => {
             const us = Array.isArray(r.usuarios) ? r.usuarios[0] : r.usuarios;
             const gr = Array.isArray(r.grupos) ? r.grupos[0] : r.grupos;
             return {
               id: r.id,
-              nombre: `${us?.nombre || ''} ${us?.apellido || ''}`.trim() || 'Sin nombre',
+              nombre: `${us?.nombre || ''} ${us?.apellido || ''}`.trim() || 'Estudiante',
               matricula: r.matricula || '',
               grupo: gr?.nombre || 'Sin Grupo',
+              nivel_semaforo: r.nivel_semaforo || 'verde',
+              puntos_totales: r.puntos_totales ?? 100,
             };
           });
           setAlumnosList(list);
-          if (!selectedAlumnoId && list.length > 0) {
-            setSelectedAlumnoId(list[0].id);
+
+          if (preselectedAlumnoId) {
+            setSelectedAlumnoId(preselectedAlumnoId);
+            setIsSearching(false);
+          } else if (list.length > 0 && !selectedAlumnoId) {
+            // No auto-seleccionar para que el orientador pueda buscar limpiamente
+            setIsSearching(true);
+          }
+        } else if (err) {
+          console.warn('[Bitácora] Reintentando carga de alumnos sin inner join:', err);
+          // Fallback en caso de esquemas alternativos
+          const { data: fallbackData } = await supabase
+            .from('alumnos')
+            .select('id, matricula, nivel_semaforo, puntos_totales, usuarios(nombre, apellido), grupos(nombre)')
+            .limit(300);
+
+          if (fallbackData) {
+            const list: AlumnoOption[] = fallbackData.map((r: any) => {
+              const us = Array.isArray(r.usuarios) ? r.usuarios[0] : r.usuarios;
+              const gr = Array.isArray(r.grupos) ? r.grupos[0] : r.grupos;
+              return {
+                id: r.id,
+                nombre: `${us?.nombre || ''} ${us?.apellido || ''}`.trim() || 'Estudiante',
+                matricula: r.matricula || '',
+                grupo: gr?.nombre || 'Sin Grupo',
+                nivel_semaforo: r.nivel_semaforo || 'verde',
+                puntos_totales: r.puntos_totales ?? 100,
+              };
+            });
+            setAlumnosList(list);
           }
         }
       } catch (e) {
         console.error('Error al cargar lista de alumnos para intervención:', e);
+      } finally {
+        setLoadingAlumnos(false);
       }
     }
 
     loadAlumnos();
-  }, [isOpen, plantelId, selectedAlumnoId]);
+  }, [isOpen, plantelId, preselectedAlumnoId]);
+
+  // Alumno actualmente seleccionado
+  const selectedAlumno = useMemo(() => {
+    return alumnosList.find(a => a.id === selectedAlumnoId) || null;
+  }, [alumnosList, selectedAlumnoId]);
+
+  // Filtrado inteligente en tiempo real por búsqueda y semáforo
+  const filteredAlumnos = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return alumnosList.filter(a => {
+      // Filtro de semáforo
+      if (riskFilter !== 'all' && a.nivel_semaforo !== riskFilter) {
+        return false;
+      }
+      // Filtro de texto
+      if (!q) return true;
+      return (
+        a.nombre.toLowerCase().includes(q) ||
+        a.matricula.toLowerCase().includes(q) ||
+        a.grupo.toLowerCase().includes(q)
+      );
+    });
+  }, [alumnosList, searchQuery, riskFilter]);
 
   if (!isOpen) return null;
+
+  function handleSelectStudent(a: AlumnoOption) {
+    setSelectedAlumnoId(a.id);
+    setIsSearching(false);
+    setError(null);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,7 +176,7 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
     setLoading(true);
     setError(null);
 
-    const al = alumnosList.find(a => a.id === selectedAlumnoId);
+    const al = selectedAlumno || alumnosList.find(a => a.id === selectedAlumnoId);
     const newRecord: IntervencionRecord = {
       id: `interv_${Date.now()}`,
       alumnoId: selectedAlumnoId,
@@ -153,20 +230,127 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
         )}
 
         <form onSubmit={handleSubmit} className="bim-form">
+          {/* Selector Inteligente de Estudiante */}
           <div className="bim-field">
-            <label htmlFor="bim-alumno">Estudiante Atendido</label>
-            <select
-              id="bim-alumno"
-              value={selectedAlumnoId}
-              onChange={e => setSelectedAlumnoId(e.target.value)}
-              required
-            >
-              {alumnosList.map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.matricula} — {a.nombre} (Grupo {a.grupo})
-                </option>
-              ))}
-            </select>
+            <label>Estudiante Atendido</label>
+            <div className="bim-smart-picker">
+              {selectedAlumno && !isSearching ? (
+                /* Ficha de Alumno Seleccionado */
+                <div className="bim-selected-student-card">
+                  <div className="bim-student-avatar">
+                    {selectedAlumno.nombre.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="bim-student-info">
+                    <div className="bim-student-name">{selectedAlumno.nombre}</div>
+                    <div className="bim-student-meta">
+                      <span>Matrícula: <strong>{selectedAlumno.matricula}</strong></span>
+                      <span>• Grupo: <strong>{selectedAlumno.grupo}</strong></span>
+                      <span className={`bim-student-semaforo bim-student-semaforo--${selectedAlumno.nivel_semaforo}`}>
+                        {selectedAlumno.puntos_totales} pts ({selectedAlumno.nivel_semaforo})
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="bim-btn-change-student"
+                    onClick={() => {
+                      setIsSearching(true);
+                      setSearchQuery('');
+                    }}
+                    title="Buscar otro estudiante"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>search</span>
+                    <span>Cambiar</span>
+                  </button>
+                </div>
+              ) : (
+                /* Buscador Interactivo con Filtros Rápidos */
+                <>
+                  <div className="bim-search-box">
+                    <span className="material-symbols-outlined bim-search-icon">search</span>
+                    <input
+                      type="text"
+                      className="bim-search-input"
+                      placeholder="Escribe nombre, apellido, matrícula o grupo..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      autoFocus={isSearching}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        className="bim-btn-clear-search"
+                        onClick={() => setSearchQuery('')}
+                        aria-label="Limpiar búsqueda"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Chips de Filtro Rápido por Riesgo */}
+                  <div className="bim-filter-chips">
+                    <button
+                      type="button"
+                      className={`bim-filter-chip ${riskFilter === 'all' ? 'bim-filter-chip--active' : ''}`}
+                      onClick={() => setRiskFilter('all')}
+                    >
+                      Todos ({alumnosList.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`bim-filter-chip bim-filter-chip--rojo ${riskFilter === 'rojo' ? 'bim-filter-chip--active' : ''}`}
+                      onClick={() => setRiskFilter('rojo')}
+                    >
+                      Semáforo Rojo ({alumnosList.filter(a => a.nivel_semaforo === 'rojo').length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`bim-filter-chip bim-filter-chip--naranja ${riskFilter === 'naranja' ? 'bim-filter-chip--active' : ''}`}
+                      onClick={() => setRiskFilter('naranja')}
+                    >
+                      Semáforo Naranja ({alumnosList.filter(a => a.nivel_semaforo === 'naranja').length})
+                    </button>
+                  </div>
+
+                  {/* Lista de Resultados Filtrados */}
+                  <div className="bim-results-list">
+                    {loadingAlumnos ? (
+                      <div className="bim-empty-search">Cargando alumnos del plantel...</div>
+                    ) : filteredAlumnos.length === 0 ? (
+                      <div className="bim-empty-search">
+                        No se encontraron estudiantes con los criterios especificados.
+                      </div>
+                    ) : (
+                      filteredAlumnos.slice(0, 40).map(a => (
+                        <div
+                          key={a.id}
+                          className={`bim-result-item ${selectedAlumnoId === a.id ? 'bim-result-item--selected' : ''}`}
+                          onClick={() => handleSelectStudent(a)}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                            <div className="bim-student-avatar" style={{ width: '32px', height: '32px', fontSize: '11px' }}>
+                              {a.nombre.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-main, #0f172a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {a.nombre}
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--color-text-sub, #64748b)' }}>
+                                {a.matricula} • Grupo {a.grupo}
+                              </div>
+                            </div>
+                          </div>
+                          <span className={`bim-student-semaforo bim-student-semaforo--${a.nivel_semaforo}`}>
+                            {a.puntos_totales} pts
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
@@ -222,9 +406,9 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
             <button type="button" className="bim-btn-cancel" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button type="submit" className="bim-btn-submit" disabled={loading}>
+            <button type="submit" className="bim-btn-submit" disabled={loading || !selectedAlumnoId}>
               <span className="material-symbols-outlined">save</span>
-              {loading ? 'Guardando...' : 'Guardar en Bitácora'}
+              <span>{loading ? 'Guardando...' : 'Guardar en Bitácora'}</span>
             </button>
           </div>
         </form>
