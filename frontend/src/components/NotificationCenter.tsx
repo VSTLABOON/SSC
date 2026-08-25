@@ -24,23 +24,33 @@ export const NotificationCenter: React.FC = () => {
     if (!userId) return;
 
     async function fetchNotifications() {
-      const { data, error } = await supabase
-        .from('notificaciones')
-        .select('*')
-        .eq('usuario_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      try {
+        const { data, error } = await supabase
+          .from('notificaciones')
+          .select('*, incidencias(descripcion, categorias_incidencia(nombre, color_semaforo))')
+          .eq('destinatario_id', userId)
+          .order('enviada_at', { ascending: false })
+          .limit(10);
 
-      if (!error && data) {
-        const mapped: NotificationItem[] = data.map(item => ({
-          id: item.id,
-          title: item.titulo || 'Notificación Conductual',
-          message: item.mensaje || '',
-          time: new Date(item.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-          type: item.tipo === 'alerta_conductual' ? 'critical' : 'warning',
-          link: resolverRutaInicio(rol),
-        }));
-        setNotifications(mapped);
+        if (!error && data) {
+          const mapped: NotificationItem[] = data.map((item: any) => {
+            const inc = Array.isArray(item.incidencias) ? item.incidencias[0] : item.incidencias;
+            const cat = inc ? (Array.isArray(inc.categorias_incidencia) ? inc.categorias_incidencia[0] : inc.categorias_incidencia) : null;
+            const fecha = item.enviada_at || item.created_at || new Date().toISOString();
+            
+            return {
+              id: item.id,
+              title: cat?.nombre ? `Reporte: ${cat.nombre}` : (item.titulo || 'Notificación del Sistema'),
+              message: inc?.descripcion || item.mensaje || 'Se ha registrado una nueva actividad escolar.',
+              time: new Date(fecha).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+              type: cat?.color_semaforo === 'rojo' || item.tipo === 'alerta_conductual' ? 'critical' : 'warning',
+              link: resolverRutaInicio(rol),
+            };
+          });
+          setNotifications(mapped);
+        }
+      } catch (err) {
+        console.warn('Error al consultar notificaciones:', err);
       }
     }
 
@@ -51,15 +61,21 @@ export const NotificationCenter: React.FC = () => {
       .channel(`realtime-notif-${userId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notificaciones', filter: `usuario_id=eq.${userId}` },
+        { event: 'INSERT', schema: 'public', table: 'notificaciones', filter: `destinatario_id=eq.${userId}` },
         () => {
           fetchNotifications();
         }
       )
       .subscribe();
 
+    const handleDataChanged = () => {
+      fetchNotifications();
+    };
+    window.addEventListener('ssc_data_changed', handleDataChanged);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('ssc_data_changed', handleDataChanged);
     };
   }, [session?.user?.id, rol]);
 

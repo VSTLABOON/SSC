@@ -63,13 +63,13 @@ export const BICategoryChart: React.FC<BICategoryChartProps> = ({ data, loading,
         </span>
       </div>
 
-      <div className="bi-chart-container">
+      <div className="bi-chart-container" style={{ minHeight: '220px', width: '100%' }}>
         {data.length === 0 ? (
-          <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+          <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px' }}>
             No hay motivos registrados para este filtro.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart layout="vertical" data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
               <XAxis type="number" stroke="#64748b" fontSize={11} allowDecimals={false} />
@@ -78,7 +78,7 @@ export const BICategoryChart: React.FC<BICategoryChartProps> = ({ data, loading,
                 dataKey="categoria"
                 stroke="#475569"
                 fontSize={11}
-                width={120}
+                width={130}
                 tickFormatter={(val: string) => (val.length > 18 ? `${val.slice(0, 16)}...` : val)}
               />
               <Tooltip

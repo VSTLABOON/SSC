@@ -5,6 +5,8 @@ import { getPerfilAlumno } from '../../services/alumnos';
 import { getIncidenciasDelAlumno } from '../../services/incidencias';
 import { exportFichaConductualAlumnoPDF } from '../../services/pdfExportService';
 import { SolicitarCitaModal, type CitaRecord } from '../../components/padre/SolicitarCitaModal';
+import { getCitasOrientacion } from '../../services/citas';
+import InlineAlert from '../../components/InlineAlert';
 import '../Home.css';
 
 interface IncidentFromDB {
@@ -28,31 +30,31 @@ const SEMAPHORE_THEME: Record<
   { icon: string; panelClass: string; circleClass: string; labelClass: string; sublabelClass: string; label: string; desc: string }
 > = {
   verde: {
-    icon: 'check_circle',
-    panelClass: 'semaphore-panel semaphore-panel--verde',
-    circleClass: 'semaphore-circle semaphore-circle--verde',
-    labelClass: 'semaphore-label semaphore-label--verde',
-    sublabelClass: 'semaphore-sublabel semaphore-sublabel--verde',
-    label: 'Verde',
-    desc: 'Buen desempeño: El estudiante mantiene una trayectoria conductual y académica óptima (90 a 100 pts).',
+    icon: 'sentiment_very_satisfied',
+    panelClass: 'semaphore-panel-green',
+    circleClass: 'semaphore-circle-green',
+    labelClass: 'semaphore-label-green',
+    sublabelClass: 'semaphore-sublabel-green',
+    label: 'Semáforo Verde • Excelente Desempeño',
+    desc: 'El alumno muestra una conducta ejemplar y constante en el aula.',
   },
   naranja: {
-    icon: 'warning',
-    panelClass: 'semaphore-panel semaphore-panel--naranja',
-    circleClass: 'semaphore-circle semaphore-circle--naranja',
-    labelClass: 'semaphore-label semaphore-label--naranja',
-    sublabelClass: 'semaphore-sublabel semaphore-sublabel--naranja',
-    label: 'Naranja',
-    desc: 'Atención preventiva: Se registran incidencias o retardos acumulados (70 a 89 pts).',
+    icon: 'sentiment_neutral',
+    panelClass: 'semaphore-panel-orange',
+    circleClass: 'semaphore-circle-orange',
+    labelClass: 'semaphore-label-orange',
+    sublabelClass: 'semaphore-sublabel-orange',
+    label: 'Semáforo Naranja • Precaución / Atención',
+    desc: 'Se registran incidencias que requieren diálogo y seguimiento preventivo.',
   },
   rojo: {
-    icon: 'error',
-    panelClass: 'semaphore-panel semaphore-panel--rojo',
-    circleClass: 'semaphore-circle semaphore-circle--rojo',
-    labelClass: 'semaphore-label semaphore-label--rojo',
-    sublabelClass: 'semaphore-sublabel semaphore-sublabel--rojo',
-    label: 'Rojo',
-    desc: 'Atención prioritaria: Saldo crítico de salud conductual (menor a 70 pts) o acumulación de reportes disciplinarios.',
+    icon: 'sentiment_very_dissatisfied',
+    panelClass: 'semaphore-panel-red',
+    circleClass: 'semaphore-circle-red',
+    labelClass: 'semaphore-label-red',
+    sublabelClass: 'semaphore-sublabel-red',
+    label: 'Semáforo Rojo • Acción Urgente Requerida',
+    desc: 'Se requiere la intervención inmediata del tutor y orientación educativa.',
   },
 };
 
@@ -72,9 +74,9 @@ interface AlumnoProfile {
 }
 
 export default function InicioPadre() {
-  const { session, nombre } = useAuth();
+  const { session, nombre, plantelId } = useAuth();
   const pageRef = useRef<HTMLDivElement>(null);
-  const [heroVisible, setHeroVisible] = useState(false);
+  const [heroVisible, setHeroVisible] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState(false);
   const [alumno, setAlumno] = useState<AlumnoProfile | null>(null);
   const [incidencias, setIncidencias] = useState<IncidentFromDB[]>([]);
@@ -87,25 +89,55 @@ export default function InicioPadre() {
   const [citas, setCitas] = useState<CitaRecord[]>([]);
   const [activeTab, setActiveTab] = useState<'resumen' | 'bitacora' | 'citas' | 'avisos'>('resumen');
   const [incFilter, setIncFilter] = useState<'all' | 'verde' | 'naranja' | 'rojo'>('all');
+  const [nativeAlert, setNativeAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setHeroVisible(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  const loadCitas = useCallback(() => {
+  const loadCitas = useCallback(async () => {
     try {
-      const storageKey = `ssc_citas_orientacion_${alumno?.id || 'default'}`;
-      const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      setCitas(saved);
+      const list = await getCitasOrientacion(plantelId || undefined, selectedHijoId || alumno?.id || undefined, session?.user?.id);
+      setCitas(list);
     } catch (e) {
       console.warn('Error al cargar citas de orientación:', e);
     }
-  }, [alumno?.id]);
+  }, [plantelId, selectedHijoId, alumno?.id, session?.user?.id]);
 
   useEffect(() => {
     loadCitas();
-  }, [loadCitas]);
+
+    const channel = supabase
+      .channel('realtime-ssc-citas-padre')
+      .on('broadcast', { event: 'nueva_cita' }, () => {
+        loadCitas();
+      })
+      .on('broadcast', { event: 'cita_confirmada' }, (payload: any) => {
+        loadCitas();
+        if (payload?.payload?.updatedRecord?.padreId === session?.user?.id) {
+          setNativeAlert({
+            type: 'success',
+            message: `¡Tu cita para ${payload.payload.updatedRecord.alumnoNombre} ha sido confirmada por Orientación Educativa!`,
+          });
+        }
+      })
+      .subscribe();
+
+    const handleLocalCita = () => {
+      loadCitas();
+    };
+    window.addEventListener('ssc_cita_creada', handleLocalCita);
+    window.addEventListener('ssc_cita_actualizada', handleLocalCita);
+    window.addEventListener('ssc_data_changed', handleLocalCita);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('ssc_cita_creada', handleLocalCita);
+      window.removeEventListener('ssc_cita_actualizada', handleLocalCita);
+      window.removeEventListener('ssc_data_changed', handleLocalCita);
+    };
+  }, [loadCitas, session?.user?.id]);
 
   // Sincronización con el selector global de tutelados
   useEffect(() => {
@@ -320,6 +352,17 @@ export default function InicioPadre() {
           </div>
         </div>
       </section>
+
+      {/* Alerta Nativa de Confirmación de Citas */}
+      {nativeAlert && (
+        <div style={{ marginBottom: '12px' }}>
+          <InlineAlert
+            type={nativeAlert.type}
+            message={nativeAlert.message}
+            onClose={() => setNativeAlert(null)}
+          />
+        </div>
+      )}
 
       {/* Selector de Hijo si hay más de 1 */}
       {hijos.length > 1 && (
@@ -726,9 +769,14 @@ export default function InicioPadre() {
       <SolicitarCitaModal
         isOpen={modalCitaOpen}
         onClose={() => setModalCitaOpen(false)}
+        alumnoId={selectedHijoId || alumno?.id}
         alumnoNombre={nombreTutelado}
         onCitaSolicitada={(newCita) => {
-          setCitas(prev => [newCita, ...prev]);
+          setCitas(prev => [newCita, ...prev.filter(c => c.id !== newCita.id)]);
+          setNativeAlert({
+            type: 'success',
+            message: `Solicitud de cita para ${newCita.alumnoNombre} registrada con éxito. Se notificó al orientador del plantel.`,
+          });
         }}
       />
     </div>

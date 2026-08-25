@@ -500,7 +500,11 @@ export const StudentExpedienteModal: React.FC<StudentExpedienteModalProps> = ({
               {/* Gráfica de Área con Tendencia en Recharts */}
               <div style={{ height: '220px', width: '100%', marginTop: '8px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trajectoryData} margin={{ top: 15, right: 15, left: -20, bottom: 0 }}>
+                  <AreaChart
+                    key={`student-traj-${selectedPeriodoId || 'all'}-${granularity}`}
+                    data={trajectoryData}
+                    margin={{ top: 15, right: 15, left: -20, bottom: 0 }}
+                  >
                     <defs>
                       <linearGradient id="colorPointsGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={periodSemaforo === 'rojo' ? '#ef4444' : periodSemaforo === 'naranja' ? '#f59e0b' : '#10b981'} stopOpacity={0.4} />

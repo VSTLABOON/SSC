@@ -53,22 +53,83 @@ export interface StudentRiskScoreResult {
 
 /**
  * Obtener estadísticas globales de KPIs mediante el RPC PostgreSQL 'fn_bi_get_kpis'
- * FUENTE ÚNICA DE VERDAD: PostgreSQL RPC
+ * FUENTE ÚNICA DE VERDAD: PostgreSQL RPC con fallback relacional reactivo
  */
 export async function getBIKPIStats(filters: BIFilters): Promise<BIKPIStats> {
-  const { data, error } = await supabase.rpc('fn_bi_get_kpis', {
-    p_periodo_id: filters.periodoId || null,
-    p_generacion: filters.generacion || null,
-    p_grupo_id: filters.grupoId || null,
-    p_severidad: filters.severidad || null,
-    p_rango_temporal: filters.rangoTemporal || 'periodo',
-  });
+  try {
+    const { data, error } = await supabase.rpc('fn_bi_get_kpis', {
+      p_periodo_id: filters.periodoId || null,
+      p_generacion: filters.generacion || null,
+      p_grupo_id: filters.grupoId || null,
+      p_severidad: filters.severidad || null,
+      p_rango_temporal: filters.rangoTemporal || 'periodo',
+    });
 
-  if (error) {
-    console.error('Error en RPC fn_bi_get_kpis:', error);
-    throw error;
+    if (!error && data) {
+      return data as BIKPIStats;
+    }
+  } catch (err) {
+    console.warn('[BI] RPC fn_bi_get_kpis no disponible, utilizando fallback relacional:', err);
   }
-  return data as BIKPIStats;
+
+  // Fallback relacional directo
+  try {
+    let queryAlumnos = supabase
+      .from('alumnos')
+      .select('id, nivel_semaforo, puntos_totales, generacion, grupo_id');
+
+    if (filters.generacion) queryAlumnos = queryAlumnos.eq('generacion', filters.generacion);
+    if (filters.grupoId) queryAlumnos = queryAlumnos.eq('grupo_id', filters.grupoId);
+    if (filters.severidad) queryAlumnos = queryAlumnos.eq('nivel_semaforo', filters.severidad);
+
+    const { data: alumnosData } = await queryAlumnos;
+    const alumnos = alumnosData || [];
+
+    const total_alumnos = alumnos.length;
+    const conteo_verde = alumnos.filter(a => a.nivel_semaforo === 'verde').length;
+    const conteo_naranja = alumnos.filter(a => a.nivel_semaforo === 'naranja').length;
+    const conteo_rojo = alumnos.filter(a => a.nivel_semaforo === 'rojo').length;
+    const sumPuntos = alumnos.reduce((acc, a) => acc + (a.puntos_totales ?? 100), 0);
+    const promedio_puntos = total_alumnos > 0 ? Number((sumPuntos / total_alumnos).toFixed(1)) : null;
+
+    let queryIncs = supabase
+      .from('incidencias')
+      .select('id, created_at, periodo_id, categorias_incidencia(color_semaforo), alumnos!inner(id, generacion, grupo_id, nivel_semaforo)', { count: 'exact' });
+
+    if (filters.periodoId) queryIncs = queryIncs.eq('periodo_id', filters.periodoId);
+    if (filters.generacion) queryIncs = queryIncs.eq('alumnos.generacion', filters.generacion);
+    if (filters.grupoId) queryIncs = queryIncs.eq('alumnos.grupo_id', filters.grupoId);
+    if (filters.severidad) queryIncs = queryIncs.eq('alumnos.nivel_semaforo', filters.severidad);
+
+    if (filters.rangoTemporal === 'semana') {
+      const d = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+      queryIncs = queryIncs.gte('created_at', d.toISOString());
+    } else if (filters.rangoTemporal === 'mes') {
+      const d = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      queryIncs = queryIncs.gte('created_at', d.toISOString());
+    }
+
+    const { count } = await queryIncs;
+
+    return {
+      total_alumnos,
+      promedio_puntos,
+      conteo_verde,
+      conteo_naranja,
+      conteo_rojo,
+      total_incidencias: count || 0,
+    };
+  } catch (err) {
+    console.error('Error en fallback getBIKPIStats:', err);
+    return {
+      total_alumnos: 0,
+      promedio_puntos: null,
+      conteo_verde: 0,
+      conteo_naranja: 0,
+      conteo_rojo: 0,
+      total_incidencias: 0,
+    };
+  }
 }
 
 /**
@@ -84,44 +145,77 @@ export async function getBITrend(filters: BIFilters): Promise<BITrendItem[]> {
     });
 
     if (!error && Array.isArray(data) && data.length > 0) {
-      return data as BITrendItem[];
+      let result = data as BITrendItem[];
+      if (filters.severidad) {
+        result = result.map(item => ({
+          ...item,
+          verde: filters.severidad === 'verde' ? item.verde : 0,
+          naranja: filters.severidad === 'naranja' ? item.naranja : 0,
+          rojo: filters.severidad === 'rojo' ? item.rojo : 0,
+          total: filters.severidad === 'verde' ? item.verde : filters.severidad === 'naranja' ? item.naranja : item.rojo,
+        }));
+      }
+      return result;
     }
-  } catch {
-    // Fallback a consulta relacional directa
+  } catch (err) {
+    console.warn('[BI] RPC fn_bi_get_trend no disponible, usando fallback relacional:', err);
   }
 
   // Fallback relacional directo
   try {
     let query = supabase
       .from('incidencias')
-      .select('created_at, categorias_incidencia(color_semaforo), alumnos!inner(id, generacion, grupo_id)');
+      .select('created_at, categorias_incidencia(color_semaforo), alumnos!inner(id, generacion, grupo_id, nivel_semaforo)');
 
     if (filters.periodoId) query = query.eq('periodo_id', filters.periodoId);
     if (filters.generacion) query = query.eq('alumnos.generacion', filters.generacion);
     if (filters.grupoId) query = query.eq('alumnos.grupo_id', filters.grupoId);
+
+    if (filters.rangoTemporal === 'semana') {
+      const d = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+      query = query.gte('created_at', d.toISOString());
+    } else if (filters.rangoTemporal === 'mes') {
+      const d = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      query = query.gte('created_at', d.toISOString());
+    }
 
     const { data: rows, error: qErr } = await query;
     if (qErr || !rows) return [];
 
     const monthMap = new Map<string, { mes: string; mes_nombre: string; verde: number; naranja: number; rojo: number; total: number }>();
     const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
     rows.forEach((r: any) => {
       const d = new Date(r.created_at);
-      const mesKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const mesNombre = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-      
+      let mesKey: string;
+      let mesNombre: string;
+
+      if (filters.rangoTemporal === 'semana') {
+        mesKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        mesNombre = `${dayNames[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      } else if (filters.rangoTemporal === 'mes') {
+        mesKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        mesNombre = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      } else {
+        mesKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        mesNombre = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+      }
+
       if (!monthMap.has(mesKey)) {
         monthMap.set(mesKey, { mes: mesKey, mes_nombre: mesNombre, verde: 0, naranja: 0, rojo: 0, total: 0 });
       }
 
       const item = monthMap.get(mesKey)!;
-      item.total++;
       const cat = Array.isArray(r.categorias_incidencia) ? r.categorias_incidencia[0] : r.categorias_incidencia;
       const color = cat?.color_semaforo;
-      if (color === 'verde') item.verde++;
-      else if (color === 'naranja') item.naranja++;
-      else if (color === 'rojo') item.rojo++;
+
+      if (!filters.severidad || filters.severidad === color) {
+        item.total++;
+        if (color === 'verde') item.verde++;
+        else if (color === 'naranja') item.naranja++;
+        else if (color === 'rojo') item.rojo++;
+      }
     });
 
     return Array.from(monthMap.values()).sort((a, b) => a.mes.localeCompare(b.mes));
@@ -144,20 +238,32 @@ export async function getBICategories(filters: BIFilters): Promise<BICategoryIte
     });
 
     if (!error && Array.isArray(data) && data.length > 0) {
-      return data as BICategoryItem[];
+      let result = data as BICategoryItem[];
+      if (filters.severidad) {
+        result = result.filter(c => c.severidad === filters.severidad);
+      }
+      return result;
     }
-  } catch {
-    // Continuar a fallback
+  } catch (err) {
+    console.warn('[BI] RPC fn_bi_get_categories no disponible, usando fallback relacional:', err);
   }
 
   try {
     let query = supabase
       .from('incidencias')
-      .select('categorias_incidencia!inner(nombre, color_semaforo), alumnos!inner(id, generacion, grupo_id)');
+      .select('created_at, categorias_incidencia!inner(nombre, color_semaforo), alumnos!inner(id, generacion, grupo_id, nivel_semaforo)');
 
     if (filters.periodoId) query = query.eq('periodo_id', filters.periodoId);
     if (filters.generacion) query = query.eq('alumnos.generacion', filters.generacion);
     if (filters.grupoId) query = query.eq('alumnos.grupo_id', filters.grupoId);
+
+    if (filters.rangoTemporal === 'semana') {
+      const d = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+      query = query.gte('created_at', d.toISOString());
+    } else if (filters.rangoTemporal === 'mes') {
+      const d = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      query = query.gte('created_at', d.toISOString());
+    }
 
     const { data: rows, error: qErr } = await query;
     if (qErr || !rows) return [];
@@ -168,10 +274,12 @@ export async function getBICategories(filters: BIFilters): Promise<BICategoryIte
       const name = cat?.nombre || 'General';
       const sev = cat?.color_semaforo || 'verde';
 
-      if (!map.has(name)) {
-        map.set(name, { categoria: name, severidad: sev, total_incidencias: 0 });
+      if (!filters.severidad || filters.severidad === sev) {
+        if (!map.has(name)) {
+          map.set(name, { categoria: name, severidad: sev, total_incidencias: 0 });
+        }
+        map.get(name)!.total_incidencias++;
       }
-      map.get(name)!.total_incidencias++;
     });
 
     return Array.from(map.values()).sort((a, b) => b.total_incidencias - a.total_incidencias);
@@ -194,10 +302,14 @@ export async function getBIRiskStudents(filters: BIFilters): Promise<BIRiskStude
     });
 
     if (!error && Array.isArray(data) && data.length > 0) {
-      return data as BIRiskStudent[];
+      let list = data as BIRiskStudent[];
+      if (filters.severidad) {
+        list = list.filter(s => s.nivel_semaforo === filters.severidad);
+      }
+      return list;
     }
-  } catch {
-    // Continuar a fallback
+  } catch (err) {
+    console.warn('[BI] RPC fn_bi_get_risk_students no disponible, usando motor compuesto:', err);
   }
 
   // Fallback relacional con cálculo exacto de Composite Risk Score
@@ -209,6 +321,7 @@ export async function getBIRiskStudents(filters: BIFilters): Promise<BIRiskStude
 
     if (filters.generacion) query = query.eq('generacion', filters.generacion);
     if (filters.grupoId) query = query.eq('grupo_id', filters.grupoId);
+    if (filters.severidad) query = query.eq('nivel_semaforo', filters.severidad);
 
     const { data: rows, error: qErr } = await query;
     if (qErr || !rows) return [];
@@ -309,130 +422,49 @@ export async function getBIRiskScoreAlumno(alumnoId: string): Promise<StudentRis
       categoria: cat,
       recent_drop: drop,
     };
-  } catch {
+  } catch (err) {
+    console.error('Error al calcular risk score alumno:', err);
     return null;
   }
 }
 
 /**
- * Obtener lista de generaciones distintas registradas en la base de datos
+ * Enviar alerta preventiva al tutor del alumno desde el Radar BI
  */
-export async function getGeneracionesDisponibles(): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('alumnos')
-    .select('generacion')
-    .not('generacion', 'is', null);
-
-  if (error) {
-    console.error('Error al obtener generaciones:', error);
-    throw error;
-  }
-
-  const set = new Set<string>();
-  (data || []).forEach(item => {
-    if (item.generacion && item.generacion.trim()) {
-      set.add(item.generacion.trim());
-    }
-  });
-  return Array.from(set).sort().reverse();
-}
-
-/**
- * Enviar alerta directa al tutor legal del alumno (notificación preventiva con incidencia_id = null)
- */
-export async function sendPreventiveAlertToTutor(
-  alumnoId: string,
-  mensaje: string,
-  sessionUserId: string
-): Promise<boolean> {
-  if (!alumnoId) {
-    throw new Error('ID de alumno no válido para enviar la alerta.');
-  }
-
-  // 1. Buscar el tutor legal en padres_alumnos
-  let targetPadreId: string | null = null;
-
-  const { data: relaciones, error: relErr } = await supabase
+export async function sendPreventiveAlertToTutor(alumnoId: string, mensaje: string, directivoUserId: string): Promise<boolean> {
+  const { data: tutorLinks, error: linkErr } = await supabase
     .from('padres_alumnos')
-    .select('padre_id')
+    .select('padre_id, padres(id, usuario_id)')
     .eq('alumno_id', alumnoId);
 
-  if (!relErr && relaciones && relaciones.length > 0) {
-    targetPadreId = relaciones[0].padre_id;
-  } else {
-    // Intentar buscar si alumnoId es el ID del registro en alumnos
-    const { data: alData } = await supabase
-      .from('alumnos')
-      .select('id')
-      .or(`id.eq.${alumnoId},usuario_id.eq.${alumnoId}`)
-      .limit(1)
-      .maybeSingle();
-
-    if (alData?.id) {
-      const { data: relsFallback } = await supabase
-        .from('padres_alumnos')
-        .select('padre_id')
-        .eq('alumno_id', alData.id);
-
-      if (relsFallback && relsFallback.length > 0) {
-        targetPadreId = relsFallback[0].padre_id;
-      }
-    }
+  if (linkErr || !tutorLinks || tutorLinks.length === 0) {
+    throw new Error('El estudiante no tiene un padre o tutor vinculado para recibir notificaciones.');
   }
 
-  // 2. Si no se encontró en padres_alumnos, verificar en contactos de emergencia
-  if (!targetPadreId) {
-    const { data: contacts } = await supabase
-      .from('contactos_emergency')
-      .select('nombre, telefono')
-      .eq('alumno_id', alumnoId)
-      .limit(1);
+  const tutorRecords = tutorLinks
+    .map((tl: any) => {
+      const p = Array.isArray(tl.padres) ? tl.padres[0] : tl.padres;
+      return p?.usuario_id;
+    })
+    .filter(Boolean);
 
-    if (!contacts || contacts.length === 0) {
-      throw new Error('El alumno no tiene un tutor o contacto de emergencia registrado.');
-    }
+  if (tutorRecords.length === 0) {
+    throw new Error('No se encontró el identificador de usuario del tutor.');
   }
 
-  // 3. Registrar la notificación si hay tutor con cuenta
-  if (targetPadreId) {
-    try {
-      const { error: insertErr } = await supabase
-        .from('notificaciones')
-        .insert([{
-          destinatario_id: targetPadreId,
-          incidencia_id: null,
-          canal: 'push',
-          leida: false,
-          enviada_at: new Date().toISOString()
-        }]);
+  const alerts = tutorRecords.map((tutorUserId: string) => ({
+    usuario_id: tutorUserId,
+    tipo: 'alerta_conductual',
+    titulo: 'Alerta Preventiva Institucional - Seguimiento Conductual',
+    mensaje,
+    leido: false,
+    creado_por: directivoUserId,
+  }));
 
-      if (insertErr) {
-        console.warn('Aviso al insertar en notificaciones (RLS):', insertErr.message);
-      }
-    } catch (e) {
-      console.warn('Excepción al registrar notificación en BD:', e);
-    }
-  }
+  const { error: notifErr } = await supabase.from('notificaciones').insert(alerts);
 
-  // 4. Registrar en el historial reactivo local del navegador para el portal del tutor
-  try {
-    const alertKey = `ssc_tutor_alerts_${alumnoId}`;
-    const prevAlerts = JSON.parse(localStorage.getItem(alertKey) || '[]');
-    prevAlerts.unshift({
-      id: crypto.randomUUID(),
-      alumno_id: alumnoId,
-      mensaje,
-      enviado_por: sessionUserId,
-      fecha: new Date().toISOString(),
-      leido: false,
-    });
-    localStorage.setItem(alertKey, JSON.stringify(prevAlerts.slice(0, 20)));
-
-    window.dispatchEvent(new CustomEvent('ssc_tutor_alert_sent', {
-      detail: { alumno_id: alumnoId, mensaje, fecha: new Date().toISOString() }
-    }));
-  } catch (storageErr) {
-    console.warn('Error al guardar alerta en localStorage:', storageErr);
+  if (notifErr) {
+    throw new Error(`Error al registrar notificación institucional: ${notifErr.message}`);
   }
 
   return true;

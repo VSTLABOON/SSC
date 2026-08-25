@@ -364,16 +364,36 @@ export const BIAnalyticsDashboard: React.FC<BIAnalyticsDashboardProps> = ({
       />
 
       {/* Tarjetas de Métricas de Alto Nivel con Lanzador de Agente IA */}
-      <BIKpiCardSection stats={kpis} loading={loading} onKpiClick={handleKpiClick} />
+      <BIKpiCardSection
+        key={`kpi-${filters.rangoTemporal}-${filters.generacion || 'all'}-${filters.grupoId || 'all'}-${filters.severidad || 'all'}`}
+        stats={kpis}
+        loading={loading}
+        onKpiClick={handleKpiClick}
+      />
 
       {/* Sección de Gráficas Recharts con Lanzador de Agente IA */}
       <div className="bi-charts-grid">
-        <BITrendChart data={trend} loading={loading} onChartClick={handleTrendChartClick} />
-        <BICategoryChart data={categories} loading={loading} onChartClick={handleCategoryChartClick} />
+        <BITrendChart
+          key={`trend-${filters.rangoTemporal}-${filters.generacion || 'all'}-${filters.grupoId || 'all'}-${filters.severidad || 'all'}`}
+          data={trend}
+          loading={loading}
+          severidad={filters.severidad}
+          onChartClick={handleTrendChartClick}
+        />
+        <BICategoryChart
+          key={`cat-${filters.rangoTemporal}-${filters.generacion || 'all'}-${filters.grupoId || 'all'}-${filters.severidad || 'all'}`}
+          data={categories}
+          loading={loading}
+          onChartClick={handleCategoryChartClick}
+        />
       </div>
 
       {/* Tabla Radar de Riesgo */}
-      <BIRiskTable students={riskStudents} loading={loading} />
+      <BIRiskTable
+        key={`risk-${filters.rangoTemporal}-${filters.generacion || 'all'}-${filters.grupoId || 'all'}-${filters.severidad || 'all'}`}
+        students={riskStudents}
+        loading={loading}
+      />
 
       {/* Modal de Reporte Ejecutivo Directivo de Plantel */}
       <ExecutiveReportModal

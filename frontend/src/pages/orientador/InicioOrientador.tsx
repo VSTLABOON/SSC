@@ -1,16 +1,18 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import { BIAnalyticsDashboard } from '../../components/bi/BIAnalyticsDashboard';
 import { BitacoraIntervencionModal, type IntervencionRecord } from '../../components/orientador/BitacoraIntervencionModal';
 import { GenerarReporteRapidoModal } from '../../components/orientador/GenerarReporteRapidoModal';
 import type { JustificanteRecord } from '../../components/alumno/SolicitarJustificanteModal';
-import type { CitaRecord } from '../../components/padre/SolicitarCitaModal';
+import { getCitasOrientacion, confirmarCitaOrientacion, type CitaRecord } from '../../services/citas';
+import InlineAlert from '../../components/InlineAlert';
 import '../DirectivosYAsesores/InicioDA.css';
 
 type TabType = 'intervenciones' | 'justificantes' | 'citas' | 'bi';
 
 export default function InicioOrientador() {
-  const { nombre, plantelId } = useAuth();
+  const { session, nombre, plantelId } = useAuth();
   const [heroVisible, setHeroVisible] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('intervenciones');
   const [modalIntervencionOpen, setModalIntervencionOpen] = useState(false);
@@ -18,13 +20,14 @@ export default function InicioOrientador() {
   const [intervenciones, setIntervenciones] = useState<IntervencionRecord[]>([]);
   const [justificantes, setJustificantes] = useState<JustificanteRecord[]>([]);
   const [citas, setCitas] = useState<CitaRecord[]>([]);
+  const [nativeToast, setNativeToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setHeroVisible(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     // 1. Bitácora de Intervenciones
     try {
       const storageKey = `ssc_intervenciones_${plantelId || 'default'}`;
@@ -47,15 +50,10 @@ export default function InicioOrientador() {
       console.warn('Error al cargar justificantes:', e);
     }
 
-    // 3. Citas de Tutores
+    // 3. Citas de Tutores en Tiempo Real desde Supabase y Memoria
     try {
-      const allCitaKeys = Object.keys(localStorage).filter(k => k.startsWith('ssc_citas_orientacion_'));
-      const combinedCitas: CitaRecord[] = [];
-      for (const k of allCitaKeys) {
-        const items = JSON.parse(localStorage.getItem(k) || '[]');
-        combinedCitas.push(...items);
-      }
-      setCitas(combinedCitas);
+      const citasData = await getCitasOrientacion(plantelId || undefined);
+      setCitas(citasData);
     } catch (e) {
       console.warn('Error al cargar citas de tutores:', e);
     }
@@ -63,6 +61,38 @@ export default function InicioOrientador() {
 
   useEffect(() => {
     loadData();
+
+    // Suscripción WebSocket Realtime para recibir citas de tutores al instante
+    const channel = supabase
+      .channel('realtime-ssc-citas-orientador')
+      .on('broadcast', { event: 'nueva_cita' }, (payload: any) => {
+        loadData();
+        const c = payload?.payload?.cita;
+        if (c) {
+          setNativeToast({
+            type: 'success',
+            message: `Nueva solicitud de cita recibida de ${c.padreNombre} para ${c.alumnoNombre} (${c.motivo}).`,
+          });
+        }
+      })
+      .on('broadcast', { event: 'cita_confirmada' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    const handleLocalCita = () => {
+      loadData();
+    };
+    window.addEventListener('ssc_cita_creada', handleLocalCita);
+    window.addEventListener('ssc_cita_actualizada', handleLocalCita);
+    window.addEventListener('ssc_data_changed', handleLocalCita);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('ssc_cita_creada', handleLocalCita);
+      window.removeEventListener('ssc_cita_actualizada', handleLocalCita);
+      window.removeEventListener('ssc_data_changed', handleLocalCita);
+    };
   }, [loadData]);
 
   function handleActualizarJustificante(id: string, nuevoEstado: 'aprobado' | 'rechazado') {
@@ -82,21 +112,28 @@ export default function InicioOrientador() {
       });
   }
 
-  function handleConfirmarCita(id: string) {
-    const updated = citas.map(c => (c.id === id ? { ...c, estado: 'confirmada' as const } : c));
-    setCitas(updated);
+  async function handleConfirmarCita(id: string) {
+    try {
+      const updatedRecord = await confirmarCitaOrientacion(
+        id,
+        session?.user?.id || 'orientador',
+        nombre || 'Orientador Educativo',
+        plantelId || undefined
+      );
 
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('ssc_citas_orientacion_'))
-      .forEach(k => {
-        try {
-          const items: CitaRecord[] = JSON.parse(localStorage.getItem(k) || '[]');
-          const modified = items.map(item => (item.id === id ? { ...item, estado: 'confirmada' as const } : item));
-          localStorage.setItem(k, JSON.stringify(modified));
-        } catch {
-          // Ignorar
-        }
+      if (updatedRecord) {
+        setCitas(prev => prev.map(c => (c.id === id ? updatedRecord : c)));
+      } else {
+        setCitas(prev => prev.map(c => (c.id === id ? { ...c, estado: 'confirmada' as const } : c)));
+      }
+
+      setNativeToast({
+        type: 'success',
+        message: 'Cita confirmada exitosamente. Se ha actualizado en tiempo real y notificado al tutor.',
       });
+    } catch (err: unknown) {
+      console.error('Error al confirmar cita:', err);
+    }
   }
 
   const justificantesPendientes = justificantes.filter(j => j.estado === 'pendiente');
@@ -139,6 +176,17 @@ export default function InicioOrientador() {
           </div>
         </div>
       </section>
+
+      {/* Banner de Notificaciones / Alarmas Nativas */}
+      {nativeToast && (
+        <div style={{ marginBottom: '14px' }}>
+          <InlineAlert
+            type={nativeToast.type}
+            message={nativeToast.message}
+            onClose={() => setNativeToast(null)}
+          />
+        </div>
+      )}
 
       {/* Resumen Rápido de Casos / KPIs de Orientación */}
       <div className="ssc-kpi-grid">
@@ -188,12 +236,14 @@ export default function InicioOrientador() {
             <div className="ssc-kpi-label">Bitácora Activa</div>
             <div className="ssc-kpi-value">{intervenciones.length}</div>
             <div className="ssc-kpi-subtext">
-              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#0284c7' }}>history_edu</span>
-              <span>Acuerdos registrados</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#10b981' }}>
+                psychology
+              </span>
+              <span>Intervenciones</span>
             </div>
           </div>
-          <div className="ssc-kpi-icon-wrap" style={{ background: '#e0e7ff', color: '#4338ca' }}>
-            <span className="material-symbols-outlined">handshake</span>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#f5f3ff', color: '#7c3aed' }}>
+            <span className="material-symbols-outlined">menu_book</span>
           </div>
         </div>
 
@@ -202,28 +252,32 @@ export default function InicioOrientador() {
           onClick={() => setActiveTab('bi')}
         >
           <div className="ssc-kpi-info">
-            <div className="ssc-kpi-label">Radar de Riesgo</div>
-            <div className="ssc-kpi-value" style={{ fontSize: '18px', paddingTop: '3px' }}>Centro BI</div>
+            <div className="ssc-kpi-label">Inteligencia BI</div>
+            <div className="ssc-kpi-value">
+              <span className="material-symbols-outlined" style={{ fontSize: '24px', verticalAlign: 'middle' }}>analytics</span>
+            </div>
             <div className="ssc-kpi-subtext">
-              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#10b981' }}>analytics</span>
-              <span>Métricas del plantel</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#0284c7' }}>
+                trending_up
+              </span>
+              <span>Métricas globales</span>
             </div>
           </div>
-          <div className="ssc-kpi-icon-wrap" style={{ background: '#dcfce7', color: '#15803d' }}>
-            <span className="material-symbols-outlined">radar</span>
+          <div className="ssc-kpi-icon-wrap" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+            <span className="material-symbols-outlined">insights</span>
           </div>
         </div>
       </div>
 
-      {/* Selector de Pestañas de Orientación */}
-      <nav className="ssc-tabs-nav" aria-label="Secciones de Orientación">
+      {/* Navegación por Pestañas */}
+      <nav className="ssc-tabs-nav">
         <button
           type="button"
           className={`ssc-tab-btn ${activeTab === 'intervenciones' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('intervenciones')}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>handshake</span>
-          <span>Acuerdos y Bitácora</span>
+          <span className="material-symbols-outlined">history_edu</span>
+          <span>Bitácora de Intervención</span>
           <span className="ssc-tab-badge">{intervenciones.length}</span>
         </button>
 
@@ -232,8 +286,8 @@ export default function InicioOrientador() {
           className={`ssc-tab-btn ${activeTab === 'justificantes' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('justificantes')}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fact_check</span>
-          <span>Validación de Justificantes</span>
+          <span className="material-symbols-outlined">fact_check</span>
+          <span>Justificantes de Alumnos</span>
           <span className={`ssc-tab-badge ${justificantesPendientes.length > 0 ? 'ssc-tab-badge--pending' : ''}`}>
             {justificantesPendientes.length}
           </span>
@@ -244,7 +298,7 @@ export default function InicioOrientador() {
           className={`ssc-tab-btn ${activeTab === 'citas' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('citas')}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>calendar_month</span>
+          <span className="material-symbols-outlined">calendar_month</span>
           <span>Citas con Tutores</span>
           <span className={`ssc-tab-badge ${citasPendientes.length > 0 ? 'ssc-tab-badge--pending' : ''}`}>
             {citasPendientes.length}
@@ -256,84 +310,81 @@ export default function InicioOrientador() {
           className={`ssc-tab-btn ${activeTab === 'bi' ? 'ssc-tab-btn--active' : ''}`}
           onClick={() => setActiveTab('bi')}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>analytics</span>
-          <span>Radar de Riesgo BI</span>
+          <span className="material-symbols-outlined">analytics</span>
+          <span>Métricas BI & Radar de Riesgo</span>
         </button>
       </nav>
 
-      {/* Pestaña 1: Bitácora de Acuerdos */}
+      {/* Pestaña 1: Bitácora de Intervención */}
       {activeTab === 'intervenciones' && (
-        <section className="dedicated-tab-content">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>handshake</span>
-                Bitácora de Acuerdos y Seguimiento Psicopedagógico
+        <section className="ssc-card animate-fade-in">
+          <div className="ssc-card-header">
+            <div className="ssc-card-header-left">
+              <h3 className="ssc-card-title">
+                Bitácora de Acuerdos y Seguimiento Psicopedagógico ({intervenciones.length})
               </h3>
-              <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
-                Historial de sesiones y compromisos acordados con estudiantes y padres de familia.
+              <p className="ssc-card-subtitle">
+                Historial institucional de acuerdos, compromisos y canalizaciones con estudiantes y tutores.
               </p>
             </div>
             <button
               type="button"
-              onClick={() => setModalIntervencionOpen(true)}
               className="ssc-btn-action ssc-btn-action--primary"
-              style={{ background: '#0284c7', color: '#ffffff', padding: '8px 16px', fontSize: '13px' }}
+              onClick={() => setModalIntervencionOpen(true)}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-              <span>Nuevo Acuerdo</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>add</span>
+              <span>Nueva Entrada</span>
             </button>
           </div>
 
           {intervenciones.length === 0 ? (
             <div className="ssc-empty-state">
               <span className="material-symbols-outlined ssc-empty-icon">history_edu</span>
-              <h4 className="ssc-empty-title">No hay acuerdos registrados en la bitácora</h4>
+              <h4 className="ssc-empty-title">Sin intervenciones registradas</h4>
               <p className="ssc-empty-desc">
-                Comienza a registrar las sesiones de orientación para dar seguimiento conductual y académico personalizado.
+                Comienza a registrar acuerdos, entrevistas de orientación y compromisos de mejora conductual.
               </p>
               <button
                 type="button"
                 className="ssc-btn-action ssc-btn-action--primary"
                 onClick={() => setModalIntervencionOpen(true)}
-                style={{ background: '#0284c7', color: '#ffffff' }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_circle</span>
-                <span>Registrar Primer Acuerdo</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>add</span>
+                <span>Registrar Primera Intervención</span>
               </button>
             </div>
           ) : (
-            <div className="ssc-cards-list">
+            <div className="ssc-list-container">
               {intervenciones.map(item => (
-                <div key={item.id} className="ssc-item-card">
-                  <div className="ssc-card-top">
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '4px' }}>
-                          Área: {item.tipo}
-                        </span>
-                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #64748b)' }}>
-                          Sesión: {item.fechaSesion}
-                        </span>
-                      </div>
-                      <h4 className="ssc-card-title">{item.alumnoNombre}</h4>
+                <div key={item.id} className="ssc-list-item">
+                  <div className="ssc-list-item-main">
+                    <div className="ssc-avatar ssc-avatar--orientador">
+                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                        {item.tipo === 'conductual' ? 'psychology' : item.tipo === 'academico' ? 'school' : item.tipo === 'emocional' ? 'favorite' : 'family_restroom'}
+                      </span>
                     </div>
-
-                    {item.fechaSeguimiento && (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '8px', fontSize: '11.5px', fontWeight: 700 }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>event</span>
-                        <span>Próxima Cita: {item.fechaSeguimiento}</span>
+                    <div className="ssc-list-item-text">
+                      <div className="ssc-list-item-top">
+                        <strong className="ssc-list-item-title">{item.alumnoNombre}</strong>
+                        <span className="ssc-tag ssc-tag--gray">{item.matricula} • {item.grupo}</span>
+                        <span className="ssc-tag ssc-tag--blue" style={{ textTransform: 'capitalize' }}>{item.tipo}</span>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="ssc-note-box" style={{ borderLeftColor: '#0284c7' }}>
-                    <strong>Acuerdos y Compromisos:</strong> {item.acuerdos}
-                  </div>
-
-                  <div className="ssc-card-footer">
-                    <span>Registrado por: <strong>{item.registradoPor}</strong></span>
-                    <span>Fecha: {new Date(item.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      <p className="ssc-list-item-desc">{item.acuerdos}</p>
+                      <div className="ssc-list-item-meta">
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>person</span>
+                        <span>Orientador: {item.registradoPor}</span>
+                        <span style={{ margin: '0 4px' }}>•</span>
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>calendar_today</span>
+                        <span>{new Date(item.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        {item.fechaSeguimiento && (
+                          <>
+                            <span style={{ margin: '0 4px' }}>•</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#f59e0b' }}>event_repeat</span>
+                            <span style={{ color: '#d97706', fontWeight: 600 }}>Próxima Cita: {item.fechaSeguimiento}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -342,67 +393,70 @@ export default function InicioOrientador() {
         </section>
       )}
 
-      {/* Pestaña 2: Validación de Justificantes */}
+      {/* Pestaña 2: Justificantes Médicos / Académicos */}
       {activeTab === 'justificantes' && (
-        <section className="dedicated-tab-content">
-          <div style={{ marginBottom: '14px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>fact_check</span>
-              Solicitudes de Justificantes Médicos y Familiares ({justificantes.length})
-            </h3>
-            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
-              Revisa, aprueba o rechaza los justificantes presentados por los estudiantes del plantel.
-            </p>
+        <section className="ssc-card animate-fade-in">
+          <div className="ssc-card-header">
+            <div className="ssc-card-header-left">
+              <h3 className="ssc-card-title">
+                Solicitudes de Justificantes Médicos y Académicos ({justificantes.length})
+              </h3>
+              <p className="ssc-card-subtitle">
+                Validación de inasistencias enviadas por alumnos y tutores con documento probatorio.
+              </p>
+            </div>
           </div>
 
           {justificantes.length === 0 ? (
             <div className="ssc-empty-state">
               <span className="material-symbols-outlined ssc-empty-icon">task_alt</span>
               <h4 className="ssc-empty-title">Bandeja de justificantes al día</h4>
-              <p className="ssc-empty-desc">No hay solicitudes de inasistencia pendientes de revisión en este momento.</p>
+              <p className="ssc-empty-desc">
+                No hay justificantes pendientes de revisión en este momento.
+              </p>
             </div>
           ) : (
-            <div className="ssc-cards-list">
+            <div className="ssc-list-container">
               {justificantes.map(j => (
-                <div key={j.id} className="ssc-item-card">
-                  <div className="ssc-card-top">
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '4px' }}>
-                          {j.motivo}
-                        </span>
-                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #64748b)' }}>
-                          Periodo: {j.fechaInicio} al {j.fechaFin}
+                <div key={j.id} className="ssc-list-item">
+                  <div className="ssc-list-item-main">
+                    <div className={`ssc-avatar ${j.estado === 'pendiente' ? 'ssc-avatar--pending' : j.estado === 'aprobado' ? 'ssc-avatar--success' : 'ssc-avatar--danger'}`}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                        {j.estado === 'pendiente' ? 'hourglass_top' : j.estado === 'aprobado' ? 'check_circle' : 'cancel'}
+                      </span>
+                    </div>
+                    <div className="ssc-list-item-text">
+                      <div className="ssc-list-item-top">
+                        <strong className="ssc-list-item-title">{j.motivo}</strong>
+                        <span className={`ssc-tag ${j.estado === 'pendiente' ? 'ssc-tag--yellow' : j.estado === 'aprobado' ? 'ssc-tag--green' : 'ssc-tag--red'}`}>
+                          {j.estado === 'pendiente' ? 'Por Validar' : j.estado === 'aprobado' ? 'Aprobado' : 'Rechazado'}
                         </span>
                       </div>
-                      <h4 className="ssc-card-title">Estudiante ID: {j.alumnoId}</h4>
+                      <p className="ssc-list-item-desc">
+                        {j.descripcion}
+                      </p>
+                      <div className="ssc-list-item-meta">
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>date_range</span>
+                        <span>Ausencia del {j.fechaInicio} al {j.fechaFin}</span>
+                      </div>
                     </div>
-
-                    <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', background: j.estado === 'aprobado' ? '#dcfce7' : j.estado === 'rechazado' ? '#fee2e2' : '#fef3c7', color: j.estado === 'aprobado' ? '#166534' : j.estado === 'rechazado' ? '#991b1b' : '#92400e' }}>
-                      {j.estado === 'aprobado' ? 'Aprobado' : j.estado === 'rechazado' ? 'Rechazado' : 'Pendiente de Validación'}
-                    </span>
                   </div>
-
-                  <div className="ssc-note-box" style={{ borderLeftColor: '#0284c7' }}>
-                    <strong>Motivo expuesto:</strong> {j.descripcion}
-                  </div>
-
                   {j.estado === 'pendiente' && (
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <div className="ssc-list-item-actions">
                       <button
                         type="button"
+                        className="ssc-btn-action ssc-btn-action--success-sm"
                         onClick={() => handleActualizarJustificante(j.id, 'aprobado')}
-                        style={{ background: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
-                        <span>Aprobar Justificante</span>
+                        <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check</span>
+                        <span>Aprobar</span>
                       </button>
                       <button
                         type="button"
+                        className="ssc-btn-action ssc-btn-action--danger-sm"
                         onClick={() => handleActualizarJustificante(j.id, 'rechazado')}
-                        style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cancel</span>
+                        <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>close</span>
                         <span>Rechazar</span>
                       </button>
                     </div>
@@ -416,57 +470,71 @@ export default function InicioOrientador() {
 
       {/* Pestaña 3: Citas de Tutores */}
       {activeTab === 'citas' && (
-        <section className="dedicated-tab-content">
-          <div style={{ marginBottom: '14px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>calendar_month</span>
-              Solicitudes de Citas con Padres de Familia ({citas.length})
-            </h3>
-            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
-              Agenda y confirma entrevistas presenciales o virtuales con los tutores de los alumnos.
-            </p>
+        <section className="ssc-card animate-fade-in">
+          <div className="ssc-card-header">
+            <div className="ssc-card-header-left">
+              <h3 className="ssc-card-title">
+                Solicitudes de Citas con Padres de Familia ({citas.length})
+              </h3>
+              <p className="ssc-card-subtitle">
+                Atención a peticiones de diálogo presencial o virtual solicitadas por los tutores.
+              </p>
+            </div>
           </div>
 
           {citas.length === 0 ? (
             <div className="ssc-empty-state">
-              <span className="material-symbols-outlined ssc-empty-icon">event_available</span>
+              <span className="material-symbols-outlined ssc-empty-icon">calendar_month</span>
               <h4 className="ssc-empty-title">Agenda de citas al día</h4>
-              <p className="ssc-empty-desc">No hay solicitudes de entrevista familiar pendientes por confirmar.</p>
+              <p className="ssc-empty-desc">
+                No hay solicitudes de citas pendientes por parte de los padres de familia.
+              </p>
             </div>
           ) : (
-            <div className="ssc-cards-list">
+            <div className="ssc-list-container">
               {citas.map(c => (
-                <div key={c.id} className="ssc-item-card">
-                  <div className="ssc-card-top">
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', background: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '4px' }}>
-                          {c.motivo}
-                        </span>
-                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-sub, #64748b)' }}>
-                          Fecha Propuesta: {c.fechaPropuesta} a las {c.horaPropuesta} hrs
+                <div key={c.id} className="ssc-list-item">
+                  <div className="ssc-list-item-main">
+                    <div className={`ssc-avatar ${c.estado === 'pendiente' ? 'ssc-avatar--pending' : 'ssc-avatar--success'}`}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                        {c.estado === 'pendiente' ? 'schedule' : 'event_available'}
+                      </span>
+                    </div>
+                    <div className="ssc-list-item-text">
+                      <div className="ssc-list-item-top">
+                        <strong className="ssc-list-item-title">Cita para {c.alumnoNombre}</strong>
+                        <span className="ssc-tag ssc-tag--gray">Tutor: {c.padreNombre}</span>
+                        <span className={`ssc-tag ${c.estado === 'pendiente' ? 'ssc-tag--yellow' : 'ssc-tag--green'}`}>
+                          {c.estado === 'pendiente' ? 'Por Confirmar' : 'Confirmada'}
                         </span>
                       </div>
-                      <h4 className="ssc-card-title">{c.padreNombre} (Tutor de {c.alumnoNombre})</h4>
+                      <p className="ssc-list-item-desc">
+                        <strong>Motivo:</strong> {c.motivo} — {c.detalles}
+                      </p>
+                      <div className="ssc-list-item-meta">
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>calendar_today</span>
+                        <span>Fecha Sugerida: {c.fechaPropuesta} a las {c.horaPropuesta} hrs</span>
+                        <span style={{ margin: '0 4px' }}>•</span>
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>history</span>
+                        <span>Solicitada: {new Date(c.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                        {c.confirmadaPor && (
+                          <>
+                            <span style={{ margin: '0 4px' }}>•</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#10b981' }}>verified</span>
+                            <span style={{ color: '#065f46', fontWeight: 600 }}>Atendido por: {c.confirmadaPor}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-
-                    <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', background: c.estado === 'confirmada' ? '#dcfce7' : c.estado === 'reprogramada' ? '#fee2e2' : '#fef3c7', color: c.estado === 'confirmada' ? '#166534' : c.estado === 'reprogramada' ? '#991b1b' : '#92400e' }}>
-                      {c.estado === 'confirmada' ? 'Confirmada' : c.estado === 'reprogramada' ? 'Reprogramada' : 'Por Confirmar'}
-                    </span>
                   </div>
-
-                  <div className="ssc-note-box" style={{ borderLeftColor: '#0284c7' }}>
-                    <strong>Asunto a tratar:</strong> {c.detalles}
-                  </div>
-
                   {c.estado === 'pendiente' && (
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <div className="ssc-list-item-actions">
                       <button
                         type="button"
+                        className="ssc-btn-action ssc-btn-action--success-sm"
                         onClick={() => handleConfirmarCita(c.id)}
-                        style={{ background: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>event_available</span>
+                        <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>event_available</span>
                         <span>Confirmar Cita</span>
                       </button>
                     </div>
@@ -478,24 +546,22 @@ export default function InicioOrientador() {
         </section>
       )}
 
-      {/* Pestaña 4: Centro BI Radar */}
+      {/* Pestaña 4: Inteligencia de Negocios BI & Radar de Riesgo */}
       {activeTab === 'bi' && (
-        <section className="dedicated-tab-content">
-          <div style={{ marginBottom: '14px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main, #0f172a)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-outlined" style={{ color: '#0284c7' }}>analytics</span>
-              Radar de Salud Conductual & Analítica BI
-            </h3>
-            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-text-sub, #64748b)' }}>
-              Indicadores globales del plantel, semáforos de riesgo y métricas de desempeño conductual.
-            </p>
+        <section className="ssc-card animate-fade-in">
+          <div className="ssc-card-header">
+            <div className="ssc-card-header-left">
+              <h3 className="ssc-card-title">
+                Tablero Analítico de Salud Conductual & Radar BI
+              </h3>
+              <p className="ssc-card-subtitle">
+                Análisis multidimensional en tiempo real de incidencias, tendencias y alumnos en riesgo prioritario.
+              </p>
+            </div>
           </div>
-
-          {plantelId ? (
-            <BIAnalyticsDashboard userRole="orientador" plantelId={plantelId} />
-          ) : (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Cargando datos del plantel...</div>
-          )}
+          <div style={{ marginTop: '16px' }}>
+            <BIAnalyticsDashboard userRole="orientador" plantelId={plantelId || undefined} />
+          </div>
         </section>
       )}
 
@@ -503,8 +569,8 @@ export default function InicioOrientador() {
       <BitacoraIntervencionModal
         isOpen={modalIntervencionOpen}
         onClose={() => setModalIntervencionOpen(false)}
-        onIntervencionGuardada={(newRecord) => {
-          setIntervenciones(prev => [newRecord, ...prev]);
+        onIntervencionGuardada={(newIntervencion) => {
+          setIntervenciones(prev => [newIntervencion, ...prev]);
         }}
       />
 
@@ -512,6 +578,9 @@ export default function InicioOrientador() {
       <GenerarReporteRapidoModal
         isOpen={modalReporteOpen}
         onClose={() => setModalReporteOpen(false)}
+        onReporteGenerado={() => {
+          loadData();
+        }}
       />
     </div>
   );

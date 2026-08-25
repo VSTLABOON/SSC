@@ -14,10 +14,11 @@ import type { BITrendItem } from '../../services/bi';
 interface BITrendChartProps {
   data: BITrendItem[];
   loading?: boolean;
+  severidad?: string;
   onChartClick?: () => void;
 }
 
-export const BITrendChart: React.FC<BITrendChartProps> = ({ data, loading, onChartClick }) => {
+export const BITrendChart: React.FC<BITrendChartProps> = ({ data, loading, severidad, onChartClick }) => {
   if (loading) {
     return (
       <div className="bi-chart-card">
@@ -26,6 +27,10 @@ export const BITrendChart: React.FC<BITrendChartProps> = ({ data, loading, onCha
       </div>
     );
   }
+
+  const showVerde = !severidad || severidad === 'verde';
+  const showNaranja = !severidad || severidad === 'naranja';
+  const showRojo = !severidad || severidad === 'rojo';
 
   return (
     <div
@@ -37,7 +42,7 @@ export const BITrendChart: React.FC<BITrendChartProps> = ({ data, loading, onCha
       <div className="bi-chart-title-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h4 className="bi-chart-title">
           <span className="material-symbols-outlined" style={{ color: '#204785' }}>show_chart</span>
-          Tendencia Temporal de Incidencias
+          Tendencia Temporal de Incidencias {severidad ? `(${severidad.toUpperCase()})` : ''}
         </h4>
         <span
           style={{
@@ -57,13 +62,13 @@ export const BITrendChart: React.FC<BITrendChartProps> = ({ data, loading, onCha
         </span>
       </div>
 
-      <div className="bi-chart-container">
+      <div className="bi-chart-container" style={{ minHeight: '220px', width: '100%' }}>
         {data.length === 0 ? (
-          <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+          <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px' }}>
             No hay registros de incidencias para este filtro.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorVerde" x1="0" y1="0" x2="0" y2="1">
@@ -86,9 +91,15 @@ export const BITrendChart: React.FC<BITrendChartProps> = ({ data, loading, onCha
                 contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', border: 'none', color: '#ffffff', fontSize: '12px' }}
               />
               <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-              <Area type="monotone" dataKey="verde" name="Positivos / Verdes" stroke="#10b981" fillOpacity={1} fill="url(#colorVerde)" />
-              <Area type="monotone" dataKey="naranja" name="Leves / Naranjas" stroke="#f59e0b" fillOpacity={1} fill="url(#colorNaranja)" />
-              <Area type="monotone" dataKey="rojo" name="Críticos / Rojos" stroke="#ef4444" fillOpacity={1} fill="url(#colorRojo)" />
+              {showVerde && (
+                <Area type="monotone" dataKey="verde" name="Positivos / Verdes" stroke="#10b981" fillOpacity={1} fill="url(#colorVerde)" />
+              )}
+              {showNaranja && (
+                <Area type="monotone" dataKey="naranja" name="Leves / Naranjas" stroke="#f59e0b" fillOpacity={1} fill="url(#colorNaranja)" />
+              )}
+              {showRojo && (
+                <Area type="monotone" dataKey="rojo" name="Críticos / Rojos" stroke="#ef4444" fillOpacity={1} fill="url(#colorRojo)" />
+              )}
             </AreaChart>
           </ResponsiveContainer>
         )}

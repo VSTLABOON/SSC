@@ -1,26 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { solicitarCitaOrientacion, type CitaRecord } from '../../services/citas';
 import './SolicitarCitaModal.css';
 
-export interface CitaRecord {
-  id: string;
-  padreId: string;
-  padreNombre: string;
-  alumnoNombre: string;
-  motivo: string;
-  fechaPropuesta: string;
-  horaPropuesta: string;
-  detalles: string;
-  estado: 'pendiente' | 'confirmada' | 'reprogramada';
-  createdAt: string;
-}
+export type { CitaRecord };
 
 interface SolicitarCitaModalProps {
   isOpen: boolean;
   onClose: () => void;
+  alumnoId?: string;
   alumnoNombre: string;
   onCitaSolicitada: (record: CitaRecord) => void;
 }
@@ -36,6 +27,7 @@ const MOTIVOS_CITA = [
 export const SolicitarCitaModal: React.FC<SolicitarCitaModalProps> = ({
   isOpen,
   onClose,
+  alumnoId,
   alumnoNombre,
   onCitaSolicitada,
 }) => {
@@ -49,9 +41,26 @@ export const SolicitarCitaModal: React.FC<SolicitarCitaModalProps> = ({
   const [detalles, setDetalles] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useLockBodyScroll(isOpen);
   useEscapeToClose(onClose);
+
+  // Reiniciar formulario cada vez que se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStep(1);
+      setMotivo(MOTIVOS_CITA[0]);
+      setFechaPropuesta(
+        new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]
+      );
+      setHoraPropuesta('10:00');
+      setDetalles('');
+      setError(null);
+      setSuccessMsg(null);
+      setLoading(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -74,31 +83,34 @@ export const SolicitarCitaModal: React.FC<SolicitarCitaModalProps> = ({
     setLoading(true);
     setError(null);
 
-    const newCita: CitaRecord = {
-      id: `cita_${Date.now()}`,
-      padreId: session?.user?.id || 'padre',
-      padreNombre: nombre || 'Padre de Familia / Tutor',
-      alumnoNombre,
-      motivo,
-      fechaPropuesta,
-      horaPropuesta,
-      detalles: detalles.trim(),
-      estado: 'pendiente',
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      const storageKey = `ssc_citas_orientacion_${plantelId || 'default'}`;
-      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      existing.unshift(newCita);
-      localStorage.setItem(storageKey, JSON.stringify(existing));
-    } catch (err) {
-      console.warn('Error al guardar cita de orientación:', err);
-    }
+      const newCita = await solicitarCitaOrientacion({
+        padreId: session?.user?.id || 'padre',
+        padreNombre: nombre || 'Padre de Familia / Tutor',
+        alumnoId,
+        alumnoNombre,
+        motivo,
+        fechaPropuesta,
+        horaPropuesta,
+        detalles: detalles.trim(),
+        plantelId: plantelId || undefined,
+      });
 
-    onCitaSolicitada(newCita);
-    setLoading(false);
-    onClose();
+      setSuccessMsg('Solicitud enviada con éxito. Orientación Educativa revisará la propuesta.');
+      onCitaSolicitada(newCita);
+
+      // Limpiar formulario y cerrar tras breve confirmación
+      setTimeout(() => {
+        setDetalles('');
+        setSuccessMsg(null);
+        onClose();
+      }, 1200);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'No se pudo registrar la solicitud de cita.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const modalJSX = (
@@ -144,6 +156,13 @@ export const SolicitarCitaModal: React.FC<SolicitarCitaModalProps> = ({
           <div className="scm-error">
             <span className="material-symbols-outlined">error</span>
             <span>{error}</span>
+          </div>
+        )}
+
+        {successMsg && (
+          <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '10px 14px', margin: '0 20px 14px 20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#065f46', fontSize: '13px', fontWeight: 600 }}>
+            <span className="material-symbols-outlined" style={{ color: '#10b981' }}>check_circle</span>
+            <span>{successMsg}</span>
           </div>
         )}
 
@@ -244,7 +263,7 @@ export const SolicitarCitaModal: React.FC<SolicitarCitaModalProps> = ({
 
               <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '8px', padding: '8px 12px', fontSize: '11.5px', color: '#5b21b6', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#7c3aed' }}>event_available</span>
-                <span>El área de Orientación revisará tu solicitud y confirmará la disponibilidad del horario.</span>
+                <span>El área de Orientación recibirá la notificación y confirmará la disponibilidad del horario.</span>
               </div>
             </div>
           )}
