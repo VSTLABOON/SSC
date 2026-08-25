@@ -248,10 +248,20 @@ export default function GestionUsuarios() {
     }
   }
 
-  // ── Filtro ─────────────────────────────────────────────────────────────────
-  const usuariosFiltrados = filtro === 'todos'
-    ? usuarios
-    : usuarios.filter(u => u.rol === filtro);
+  // ── Filtro y Buscador Inteligente ──────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const usuariosFiltrados = usuarios.filter(u => {
+    const matchesRol = filtro === 'todos' ? true : u.rol === filtro;
+    if (!matchesRol) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      (u.nombre && u.nombre.toLowerCase().includes(q)) ||
+      (u.apellido && u.apellido.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q))
+    );
+  });
 
   function iniciales(u: Usuario) {
     return `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
@@ -409,6 +419,27 @@ export default function GestionUsuarios() {
           );
         })}
       </nav>
+
+      {/* Buscador Rápido de Usuarios */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--color-bg-card, #ffffff)', border: '1px solid var(--color-border-subtle, #cbd5e1)', borderRadius: '12px', padding: '0 12px', height: '40px', maxWidth: '460px' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#64748b' }}>search</span>
+        <input
+          type="text"
+          placeholder="Buscar por nombre, apellido o correo institucional..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', color: 'var(--color-text-main, #0f172a)' }}
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>cancel</span>
+          </button>
+        )}
+      </div>
 
       {/* Tabla de Usuarios */}
       <div className="gu-card">

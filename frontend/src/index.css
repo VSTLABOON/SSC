@@ -1048,31 +1048,46 @@ table.history-table td {
   transform: translateY(-1px);
 }
 
-/* ── Grid de KPIs Interactivos ────────────────────────────────────────────── */
+/* ── Grid de KPIs Interactivos (Zero Overflow & Strict Hierarchy) ────────── */
 .ssc-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 1024px) {
+  .ssc-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 641px) {
+  .ssc-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
 }
 
 .ssc-kpi-card {
   background: var(--color-bg-card, #ffffff);
   border: 1px solid var(--color-border-subtle, #e2e8f0);
-  border-radius: 16px;
-  padding: 14px 18px;
+  border-radius: 14px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  min-width: 0;
+  overflow: hidden;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 
 .ssc-kpi-card:hover {
   transform: translateY(-2px);
   border-color: var(--color-brand-chambray, #204785);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .ssc-kpi-card--active {
@@ -1085,39 +1100,48 @@ table.history-table td {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .ssc-kpi-label {
-  font-size: 11.5px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: var(--color-text-sub, #64748b);
   margin-bottom: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ssc-kpi-value {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1.15;
   color: var(--color-text-main, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ssc-kpi-subtext {
-  font-size: 11.5px;
+  font-size: 10.5px;
   color: var(--color-text-sub, #64748b);
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 4px;
+  gap: 3px;
+  margin-top: 3px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ssc-kpi-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1125,7 +1149,7 @@ table.history-table td {
 }
 
 .ssc-kpi-icon-wrap .material-symbols-outlined {
-  font-size: 22px;
+  font-size: 20px;
 }
 
 /* ── Pestañas de Navegación Segmentadas ───────────────────────────────────── */
@@ -1321,31 +1345,36 @@ table.history-table td {
   }
 
   .ssc-kpi-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .ssc-kpi-card {
-    padding: 12px 14px;
-    border-radius: 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    gap: 6px;
   }
 
   .ssc-kpi-icon-wrap {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
   }
 
   .ssc-kpi-icon-wrap .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 17px;
   }
 
   .ssc-kpi-value {
-    font-size: 20px;
+    font-size: 17px;
   }
 
   .ssc-kpi-label {
-    font-size: 10px;
+    font-size: 9.5px;
+  }
+
+  .ssc-kpi-subtext {
+    font-size: 9.5px;
   }
 
   .ssc-tabs-nav {
