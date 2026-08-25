@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { BIAnalyticsDashboard } from '../../components/bi/BIAnalyticsDashboard';
 import { BitacoraIntervencionModal, type IntervencionRecord } from '../../components/orientador/BitacoraIntervencionModal';
+import { GenerarReporteRapidoModal } from '../../components/orientador/GenerarReporteRapidoModal';
 import type { JustificanteRecord } from '../../components/alumno/SolicitarJustificanteModal';
 import type { CitaRecord } from '../../components/padre/SolicitarCitaModal';
 import '../DirectivosYAsesores/InicioDA.css';
@@ -11,10 +11,10 @@ type TabType = 'intervenciones' | 'justificantes' | 'citas' | 'bi';
 
 export default function InicioOrientador() {
   const { nombre, plantelId } = useAuth();
-  const navigate = useNavigate();
   const [heroVisible, setHeroVisible] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('intervenciones');
   const [modalIntervencionOpen, setModalIntervencionOpen] = useState(false);
+  const [modalReporteOpen, setModalReporteOpen] = useState(false);
   const [intervenciones, setIntervenciones] = useState<IntervencionRecord[]>([]);
   const [justificantes, setJustificantes] = useState<JustificanteRecord[]>([]);
   const [citas, setCitas] = useState<CitaRecord[]>([]);
@@ -132,7 +132,7 @@ export default function InicioOrientador() {
             <button
               type="button"
               className="orientador-btn-action orientador-btn-action--secondary"
-              onClick={() => navigate('/orientador/reporte')}
+              onClick={() => setModalReporteOpen(true)}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>assignment_add</span>
               <span>Generar Reporte</span>
@@ -536,6 +536,15 @@ export default function InicioOrientador() {
         onIntervencionGuardada={() => {
           loadData();
           setActiveTab('intervenciones');
+        }}
+      />
+
+      {/* Modal Emisión Rápida de Reporte */}
+      <GenerarReporteRapidoModal
+        isOpen={modalReporteOpen}
+        onClose={() => setModalReporteOpen(false)}
+        onReporteGenerado={() => {
+          loadData();
         }}
       />
     </div>
