@@ -278,7 +278,7 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
                         <div className="bim-student-name">{selectedAlumno.nombre}</div>
                         <div className="bim-student-meta">
                           <span>Matrícula: <strong>{selectedAlumno.matricula}</strong></span>
-                          <span>• Grupo: <strong>{selectedAlumno.grupo}</strong></span>
+                          <span>• {selectedAlumno.grupo && selectedAlumno.grupo !== 'Sin Grupo' ? (selectedAlumno.grupo.toLowerCase().startsWith('grupo') ? selectedAlumno.grupo : `Grupo ${selectedAlumno.grupo}`) : 'Sin Grupo Asignado'}</span>
                           <span className={`bim-student-semaforo bim-student-semaforo--${selectedAlumno.nivel_semaforo}`}>
                             {selectedAlumno.puntos_totales} pts ({selectedAlumno.nivel_semaforo})
                           </span>
@@ -368,7 +368,7 @@ export const BitacoraIntervencionModal: React.FC<BitacoraIntervencionModalProps>
                                     {a.nombre}
                                   </div>
                                   <div style={{ fontSize: '11px', color: 'var(--color-text-sub, #64748b)' }}>
-                                    {a.matricula} • Grupo {a.grupo}
+                                    {a.matricula} • {a.grupo && a.grupo !== 'Sin Grupo' ? (a.grupo.toLowerCase().startsWith('grupo') ? a.grupo : `Grupo ${a.grupo}`) : 'Sin Grupo Asignado'}
                                   </div>
                                 </div>
                               </div>
