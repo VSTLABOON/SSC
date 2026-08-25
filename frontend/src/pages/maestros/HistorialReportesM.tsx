@@ -139,13 +139,23 @@ export default function HistorialReportesM() {
     return Array.from(map.values());
   }, [incidents]);
 
+  const [riskFilter, setRiskFilter] = useState<'all' | 'rojo' | 'naranja' | 'verde'>('all');
+
   const filteredStudents = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return studentsList;
-    return studentsList.filter(s =>
-      s.name.toLowerCase().includes(q) || s.matricula.toLowerCase().includes(q)
-    );
-  }, [studentsList, searchQuery]);
+    return studentsList.filter(s => {
+      if (riskFilter !== 'all' && s.semaforo !== riskFilter) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        s.name.toLowerCase().includes(q) ||
+        s.matricula.toLowerCase().includes(q) ||
+        s.group.toLowerCase().includes(q) ||
+        s.career.toLowerCase().includes(q)
+      );
+    });
+  }, [studentsList, searchQuery, riskFilter]);
 
   async function handleAlertTutor(studentData: StudentExpedienteData) {
     if (!session?.user?.id) return;
@@ -195,16 +205,93 @@ export default function HistorialReportesM() {
           <h2 className="hrm-page-title">Historial de Reportes</h2>
           <p className="hrm-page-subtitle">Registro de incidencias de tus alumnos asignados.</p>
         </div>
-        <div className="hrm-search-wrap">
+        <div className="hrm-search-wrap" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <span className="material-symbols-outlined hrm-search-icon">search</span>
           <input
             className="hrm-search-input"
-            placeholder="Buscar por nombre o matrícula..."
+            placeholder="Buscar por nombre, matrícula, grupo o carrera..."
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>cancel</span>
+            </button>
+          )}
         </div>
+      </div>
+
+      {/* Chips de Filtro Semáforo */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
+        <button
+          type="button"
+          onClick={() => setRiskFilter('all')}
+          style={{
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            border: riskFilter === 'all' ? '1.5px solid #00492f' : '1px solid #cbd5e1',
+            background: riskFilter === 'all' ? '#00492f' : 'var(--color-bg-card, #ffffff)',
+            color: riskFilter === 'all' ? '#ffffff' : '#64748b',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          Todos ({studentsList.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setRiskFilter('rojo')}
+          style={{
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            border: riskFilter === 'rojo' ? '1.5px solid #dc2626' : '1px solid #fecaca',
+            background: riskFilter === 'rojo' ? '#fee2e2' : 'var(--color-bg-card, #ffffff)',
+            color: '#dc2626',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          Semáforo Rojo ({studentsList.filter(s => s.semaforo === 'rojo').length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setRiskFilter('naranja')}
+          style={{
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            border: riskFilter === 'naranja' ? '1.5px solid #d97706' : '1px solid #fed7aa',
+            background: riskFilter === 'naranja' ? '#fef3c7' : 'var(--color-bg-card, #ffffff)',
+            color: '#d97706',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          Semáforo Naranja ({studentsList.filter(s => s.semaforo === 'naranja').length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setRiskFilter('verde')}
+          style={{
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            border: riskFilter === 'verde' ? '1.5px solid #16a34a' : '1px solid #bbf7d0',
+            background: riskFilter === 'verde' ? '#dcfce7' : 'var(--color-bg-card, #ffffff)',
+            color: '#16a34a',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          Semáforo Verde ({studentsList.filter(s => s.semaforo === 'verde').length})
+        </button>
       </div>
 
       {feedback && (

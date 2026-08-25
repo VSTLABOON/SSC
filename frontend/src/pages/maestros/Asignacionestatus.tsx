@@ -428,8 +428,12 @@ export default function AsignacionEstatus() {
     .filter(({ student, originalIndex }) => {
       const user = (Array.isArray(student.usuarios) ? student.usuarios[0] : student.usuarios) as { nombre?: string; apellido?: string } | null;
       const fullName = `${user?.nombre || ''} ${user?.apellido || ''}`.toLowerCase();
+      const matricula = (student.matricula || '').toLowerCase();
 
-      if (searchQuery && !fullName.includes(searchQuery.toLowerCase())) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase().trim();
+        if (!fullName.includes(q) && !matricula.includes(q)) return false;
+      }
 
       const status = statuses[originalIndex];
       if (activeFilter === 'guardados' && status.asistencia === null) return false;
@@ -579,15 +583,24 @@ export default function AsignacionEstatus() {
 
       {/* Filtros y Búsqueda */}
       <section className="filter-bar">
-        <div className="filter-search">
+        <div className="filter-search" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <span className="material-symbols-outlined filter-search-icon">search</span>
           <input
             className="filter-search-input"
             type="text"
-            placeholder="Buscar alumno por nombre..."
+            placeholder="Buscar alumno por nombre o matrícula..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>cancel</span>
+            </button>
+          )}
         </div>
 
         {/* Chips de filtro */}

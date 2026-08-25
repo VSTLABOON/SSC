@@ -46,14 +46,14 @@ async function testAsUser(roleName, email, testFn) {
   });
 
   if (error) {
-    console.error(`❌ Error de login para ${email}:`, error.message);
+    console.error(`[ERROR] Error de login para ${email}:`, error.message);
     return;
   }
 
   try {
     await testFn(client, data.user.id);
   } catch (err) {
-    console.error(`❌ Excepción durante las pruebas de ${roleName}:`, err);
+    console.error(`[ERROR] Excepción durante las pruebas de ${roleName}:`, err);
   } finally {
     await client.auth.signOut();
   }
@@ -70,7 +70,7 @@ async function main() {
   const directivoUser = listUsr.users.find(u => u.email === USER_EMAILS.directivo);
 
   if (!alumnoUser || !docenteUser || !directivoUser) {
-    console.error('❌ Falta semillar los usuarios de prueba. Corre "node frontend/src/seed_users.js" primero.');
+    console.error('[ERROR] Falta semillar los usuarios de prueba. Corre "node frontend/src/seed_users.js" primero.');
     process.exit(1);
   }
 
@@ -78,18 +78,18 @@ async function main() {
   await testAsUser('alumno', USER_EMAILS.alumno, async (client, uid) => {
     // Lectura de planteles (Debe permitir)
     const { data: planteles, error: errPl } = await client.from('planteles').select('*');
-    if (errPl) console.log(`❌ Error leyendo planteles: ${errPl.message}`);
-    else console.log(`✅ Lectura de planteles exitosa. Registros devueltos: ${planteles.length}`);
+    if (errPl) console.log(`[ERROR] Error leyendo planteles: ${errPl.message}`);
+    else console.log(`[OK] Lectura de planteles exitosa. Registros devueltos: ${planteles.length}`);
 
     // Lectura de carreras del plantel (Debe permitir)
     const { data: carreras, error: errCa } = await client.from('carreras').select('*');
-    if (errCa) console.log(`❌ Error leyendo carreras: ${errCa.message}`);
-    else console.log(`✅ Lectura de carreras exitosa. Registros devueltos: ${carreras.length}`);
+    if (errCa) console.log(`[ERROR] Error leyendo carreras: ${errCa.message}`);
+    else console.log(`[OK] Lectura de carreras exitosa. Registros devueltos: ${carreras.length}`);
 
     // Lectura de sus propios contactos de emergencia (Debe permitir)
     const { data: contactos, error: errCo } = await client.from('contactos_emergency').select('*');
-    if (errCo) console.log(`❌ Error leyendo contactos: ${errCo.message}`);
-    else console.log(`✅ Lectura de contactos_emergency exitosa. Registros devueltos: ${contactos.length}`);
+    if (errCo) console.log(`[ERROR] Error leyendo contactos: ${errCo.message}`);
+    else console.log(`[OK] Lectura de contactos_emergency exitosa. Registros devueltos: ${contactos.length}`);
 
     // Intentar escribir en incidencias (Debe denegar)
     const { error: errInc } = await client.from('incidencias').insert({
@@ -101,17 +101,17 @@ async function main() {
       lugar: 'Aula',
       impacto_puntos: 10
     });
-    if (errInc) console.log(`✅ Inserción en incidencias denegada correctamente: ${errInc.message}`);
-    else console.log(`❌ ERROR: Se permitió al alumno registrar una incidencia.`);
+    if (errInc) console.log(`[OK] Inserción en incidencias denegada correctamente: ${errInc.message}`);
+    else console.log(`[ERROR] ERROR: Se permitió al alumno registrar una incidencia.`);
 
     // Intentar actualizar alumnos (Debe denegar)
     // Primero obtener el ID real del registro en 'alumnos' (distinto de auth.uid)
     const { data: myAlumno } = await client.from('alumnos').select('id').eq('usuario_id', uid).single();
     if (myAlumno) {
       const { data: updData, error: errUpAl } = await client.from('alumnos').update({ puntos_totales: 100 }).eq('id', myAlumno.id).select();
-      if (errUpAl) console.log(`✅ Actualización de puntos de alumno denegada correctamente: ${errUpAl.message}`);
-      else if (!updData || updData.length === 0) console.log(`✅ Actualización de puntos de alumno denegada correctamente (0 filas afectadas).`);
-      else console.log(`❌ ERROR: Se permitió al alumno actualizar su propio puntaje.`);
+      if (errUpAl) console.log(`[OK] Actualización de puntos de alumno denegada correctamente: ${errUpAl.message}`);
+      else if (!updData || updData.length === 0) console.log(`[OK] Actualización de puntos de alumno denegada correctamente (0 filas afectadas).`);
+      else console.log(`[ERROR] ERROR: Se permitió al alumno actualizar su propio puntaje.`);
     } else {
       console.log(`⚠️ No se encontró registro en 'alumnos' para este usuario, no se puede probar update.`);
     }
@@ -121,8 +121,8 @@ async function main() {
   await testAsUser('docente', USER_EMAILS.docente, async (client, uid) => {
     // Lectura de materias (Debe devolver sus materias asignadas)
     const { data: materias, error: errMat } = await client.from('materias').select('*');
-    if (errMat) console.log(`❌ Error leyendo materias: ${errMat.message}`);
-    else console.log(`✅ Lectura de materias exitosa. Registros devueltos: ${materias.length}`);
+    if (errMat) console.log(`[ERROR] Error leyendo materias: ${errMat.message}`);
+    else console.log(`[OK] Lectura de materias exitosa. Registros devueltos: ${materias.length}`);
 
     // Crear asistencia para alumno (Debe permitir si es su materia)
     // Buscamos una materia asignada
@@ -135,8 +135,8 @@ async function main() {
         presente: true
       }, { onConflict: 'alumno_id,materia_id,fecha' });
 
-      if (errAsist) console.log(`❌ Error insertando asistencia: ${errAsist.message}`);
-      else console.log(`✅ Inserción de asistencia como docente exitosa.`);
+      if (errAsist) console.log(`[ERROR] Error insertando asistencia: ${errAsist.message}`);
+      else console.log(`[OK] Inserción de asistencia como docente exitosa.`);
 
       // Registrar incidencia (Debe permitir)
       const { error: errInc } = await client.from('incidencias').insert({
@@ -149,8 +149,8 @@ async function main() {
         lugar: 'Aula 1',
         impacto_puntos: 5
       });
-      if (errInc) console.log(`❌ Error insertando incidencia como docente: ${errInc.message}`);
-      else console.log(`✅ Inserción de incidencia como docente exitosa.`);
+      if (errInc) console.log(`[ERROR] Error insertando incidencia como docente: ${errInc.message}`);
+      else console.log(`[OK] Inserción de incidencia como docente exitosa.`);
     } else {
       console.log('⚠️ No se encontraron materias asignadas para probar asistencia/incidencia.');
     }
@@ -161,8 +161,8 @@ async function main() {
       alumno_id: alumnoUser.id,
       parentesco: 'Tutor de prueba'
     });
-    if (errPadAl) console.log(`✅ Vinculación de tutores denegada correctamente: ${errPadAl.message}`);
-    else console.log(`❌ ERROR: Se permitió a un docente vincular tutores.`);
+    if (errPadAl) console.log(`[OK] Vinculación de tutores denegada correctamente: ${errPadAl.message}`);
+    else console.log(`[ERROR] ERROR: Se permitió a un docente vincular tutores.`);
   });
 
   // 3. Probar como DIRECTIVO
@@ -175,8 +175,8 @@ async function main() {
       notificaciones_activas: true
     }, { onConflict: 'padre_id,alumno_id' });
 
-    if (errPadAl) console.log(`❌ Error vinculando tutor como directivo: ${errPadAl.message}`);
-    else console.log(`✅ Vinculación de tutor como directivo exitosa.`);
+    if (errPadAl) console.log(`[ERROR] Error vinculando tutor como directivo: ${errPadAl.message}`);
+    else console.log(`[OK] Vinculación de tutor como directivo exitosa.`);
 
     // Crear contacto de emergencia (Debe permitir)
     const { error: errCont } = await client.from('contactos_emergency').insert({
@@ -187,8 +187,8 @@ async function main() {
       es_primario: false
     });
 
-    if (errCont) console.log(`❌ Error creando contacto como directivo: ${errCont.message}`);
-    else console.log(`✅ Creación de contacto de emergencia como directivo exitosa.`);
+    if (errCont) console.log(`[ERROR] Error creando contacto como directivo: ${errCont.message}`);
+    else console.log(`[OK] Creación de contacto de emergencia como directivo exitosa.`);
 
     // Crear periodo escolar (Debe permitir)
     const { error: errPer } = await client.from('periodos_escolares').insert({
@@ -201,12 +201,12 @@ async function main() {
 
     if (errPer) {
       if (errPer.message.includes('duplicate') || errPer.message.includes('unique')) {
-        console.log(`✅ El periodo ya existía o se detectó colisión de índice único.`);
+        console.log(`[OK] El periodo ya existía o se detectó colisión de índice único.`);
       } else {
-        console.log(`❌ Error creando periodo escolar como directivo: ${errPer.message}`);
+        console.log(`[ERROR] Error creando periodo escolar como directivo: ${errPer.message}`);
       }
     } else {
-      console.log(`✅ Creación de periodo escolar como directivo exitosa.`);
+      console.log(`[OK] Creación de periodo escolar como directivo exitosa.`);
     }
   });
 
@@ -231,9 +231,9 @@ async function main() {
     // Si inicia sesión, RLS de todas formas debe denegar todo porque fn_check_auth_user_valid() devuelve false
     const { data: planteles, error: errPl } = await docClient.from('planteles').select('*');
     if (errPl || (planteles && planteles.length === 0)) {
-      console.log(`✅ RLS denegó lectura de planteles a cuenta inactiva correctamente.`);
+      console.log(`[OK] RLS denegó lectura de planteles a cuenta inactiva correctamente.`);
     } else {
-      console.log(`❌ ERROR: Cuenta inactiva pudo leer planteles.`);
+      console.log(`[ERROR] ERROR: Cuenta inactiva pudo leer planteles.`);
     }
     await docClient.auth.signOut();
   }
