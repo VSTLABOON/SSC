@@ -652,28 +652,22 @@ export default function AsignacionEstatus() {
 
       {/* Tarjeta Contenedora de Lista */}
       <div className="attendance-card">
-        {/* Cabecera de Tabla */}
-        <div className="attendance-table-header-wrap">
-          <table className="attendance-table">
-            <thead>
-              <tr>
-                <th className="attendance-th" style={{ width: '50px', textAlign: 'center' }}>#</th>
-                <th className="attendance-th attendance-th--matricula">Matr&iacute;cula</th>
-                <th className="attendance-th">Nombre del Alumno</th>
-                <th className="attendance-th attendance-th--asistencia">Asistencia</th>
-                <th className="attendance-th attendance-th--desempeno">Desempe&ntilde;o</th>
-                <th className="attendance-th" style={{ width: '44px', textAlign: 'center' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#8896a0' }}>edit_note</span>
-                </th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-
-        {/* Cuerpo de Tabla con Scroll */}
+        {/* Tabla Desktop con Sticky Header */}
         <div className="attendance-scroll custom-scrollbar">
-          <div className="attendance-table-body-wrap">
+          <div className="attendance-table-wrap">
             <table className="attendance-table">
+              <thead>
+                <tr>
+                  <th className="attendance-th attendance-th--num">#</th>
+                  <th className="attendance-th attendance-th--matricula">Matr&iacute;cula</th>
+                  <th className="attendance-th attendance-th--name">Nombre del Alumno</th>
+                  <th className="attendance-th attendance-th--asistencia">Asistencia</th>
+                  <th className="attendance-th attendance-th--desempeno">Desempe&ntilde;o</th>
+                  <th className="attendance-th attendance-th--obs">
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#8896a0' }}>edit_note</span>
+                  </th>
+                </tr>
+              </thead>
               <tbody>
                 {filteredStudents.length === 0 ? (
                   <tr>
@@ -696,8 +690,8 @@ export default function AsignacionEstatus() {
 
                     return (
                       <tr className={`attendance-row ${rowTintClass}`} key={student.id}>
-                        <td className="attendance-td" style={{ width: '50px', textAlign: 'center', fontWeight: 'bold', color: '#5c5f60' }}>{idx + 1}</td>
-                        <td className="attendance-td attendance-td--matricula" style={{ color: '#5c5f60' }}>{student.matricula}</td>
+                        <td className="attendance-td attendance-td--num">{idx + 1}</td>
+                        <td className="attendance-td attendance-td--matricula">{student.matricula}</td>
                         <td className="attendance-td attendance-td--name">
                           {fullName}
                           {/* Justified toggle inline */}
@@ -766,7 +760,7 @@ export default function AsignacionEstatus() {
                             rowStatus.asistencia === 'falta' || rowStatus.asistencia === null || isLocked,
                           )}
                         </td>
-                        <td className="attendance-td" style={{ width: '44px', textAlign: 'center' }}>
+                        <td className="attendance-td attendance-td--obs">
                           <button className="obs-toggle-btn" onClick={() => toggleObsExpand(originalIndex)} title="Agregar observación">
                             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
                               {isObsExpanded ? 'edit_note' : 'note_add'}

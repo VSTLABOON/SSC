@@ -789,13 +789,13 @@ input {
   min-height: 0;
 }
 
-.attendance-table-header-wrap {
+.attendance-table-wrap {
   display: none;
-  flex-shrink: 0;
+  width: 100%;
 }
 
 @media (min-width: 768px) {
-  .attendance-table-header-wrap {
+  .attendance-table-wrap {
     display: block;
   }
 }
@@ -803,53 +803,43 @@ input {
 .attendance-table {
   width: 100%;
   text-align: left;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
 }
 
 .attendance-table thead {
-  background-color: var(--mystic);
-  color: var(--chambray);
-  border-bottom: 1px solid rgba(32, 71, 133, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--mystic, #dde4e5);
+  color: var(--chambray, #204785);
 }
 
 .attendance-th {
-  padding: 16px 24px;
-  font-weight: 600;
-  font-size: 14px;
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.attendance-th--matricula {
-  width: 160px;
+  background-color: var(--mystic, #dde4e5);
+  border-bottom: 2px solid rgba(32, 71, 133, 0.2);
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .attendance-th--center {
   text-align: center;
 }
 
-/* Cambio: ya no depende de un calc(100vh - Npx) fijo; ahora se
-   estira usando flex:1 dentro de attendance-card, aprovechando
-   siempre el espacio realmente disponible. */
 .attendance-scroll {
   flex: 1;
   min-height: 320px;
   overflow-y: auto;
 }
 
-.attendance-table-body-wrap {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .attendance-table-body-wrap {
-    display: block;
-  }
-}
-
 .attendance-row {
-  border-bottom: 1px solid rgba(190, 201, 192, 0.1);
+  border-bottom: 1px solid rgba(190, 201, 192, 0.15);
   transition: background-color 0.15s ease;
 }
 
@@ -867,21 +857,50 @@ input {
 }
 
 .attendance-td {
-  padding: 16px 24px;
+  padding: 12px 16px;
   font-size: 14px;
   color: var(--on-surface);
   vertical-align: middle;
+  border-bottom: 1px solid rgba(190, 201, 192, 0.15);
+  box-sizing: border-box;
 }
 
+.attendance-th--num,
+.attendance-td--num {
+  width: 56px;
+  text-align: center;
+  font-weight: 700;
+  color: #5c5f60;
+}
+
+.attendance-th--matricula,
 .attendance-td--matricula {
-  width: 160px;
+  width: 150px;
+  text-align: left;
+  font-family: inherit;
 }
 
+.attendance-th--name,
 .attendance-td--name {
+  text-align: left;
   font-weight: 500;
 }
 
-.attendance-td--status {
+.attendance-th--asistencia,
+.attendance-td--asistencia {
+  width: 170px;
+  text-align: center;
+}
+
+.attendance-th--desempeno,
+.attendance-td--desempeno {
+  width: 170px;
+  text-align: center;
+}
+
+.attendance-th--obs,
+.attendance-td--obs {
+  width: 56px;
   text-align: center;
 }
 
@@ -1149,9 +1168,11 @@ input {
    ============================================================ */
 
 .status-group {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;
 }
 
 .status-group__label {
@@ -1170,6 +1191,7 @@ input {
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .status-dot:hover {
@@ -1191,12 +1213,6 @@ input {
   opacity: 0.35;
   pointer-events: none;
   filter: grayscale(30%);
-}
-
-.attendance-th--asistencia,
-.attendance-th--desempeno {
-  width: 180px;
-  text-align: center;
 }
 
 .justified-toggle {
@@ -1353,6 +1369,12 @@ input {
 [data-theme='dark'] .filter-pill--active {
   background-color: #204785 !important;
   color: #ffffff !important;
+}
+
+[data-theme='dark'] .attendance-table thead,
+[data-theme='dark'] .attendance-th {
+  background-color: #1e293b !important;
+  border-bottom-color: #334155 !important;
 }
 
 [data-theme='dark'] .im-section-label,
