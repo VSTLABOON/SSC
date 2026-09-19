@@ -754,19 +754,46 @@ dist/assets/index-BqmoOqP2.js 473.06 kB
 
 ---
 
-## CAPÍTULO VI: GUÍA DE DESPLIEGUE, ENTORNO Y MANTENIMIENTO
+## CAPÍTULO VI: GUÍA DE DESPLIEGUE, ENTORNO Y MANTENIMIENTO EN SERVIDOR FÍSICO (ON-PREMISE)
 
-### 6.1 Variables de Entorno (`.env`)
-```env
-VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+### 6.1 Justificación y Arquitectura de Despliegue On-Premise
+En observancia de la Ley General de Protección de Datos Personales en Posesión de Sujetos Obligados (LGPDPPSO) y para garantizar un costo recurrente de $0.00 MXN en licenciamiento y hospedaje para el Plantel CONALEP Puebla I, el sistema está diseñado para operar en un **servidor físico propio** dentro de la Intranet escolar con capacidad de publicación segura hacia el exterior.
 
-### 6.2 Comando de Despliegue
-```bash
-npm install
-npx vite build
-```
+*(Nota: Para la guía de despliegue exhaustiva con comandos paso a paso, particionado de disco, scripts de respaldo y acta de entrega-recepción, consultar el documento oficial complementario: [`MANUAL_INSTALACION_SERVIDOR_FISICO_CONALEP.md`](file:///c:/Users/User/Documents/SSC/MANUAL_INSTALACION_SERVIDOR_FISICO_CONALEP.md)).*
+
+### 6.2 Matriz de Requisitos de Hardware y Software
+- **Hardware Físico:** CPU Intel Core i5/Xeon (mín. 4 núcleos), 8 GB a 16 GB RAM DDR4, 256 GB a 512 GB SSD (esquema RAID 1 sugerido), tarjeta de red Gigabit Ethernet RJ-45 cableada al switch central, y **UPS/No-Break interactivo de 1200 VA a 1500 VA** obligatorio para mitigar apagones y fluctuaciones eléctricas.
+- **Software Base:** Ubuntu Server 24.04 LTS (64-bit), Docker Engine v26+ con Docker Compose Plugin, Nginx v1.24+ (Reverse Proxy & Web Server), Node.js v20 LTS y utilidades (`ufw`, `fail2ban`, `openssl`, `htop`).
+
+### 6.3 Pila de Microservicios Backend (Supabase Self-Hosted Docker)
+1. **`supabase-db` (PostgreSQL 15):** Aloja las 24 tablas, triggers de semáforo conductual, motor analítico EWMA/Risk Score y políticas RLS.
+2. **`supabase-auth` (GoTrue):** Motor de autenticación con emisión de JWT y RBAC estricto.
+3. **`supabase-rest` (PostgREST):** Exposición instantánea y securizada de endpoints REST basados en el catálogo SQL.
+4. **`supabase-realtime`:** Servidor WebSockets para transmisión reactiva de cambios en semáforos, pases de lista e incidencias.
+5. **`supabase-kong`:** API Gateway central que unifica el tráfico interno.
+
+### 6.4 Compilación y Servicio Web del Frontend (React + Vite + Nginx)
+1. Inyección de variables de entorno de producción (`/opt/ssc/frontend/.env`):
+   ```env
+   VITE_SUPABASE_URL=http://192.168.1.200:8000
+   VITE_SUPABASE_ANON_KEY=<Clave_Anon_Generada_Con_JWT_Secret>
+   ```
+2. Compilación estática optimizada con code-splitting:
+   ```bash
+   pnpm install && pnpm build
+   ```
+3. Configuración de Nginx con enrutamiento SPA (`try_files $uri $uri/ /index.html;`), compresión Gzip, cabeceras HTTP de seguridad (`X-Frame-Options`, `X-Content-Type-Options`) y proxy inverso seguro a la API de Supabase.
+
+### 6.5 Topología de Conectividad y Publicación Externa
+- **Modo Intranet (LAN):** Docentes y directivos acceden mediante la IP local fija del servidor (`http://192.168.1.200`) o nombre DNS interno (`http://conductual.conalep`).
+- **Modo Acceso Tutores (Cloudflare Tunnel - Zero Trust):** Permite a padres de familia ingresar desde teléfonos celulares fuera del plantel mediante HTTPS institucional sin necesidad de IP fija ni apertura de puertos en el módem escolar.
+
+### 6.6 Política de Respaldos Diarios y Recuperación ante Desastres
+Se implementó un script de respaldo automatizado (`backup_ssc.sh`) calendarizado en `crontab` diariamente a las 02:00 hrs:
+- Genera volcados lógicos de PostgreSQL mediante `pg_dump` con compresión `gzip -9`.
+- Almacena las copias en una partición aislada (`/backups/postgresql/`).
+- Aplica rotación automática con retención de los últimos 15 días.
+- Restauración inmediata en un solo paso mediante tubería (`gunzip -c archivo.sql.gz | docker exec -i backend-db-1 psql`).
 
 ---
 
