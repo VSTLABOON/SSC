@@ -1395,3 +1395,596 @@ input {
 [data-theme='dark'] h4 {
   color: #f8fafc !important;
 }
+
+/* ============================================================
+   BARRA DE ACCIONES RÁPIDAS Y MÉTRICAS DE ASISTENCIA
+   ============================================================ */
+.attendance-quick-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(190, 201, 192, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.attendance-metric-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.att-metric-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: transform 0.15s ease;
+}
+
+.att-metric-pill .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.att-metric-pill--presente {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.att-metric-pill--retardo {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.att-metric-pill--falta {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.btn-bulk-asistencia {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #204785;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(32, 71, 133, 0.25);
+}
+
+.btn-bulk-asistencia:hover:not(:disabled) {
+  background: #173566;
+  transform: translateY(-1px);
+}
+
+.btn-bulk-asistencia:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-bulk-asistencia:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   TARJETAS MÓVILES TOUCH-FIRST (< 768px)
+   ============================================================ */
+.attendance-empty-state {
+  text-align: center;
+  padding: 40px 16px;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
+}
+
+.attendance-mobile-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(190, 201, 192, 0.35);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.att-card--asistio {
+  border-left: 5px solid #10b981;
+}
+
+.att-card--retardo {
+  border-left: 5px solid #f59e0b;
+}
+
+.att-card--falta {
+  border-left: 5px solid #ef4444;
+  background-color: #fffafb;
+}
+
+.att-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.att-card-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+}
+
+.att-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.att-card-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 3px;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.att-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.att-card-matricula {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.att-card-semaforo-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  letter-spacing: 0.3px;
+}
+
+.semaforo--verde {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.semaforo--naranja {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.semaforo--rojo {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.att-card-obs-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.att-card-obs-btn--has-obs {
+  background: #eff6ff;
+  color: #204785;
+  border-color: #bfdbfe;
+}
+
+.att-card-obs-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── Segmented Control Mobile ── */
+.att-segmented-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: opacity 0.2s ease;
+}
+
+.att-segmented-section--dimmed {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.att-segmented-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.att-segmented-title .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.att-segmented-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.att-pill-btn {
+  height: 44px; /* Estándar táctil Apple / Material Design */
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.att-pill-btn .material-symbols-outlined {
+  font-size: 17px;
+  transition: transform 0.15s ease;
+}
+
+.att-pill-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.att-pill-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Estados activos con alta visibilidad y contraste */
+.att-pill-btn--asistio.att-pill-btn--active {
+  background: #10b981;
+  border-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.35);
+}
+
+.att-pill-btn--retardo.att-pill-btn--active {
+  background: #f59e0b;
+  border-color: #d97706;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.35);
+}
+
+.att-pill-btn--falta.att-pill-btn--active {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.35);
+}
+
+.att-pill-btn--participo.att-pill-btn--active {
+  background: #0d9488;
+  border-color: #0f766e;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(13, 148, 136, 0.35);
+}
+
+.att-pill-btn--neutral.att-pill-btn--active {
+  background: #475569;
+  border-color: #334155;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(71, 85, 105, 0.3);
+}
+
+.att-pill-btn--no-participo.att-pill-btn--active {
+  background: #e11d48;
+  border-color: #be123c;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(225, 29, 72, 0.35);
+}
+
+/* ── Justificante y Evidencia en Móvil ── */
+.att-card-justificada-wrap {
+  background: #fff1f2;
+  border: 1px dashed #fca5a5;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.att-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #991b1b;
+  cursor: pointer;
+}
+
+.att-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ef4444;
+  cursor: pointer;
+}
+
+.att-evidence-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.att-evidence-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #f87171;
+  color: #b91c1c;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.att-evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: #fee2e2;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #991b1b;
+  max-width: 200px;
+}
+
+.att-evidence-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Observación Móvil (iOS Safe Input) ── */
+.att-card-obs-container {
+  margin-top: 2px;
+}
+
+.att-card-obs-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.att-card-obs-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 18px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.att-card-obs-input {
+  width: 100%;
+  font-size: 16px !important; /* IMPORTANTE: Previene el auto-zoom molesto en Safari iOS */
+  padding: 8px 34px 8px 34px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.att-card-obs-input:focus {
+  outline: none;
+  border-color: #204785;
+  background: #ffffff;
+}
+
+.att-card-obs-clear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Barra Flotante Inferior en Móviles ── */
+.attendance-mobile-bottom-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .attendance-mobile-bottom-bar {
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 12px));
+    left: 12px;
+    right: 12px;
+    z-index: 140;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(203, 213, 225, 0.8);
+    border-radius: 16px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+  }
+
+  .att-mob-bar-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .att-mob-bar-count {
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 4px;
+  }
+
+  .att-mob-bar-count strong {
+    color: #0f172a;
+    font-size: 13px;
+  }
+
+  .att-mob-bar-progress {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .att-mob-bar-progress-fill {
+    height: 100%;
+    background: #204785;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+
+  .att-mob-bar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(32, 71, 133, 0.3);
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+  }
+
+  .att-mob-bar-btn:active {
+    transform: scale(0.95);
+  }
+
+  .attendance-card {
+    padding-bottom: 120px !important;
+  }
+}
+
+/* ── Dark Mode para Asistencia Móvil ── */
+[data-theme='dark'] .attendance-quick-actions-bar {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .att-metric-pill--presente {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+[data-theme='dark'] .att-metric-pill--retardo {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+[data-theme='dark'] .att-metric-pill--falta {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+[data-theme='dark'] .attendance-mobile-card {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .att-card--falta {
+  background-color: #261b1e;
+}
+
+[data-theme='dark'] .att-card-avatar {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .att-card-name {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .att-pill-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .att-card-obs-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .attendance-mobile-bottom-bar {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #334155;
+}
+
+[data-theme='dark'] .att-mob-bar-count {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .att-mob-bar-count strong {
+  color: #f8fafc;
+}

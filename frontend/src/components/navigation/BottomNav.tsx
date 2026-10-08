@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import QuickSearchModal from '../common/QuickSearchModal';
 import './BottomNav.css';
 
 interface BottomNavItem {
@@ -12,6 +13,7 @@ interface BottomNavItem {
 
 export const BottomNav: React.FC = () => {
   const [isFabOpen, setIsFabOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { rol, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -96,6 +98,27 @@ export const BottomNav: React.FC = () => {
     navigate(path);
   }
 
+  // Atajo global Ctrl+K / Cmd+K y evento personalizado ssc-open-search
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+      }
+    };
+
+    const handleCustomSearch = () => {
+      setIsSearchOpen(true);
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('ssc-open-search', handleCustomSearch);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('ssc-open-search', handleCustomSearch);
+    };
+  }, []);
+
   return (
     <>
       {/* Fondo semi-transparente cuando el botón (+) de acción rápida está abierto */}
@@ -105,6 +128,26 @@ export const BottomNav: React.FC = () => {
             <div style={{ padding: '6px 12px 8px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Acciones Rápidas
             </div>
+
+            {/* Buscador Universal disponible para todos los roles */}
+            <button
+              type="button"
+              className="fab-action-btn"
+              style={{
+                background: 'rgba(32, 71, 133, 0.08)',
+                color: 'var(--color-brand-chambray, #204785)',
+                fontWeight: 700,
+                border: '1px solid rgba(32, 71, 133, 0.15)',
+              }}
+              onClick={() => {
+                triggerHaptic();
+                setIsFabOpen(false);
+                setIsSearchOpen(true);
+              }}
+            >
+              <span className="material-symbols-outlined fab-action-icon" style={{ color: 'var(--color-brand-chambray, #204785)' }}>search</span>
+              Buscar Alumno (Ctrl + K)
+            </button>
 
             {isDocente && (
               <>
@@ -286,6 +329,9 @@ export const BottomNav: React.FC = () => {
           })}
         </nav>
       </div>
+
+      {/* Buscador Universal Mobile-First */}
+      <QuickSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };

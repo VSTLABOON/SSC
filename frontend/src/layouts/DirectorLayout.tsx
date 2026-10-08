@@ -19,6 +19,8 @@ interface NavItem {
 import { BottomNav } from '../components/navigation/BottomNav';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NotificationCenter } from '../components/NotificationCenter';
+import QuickSearchTrigger from '../components/common/QuickSearchTrigger';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 export default function DirectorLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -157,6 +159,7 @@ export default function DirectorLayout() {
             </h1>
           </div>
           <div className="grm-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <QuickSearchTrigger />
             <ThemeToggle />
             <NotificationCenter />
             <button
@@ -195,7 +198,9 @@ export default function DirectorLayout() {
         </header>
 
         <div className="ida-canvas">
-          <Outlet />
+          <ErrorBoundary fallbackTitle="Error al cargar el módulo directivo" fallbackMessage="Ocurrió un problema en esta sección directiva. Puedes navegar a otros reportes o paneles desde el menú.">
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
 

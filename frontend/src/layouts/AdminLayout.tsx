@@ -8,6 +8,8 @@ import CONALEPlogo from '../assets/imagenes/CONALEPlogo.png';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NotificationCenter } from '../components/NotificationCenter';
+import QuickSearchTrigger from '../components/common/QuickSearchTrigger';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 interface NavItem {
   id: string;
@@ -141,6 +143,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="grm-topbar-right">
+            <QuickSearchTrigger />
             <ThemeToggle />
             <NotificationCenter />
             <div className="grm-topbar-divider" />
@@ -181,7 +184,9 @@ export default function AdminLayout() {
         </header>
 
         <main className="ida-content" style={{ paddingBottom: '80px' }}>
-          <Outlet />
+          <ErrorBoundary fallbackTitle="Error en el módulo administrativo" fallbackMessage="Ocurrió un problema en esta sección. Puedes usar el menú para navegar a gestión de usuarios o importación.">
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
 

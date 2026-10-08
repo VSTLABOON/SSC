@@ -1,9 +1,33 @@
 import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
 
-const envContent = fs.readFileSync('c:\\Users\\User\\Documents\\SSC\\.env_Sup', 'utf8');
-const SUPABASE_URL = envContent.match(/SUPABASE_URL=(.+)/)[1].trim();
-const SERVICE_KEY  = envContent.match(/SUPABASE_SERVICE_ROLE_KEY=(.+)/)[1].trim();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function getEnvConfig() {
+  const possiblePaths = [
+    process.env.ENV_FILE,
+    path.resolve(__dirname, '../.env_Sup'),
+    path.resolve(__dirname, '../.env'),
+    path.resolve(__dirname, '../frontend/.env'),
+  ].filter(Boolean);
+
+  let content = '';
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      content += '\n' + fs.readFileSync(p, 'utf8');
+    }
+  }
+
+  const url = process.env.SUPABASE_URL || content.match(/SUPABASE_URL=(.+)/)?.[1]?.trim() || content.match(/VITE_SUPABASE_URL=(.+)/)?.[1]?.trim() || 'http://localhost:8000';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || content.match(/SUPABASE_SERVICE_ROLE_KEY=(.+)/)?.[1]?.trim() || '';
+  return { url, serviceKey };
+}
+
+const { url: SUPABASE_URL, serviceKey: SERVICE_KEY } = getEnvConfig();
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }

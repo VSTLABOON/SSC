@@ -289,6 +289,12 @@
     flex: 1;
     justify-content: center;
   }
+
+  .scm-field input,
+  .scm-field select,
+  .scm-field textarea {
+    font-size: 16px !important;
+  }
 }
 
 [data-theme='dark'] .scm-box {

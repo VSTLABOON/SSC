@@ -410,7 +410,9 @@ export default function History() {
           groupedReports.map((group) => (
             <div className="date-group" key={group.label}>
               <h3 className="date-group__title">{group.label}</h3>
-              <div className="table-card">
+
+              {/* Vista Tabla Desktop (>= 768px) */}
+              <div className="table-card history-desktop-table">
                 <div className="table-responsive">
                   <table className="reports-table">
                     <thead>
@@ -453,6 +455,45 @@ export default function History() {
                       })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              {/* Vista Línea de Tiempo Móvil Touch-First (< 768px) */}
+              <div className="history-mobile-timeline">
+                <div className="timeline-stream">
+                  {group.items.map((report) => {
+                    const badgeClass = CATEGORY_BADGE_CLASS[report.category] || CATEGORY_BADGE_CLASS.general;
+                    const isPositive = report.impact > 0;
+                    const nodeColor = isPositive ? 'node--positive' : report.filterGroup === 'warning' ? 'node--warning' : 'node--negative';
+                    const nodeIcon = isPositive ? 'verified' : report.filterGroup === 'warning' ? 'warning' : 'report';
+
+                    return (
+                      <div key={report.id} className="timeline-entry">
+                        <div className={`timeline-entry-node ${nodeColor}`}>
+                          <Icon name={nodeIcon} style={{ fontSize: '16px' }} />
+                        </div>
+                        <div className="timeline-entry-card">
+                          <div className="timeline-entry-top">
+                            <span className={badgeClass}>{report.categoryLabel}</span>
+                            <span className={`timeline-points ${isPositive ? 'points--positive' : 'points--negative'}`}>
+                              {isPositive ? `+${report.impact}` : report.impact} pts
+                            </span>
+                          </div>
+                          <p className="timeline-entry-desc">{report.description}</p>
+                          <div className="timeline-entry-meta">
+                            <Icon name="location_on" style={{ fontSize: '13px' }} />
+                            <span>{report.location} • {report.date}</span>
+                          </div>
+                          <div className="timeline-entry-action" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div className="status-cell">
+                              <span className={STATUS_DOT_CLASS[report.status]} />
+                              <span className={STATUS_TEXT_CLASS[report.status]}>{report.statusLabel}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

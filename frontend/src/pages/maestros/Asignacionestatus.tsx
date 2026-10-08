@@ -91,6 +91,17 @@ export default function AsignacionEstatus() {
   const [hasPassedToday, setHasPassedToday] = useState(false);
   const [toastState, setToastState] = useState<ToastState>('hidden');
   const [undoTarget, setUndoTarget] = useState<{ index: number; previousState: RowStatus } | null>(null);
+  const [fullUndoSnapshot, setFullUndoSnapshot] = useState<RowStatus[] | null>(null);
+
+  const triggerHaptic = (pattern: number | number[] = 10) => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        // Ignorar si el navegador no permite vibración
+      }
+    }
+  };
 
   // ── useEffect: Cargar alumnos y verificar pase de lista de hoy ────────────
   useEffect(() => {
@@ -179,7 +190,30 @@ export default function AsignacionEstatus() {
 
   // ── Manejadores de Asistencia ────────────────────────────────────────────
 
+  const handleMarcarTodosPresentes = () => {
+    if (isLocked) return;
+    triggerHaptic([15, 40, 15]);
+    const prevSnapshot = [...statuses];
+    setFullUndoSnapshot(prevSnapshot);
+    setUndoTarget(null);
+
+    const updated = statuses.map((s) => ({
+      ...s,
+      asistencia: 'asistio' as AsistenciaValue,
+      desempeno: s.desempeno || ('neutral' as DesempenoValue),
+      justificada: false,
+      justificanteFile: null,
+    }));
+    setStatuses(updated);
+
+    setToastState('visible');
+    setTimeout(() => setToastState('fading'), 2800);
+    setTimeout(() => setToastState('hidden'), 3100);
+  };
+
   const handleAsistencia = (studentIndex: number, value: AsistenciaValue) => {
+    triggerHaptic(12);
+    setFullUndoSnapshot(null);
     const previous = statuses[studentIndex];
     const updated = [...statuses];
 
@@ -207,6 +241,8 @@ export default function AsignacionEstatus() {
   const handleDesempeno = (studentIndex: number, value: DesempenoValue) => {
     const previous = statuses[studentIndex];
     if (previous.asistencia === 'falta') return; // Bloqueado
+    triggerHaptic(12);
+    setFullUndoSnapshot(null);
 
     const updated = [...statuses];
     // Toggle
@@ -394,11 +430,19 @@ export default function AsignacionEstatus() {
 
   // ── Deshacer ─────────────────────────────────────────────────────────────
   const handleUndo = () => {
+    if (fullUndoSnapshot) {
+      setStatuses(fullUndoSnapshot);
+      setFullUndoSnapshot(null);
+      setToastState('hidden');
+      triggerHaptic(10);
+      return;
+    }
     if (!undoTarget) return;
     const updated = [...statuses];
     updated[undoTarget.index] = undoTarget.previousState;
     setStatuses(updated);
     setUndoTarget(null);
+    triggerHaptic(10);
   };
 
   // ── Carga ────────────────────────────────────────────────────────────────
@@ -444,6 +488,9 @@ export default function AsignacionEstatus() {
 
   const totalAssigned = statuses.filter(s => s.asistencia !== null).length;
   const progressPercent = students.length > 0 ? Math.round((totalAssigned / students.length) * 100) : 0;
+  const countAsistio = statuses.filter(s => s.asistencia === 'asistio').length;
+  const countRetardo = statuses.filter(s => s.asistencia === 'retardo').length;
+  const countFalta = statuses.filter(s => s.asistencia === 'falta').length;
 
   // ── Helper: Renderizar grupo de bolitas ───────────────────────────────────
   const renderDotGroup = (
@@ -579,6 +626,35 @@ export default function AsignacionEstatus() {
         <div className="progress-bar-container" style={{ width: '100%', height: '8px', background: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
           <div className="progress-bar-fill" style={{ width: `${progressPercent}%`, height: '100%', background: '#204785', borderRadius: '4px', transition: 'width 0.3s ease' }} />
         </div>
+      </div>
+
+      {/* Barra de Acciones Rápidas y Métricas de Asistencia */}
+      <div className="attendance-quick-actions-bar">
+        <div className="attendance-metric-pills">
+          <div className="att-metric-pill att-metric-pill--presente">
+            <span className="material-symbols-outlined">check_circle</span>
+            <span><strong>{countAsistio}</strong> Asistencias</span>
+          </div>
+          <div className="att-metric-pill att-metric-pill--retardo">
+            <span className="material-symbols-outlined">schedule</span>
+            <span><strong>{countRetardo}</strong> Retardos</span>
+          </div>
+          <div className="att-metric-pill att-metric-pill--falta">
+            <span className="material-symbols-outlined">cancel</span>
+            <span><strong>{countFalta}</strong> Faltas</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="btn-bulk-asistencia"
+          onClick={handleMarcarTodosPresentes}
+          disabled={isLocked || students.length === 0}
+          title="Marcar automáticamente a todos los alumnos como asistió"
+        >
+          <span className="material-symbols-outlined">done_all</span>
+          <span>Todos Asistieron</span>
+        </button>
       </div>
 
       {/* Filtros y Búsqueda */}
@@ -775,92 +851,195 @@ export default function AsignacionEstatus() {
             </table>
           </div>
 
-          {/* Lista Móvil (Tarjetas) */}
+          {/* Lista Móvil (Tarjetas Ergonómicas Touch-First) */}
           <div className="attendance-mobile-list">
             {filteredStudents.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '32px', color: '#5c5f60' }}>
-                No se encontraron alumnos con los criterios seleccionados.
+              <div className="attendance-empty-state">
+                <span className="material-symbols-outlined" style={{ fontSize: '42px', color: '#94a3b8', marginBottom: '8px' }}>search_off</span>
+                <p style={{ margin: 0, fontWeight: 600 }}>No se encontraron alumnos con los criterios seleccionados.</p>
               </div>
             ) : (
               filteredStudents.map(({ student, originalIndex }, idx) => {
                 const rowStatus = statuses[originalIndex];
                 const user = (Array.isArray(student.usuarios) ? student.usuarios[0] : student.usuarios) as { nombre?: string; apellido?: string } | null;
-                const fullName = `${user?.nombre || ''} ${user?.apellido || ''}`;
+                const fullName = `${user?.nombre || ''} ${user?.apellido || ''}`.trim() || 'Alumno sin nombre';
+                const isObsExpanded = expandedObs.has(originalIndex);
+
+                const statusColorClass = rowStatus.asistencia === 'asistio'
+                  ? 'att-card--asistio'
+                  : rowStatus.asistencia === 'retardo'
+                  ? 'att-card--retardo'
+                  : rowStatus.asistencia === 'falta'
+                  ? 'att-card--falta'
+                  : '';
 
                 return (
-                  <div className="attendance-mobile-row" key={student.id}>
-                    <div className="attendance-mobile-id-row">
-                      <span className="attendance-mobile-id">{student.matricula}</span>
-                      <span style={{ fontSize: '12px', color: '#5c5f60', fontWeight: 'bold' }}>#{idx + 1}</span>
-                    </div>
-                    <h4 className="attendance-mobile-name">{fullName}</h4>
-                    <div className="attendance-mobile-status-row">
-                      <div>
-                        <span className="status-group__label">Asistencia</span>
-                        {renderDotGroup(
-                          ASISTENCIA_OPTIONS,
-                          rowStatus.asistencia,
-                          (key) => handleAsistencia(originalIndex, key as AsistenciaValue),
-                          isLocked,
-                        )}
+                  <div className={`attendance-mobile-card ${statusColorClass}`} key={student.id}>
+                    {/* Fila Superior: Info del Alumno */}
+                    <div className="att-card-header">
+                      <div className="att-card-avatar">
+                        <span>{idx + 1}</span>
                       </div>
-                      <div>
-                        <span className="status-group__label">Desempe&ntilde;o</span>
-                        {renderDotGroup(
-                          DESEMPENO_OPTIONS,
-                          rowStatus.desempeno,
-                          (key) => handleDesempeno(originalIndex, key as DesempenoValue),
-                          rowStatus.asistencia === 'falta' || rowStatus.asistencia === null || isLocked,
-                        )}
-                      </div>
-                    </div>
-                    {/* Justified toggle */}
-                    {rowStatus.asistencia === 'falta' && (
-                      <div className="justified-toggle">
-                        <input
-                          type="checkbox"
-                          id={`just-m-${originalIndex}`}
-                          checked={rowStatus.justificada}
-                          disabled={isLocked}
-                          onChange={(e) => handleJustificada(originalIndex, e.target.checked)}
-                        />
-                        <label htmlFor={`just-m-${originalIndex}`}>Falta justificada</label>
-                      </div>
-                    )}
-                    {/* Evidence upload mobile */}
-                    {rowStatus.asistencia === 'falta' && rowStatus.justificada && (
-                      <div className="evidence-upload">
-                        <label className="evidence-label" htmlFor={`ev-m-${originalIndex}`} style={{ opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>attach_file</span>
-                          {' '}Adjuntar evidencia
-                        </label>
-                        <input
-                          id={`ev-m-${originalIndex}`}
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          disabled={isLocked}
-                          style={{ display: 'none' }}
-                          onChange={(e) => handleJustificanteFile(originalIndex, e.target.files?.[0] || null)}
-                        />
-                        {rowStatus.justificanteFile && (
-                          <span className="evidence-filename">
-                            <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>description</span>
-                            {' '}{rowStatus.justificanteFile.name}
+                      <div className="att-card-info">
+                        <h4 className="att-card-name">{fullName}</h4>
+                        <div className="att-card-meta">
+                          <span className="att-card-matricula">{student.matricula}</span>
+                          <span className={`att-card-semaforo-badge semaforo--${student.nivel_semaforo || 'verde'}`}>
+                            {student.nivel_semaforo || 'verde'}
                           </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className={`att-card-obs-btn ${rowStatus.observacion ? 'att-card-obs-btn--has-obs' : ''}`}
+                        onClick={() => toggleObsExpand(originalIndex)}
+                        title={isObsExpanded ? 'Ocultar observación' : 'Agregar observación'}
+                      >
+                        <span className="material-symbols-outlined">
+                          {rowStatus.observacion ? 'comment' : 'add_comment'}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Segmented Controls: Asistencia (Mínimo 44px de altura táctil) */}
+                    <div className="att-segmented-section">
+                      <div className="att-segmented-title">
+                        <span className="material-symbols-outlined">checklist</span>
+                        <span>Asistencia</span>
+                      </div>
+                      <div className="att-segmented-grid">
+                        <button
+                          type="button"
+                          disabled={isLocked}
+                          onClick={() => handleAsistencia(originalIndex, 'asistio')}
+                          className={`att-pill-btn att-pill-btn--asistio ${rowStatus.asistencia === 'asistio' ? 'att-pill-btn--active' : ''}`}
+                        >
+                          <span className="material-symbols-outlined">check_circle</span>
+                          <span>Asistió</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isLocked}
+                          onClick={() => handleAsistencia(originalIndex, 'retardo')}
+                          className={`att-pill-btn att-pill-btn--retardo ${rowStatus.asistencia === 'retardo' ? 'att-pill-btn--active' : ''}`}
+                        >
+                          <span className="material-symbols-outlined">schedule</span>
+                          <span>Retardo</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isLocked}
+                          onClick={() => handleAsistencia(originalIndex, 'falta')}
+                          className={`att-pill-btn att-pill-btn--falta ${rowStatus.asistencia === 'falta' ? 'att-pill-btn--active' : ''}`}
+                        >
+                          <span className="material-symbols-outlined">cancel</span>
+                          <span>Falta</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Segmented Controls: Desempeño / Participación */}
+                    <div className={`att-segmented-section ${rowStatus.asistencia === 'falta' ? 'att-segmented-section--dimmed' : ''}`}>
+                      <div className="att-segmented-title">
+                        <span className="material-symbols-outlined">star</span>
+                        <span>Desempeño / Participación</span>
+                      </div>
+                      <div className="att-segmented-grid">
+                        <button
+                          type="button"
+                          disabled={rowStatus.asistencia === 'falta' || rowStatus.asistencia === null || isLocked}
+                          onClick={() => handleDesempeno(originalIndex, 'participo')}
+                          className={`att-pill-btn att-pill-btn--participo ${rowStatus.desempeno === 'participo' ? 'att-pill-btn--active' : ''}`}
+                        >
+                          <span className="material-symbols-outlined">thumb_up</span>
+                          <span>Positiva</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={rowStatus.asistencia === 'falta' || rowStatus.asistencia === null || isLocked}
+                          onClick={() => handleDesempeno(originalIndex, 'neutral')}
+                          className={`att-pill-btn att-pill-btn--neutral ${rowStatus.desempeno === 'neutral' ? 'att-pill-btn--active' : ''}`}
+                        >
+                          <span className="material-symbols-outlined">remove</span>
+                          <span>Regular</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={rowStatus.asistencia === 'falta' || rowStatus.asistencia === null || isLocked}
+                          onClick={() => handleDesempeno(originalIndex, 'no_participo')}
+                          className={`att-pill-btn att-pill-btn--no-participo ${rowStatus.desempeno === 'no_participo' ? 'att-pill-btn--active' : ''}`}
+                        >
+                          <span className="material-symbols-outlined">thumb_down</span>
+                          <span>Negativa</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Falta justificada y carga de evidencia en móvil */}
+                    {rowStatus.asistencia === 'falta' && (
+                      <div className="att-card-justificada-wrap">
+                        <label className="att-checkbox-label">
+                          <input
+                            type="checkbox"
+                            id={`just-m-${originalIndex}`}
+                            checked={rowStatus.justificada}
+                            disabled={isLocked}
+                            onChange={(e) => handleJustificada(originalIndex, e.target.checked)}
+                          />
+                          <span>Falta justificada con documento</span>
+                        </label>
+
+                        {rowStatus.justificada && (
+                          <div className="att-evidence-mobile">
+                            <label className="att-evidence-btn" htmlFor={`ev-m-${originalIndex}`} style={{ opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
+                              <span className="material-symbols-outlined">upload_file</span>
+                              <span>{rowStatus.justificanteFile ? 'Cambiar archivo' : 'Adjuntar justificante'}</span>
+                            </label>
+                            <input
+                              id={`ev-m-${originalIndex}`}
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              disabled={isLocked}
+                              style={{ display: 'none' }}
+                              onChange={(e) => handleJustificanteFile(originalIndex, e.target.files?.[0] || null)}
+                            />
+                            {rowStatus.justificanteFile && (
+                              <div className="att-evidence-chip">
+                                <span className="material-symbols-outlined">description</span>
+                                <span className="att-evidence-text">{rowStatus.justificanteFile.name}</span>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
-                    {/* Observation mobile */}
-                    <div style={{ marginTop: '8px' }}>
-                      <input
-                        className="obs-input"
-                        type="text"
-                        disabled={isLocked}
-                        placeholder="Observación (opcional)..."
-                        value={rowStatus.observacion}
-                        onChange={(e) => handleObservacion(originalIndex, e.target.value)}
-                      />
-                    </div>
+
+                    {/* Campo expandible de observación con font-size: 16px para evitar auto-zoom */}
+                    {isObsExpanded && (
+                      <div className="att-card-obs-container">
+                        <div className="att-card-obs-input-wrap">
+                          <span className="material-symbols-outlined att-card-obs-icon">edit_note</span>
+                          <input
+                            className="att-card-obs-input"
+                            type="text"
+                            disabled={isLocked}
+                            placeholder="Escribe una observación para este alumno..."
+                            value={rowStatus.observacion}
+                            onChange={(e) => handleObservacion(originalIndex, e.target.value)}
+                          />
+                          {rowStatus.observacion && (
+                            <button
+                              type="button"
+                              className="att-card-obs-clear"
+                              onClick={() => handleObservacion(originalIndex, '')}
+                              disabled={isLocked}
+                            >
+                              <span className="material-symbols-outlined">close</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -869,13 +1048,43 @@ export default function AsignacionEstatus() {
         </div>
       </div>
 
-      {/* Toast de éxito */}
+      {/* Barra Flotante Inferior en Pantallas Móviles */}
+      <div className="attendance-mobile-bottom-bar">
+        <div className="att-mob-bar-info">
+          <div className="att-mob-bar-count">
+            <strong>{totalAssigned}</strong> de {students.length} registrados
+          </div>
+          <div className="att-mob-bar-progress">
+            <div className="att-mob-bar-progress-fill" style={{ width: `${progressPercent}%` }} />
+          </div>
+        </div>
+        <button
+          type="button"
+          className="att-mob-bar-btn"
+          onClick={isLocked ? () => setIsLocked(false) : handleSave}
+          disabled={isSaving}
+          style={{
+            background: isLocked ? '#16a34a' : '#204785',
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+            {isLocked ? 'lock_open' : isSaving ? 'sync' : 'save'}
+          </span>
+          <span>{isSaving ? 'Guardando...' : isLocked ? 'Editar' : 'Guardar'}</span>
+        </button>
+      </div>
+
+      {/* Toast de éxito con botón Deshacer */}
       {toastState !== 'hidden' && (
         <div className={`toast ${toastState === 'fading' ? 'toast--fading' : ''}`}>
           <div className="toast-content">
             <span className="material-symbols-outlined check-icon">check_circle</span>
-            <span>Registro diario guardado exitosamente.</span>
-            {undoTarget && (
+            <span>
+              {fullUndoSnapshot
+                ? 'Todos los alumnos marcados como presentes.'
+                : 'Registro diario guardado exitosamente.'}
+            </span>
+            {(undoTarget || fullUndoSnapshot) && (
               <button className="btn-undo" onClick={handleUndo}>
                 Deshacer
               </button>

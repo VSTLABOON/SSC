@@ -289,6 +289,12 @@
     flex: 1;
     justify-content: center;
   }
+
+  .sjm-field input,
+  .sjm-field select,
+  .sjm-field textarea {
+    font-size: 16px !important;
+  }
 }
 
 [data-theme='dark'] .sjm-box {

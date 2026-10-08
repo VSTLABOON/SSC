@@ -311,7 +311,8 @@ export default function HistorialReporteDA() {
             Expedientes de Alumnos con Incidencias del Plantel
           </h3>
         </div>
-        <div className="hrm-table-scroll">
+        {/* Vista Tabla Desktop (>= 768px) */}
+        <div className="hrm-table-scroll hrm-desktop-table">
           <table className="hrm-table">
             <thead>
               <tr>
@@ -361,6 +362,43 @@ export default function HistorialReporteDA() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Vista Tarjetas Móviles Touch-First (< 768px) */}
+        <div className="hrm-mobile-cards-list">
+          {filteredStudents.length > 0 ? (
+            filteredStudents.map(s => (
+              <div
+                key={s.id}
+                className="hrm-mobile-student-card"
+                onClick={() => setSelectedStudent(s)}
+              >
+                <div className="hrm-mob-card-top">
+                  <div className={`hrm-avatar hrm-avatar--${s.avatarTone}`}>{s.initials}</div>
+                  <div className="hrm-mob-card-info">
+                    <h4 className="hrm-mob-card-name">{s.name}</h4>
+                    <span className="hrm-mob-card-mat">{s.matricula}</span>
+                  </div>
+                  <span className={`hrm-report-badge hrm-report-badge--${s.reportLevel}`}>
+                    {s.reportCount} {s.reportCount === 1 ? 'Reporte' : 'Reportes'}
+                  </span>
+                </div>
+                <div className="hrm-mob-card-details">
+                  <span className="hrm-mob-card-badge">{s.group}</span>
+                  <span className="hrm-mob-card-badge hrm-mob-card-badge--subtle">{s.career}</span>
+                  <span className={`hrm-mob-card-badge semaforo--${s.semaforo}`}>
+                    Semáforo {s.semaforo}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="hrm-td-empty" style={{ textAlign: 'center', padding: '32px' }}>
+              {incidents.length === 0
+                ? 'No se han registrado reportes disciplinarios en el plantel.'
+                : 'No se encontraron alumnos con los criterios de búsqueda.'}
+            </div>
+          )}
         </div>
       </div>
 

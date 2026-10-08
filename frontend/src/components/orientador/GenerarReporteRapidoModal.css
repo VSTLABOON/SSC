@@ -691,6 +691,12 @@
   .grrm-severity-desc {
     display: none;
   }
+
+  .grrm-field input,
+  .grrm-field select,
+  .grrm-field textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Modo Oscuro */

@@ -133,8 +133,14 @@ const Login = () => {
     });
 
     if (loginError || !data.user) {
-      // Registrar intento fallido en base de datos
-      await supabase.rpc('fn_registrar_intento_fallido', { p_email: normalizedEmail });
+      // Registrar intento fallido de forma segura a través de Edge Function
+      try {
+        await supabase.functions.invoke('record-failed-login', {
+          body: { email: normalizedEmail },
+        });
+      } catch (err) {
+        console.warn('No se pudo registrar el intento fallido:', err);
+      }
       setError('Usuario o contraseña incorrectos.');
       setSubmitting(false);
       return;

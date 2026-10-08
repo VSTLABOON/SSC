@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { BottomNav } from '../components/navigation/BottomNav';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import '../pages/Home.css';
 
 interface NavItem {
@@ -226,7 +227,9 @@ export default function ParentLayout() {
         </header>
 
         <main className="page-canvas" style={{ paddingBottom: '88px' }}>
-          <Outlet />
+          <ErrorBoundary fallbackTitle="Error al cargar la sección" fallbackMessage="Ocurrió un problema en esta vista. Puedes usar el menú para navegar a otra pantalla.">
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
 

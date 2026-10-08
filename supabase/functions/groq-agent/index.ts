@@ -13,27 +13,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Rate Limiter en memoria efímero por instancia Deno (Limitación técnica conocida en Deno Deploy)
-// En producción con múltiples pods distribuidos, se recomienda migrar a la tabla PostgreSQL public.groq_rate_limits.
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minuto
-const MAX_REQUESTS_PER_WINDOW = 10;
-
-function isRateLimited(userId: string): boolean {
-  const now = Date.now();
-  const userRecord = rateLimitMap.get(userId);
-
-  if (!userRecord || now > userRecord.resetTime) {
-    rateLimitMap.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return false;
+// Rate Limiter persistente en PostgreSQL (compatible con Deno Deploy distribuido)
+async function isRateLimited(supabaseAdmin: any, userId: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin.rpc('fn_check_groq_rate_limit', {
+    p_user_id: userId,
+    p_max_requests: 10,
+    p_window_seconds: 60,
+  });
+  if (error) {
+    console.error('[Rate Limit Error]:', error.message);
+    return false; // En caso de error, permitir el request (fail-open)
   }
-
-  if (userRecord.count >= MAX_REQUESTS_PER_WINDOW) {
-    return true;
-  }
-
-  userRecord.count += 1;
-  return false;
+  return data === true;
 }
 
 serve(async (req) => {
@@ -81,8 +72,8 @@ serve(async (req) => {
       );
     }
 
-    // 2. Control de Rate Limiting por usuario
-    if (isRateLimited(user.id)) {
+    // 2. Control de Rate Limiting por usuario (persistente en PostgreSQL)
+    if (await isRateLimited(supabaseAdmin, user.id)) {
       return new Response(
         JSON.stringify({ error: "Límite de peticiones excedido (máximo 10 por minuto). Intente más tarde." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }

@@ -23,3 +23,12 @@ supabase/.temp/
 .DS_Store
 Thumbs.db
 *.log
+
+# === Respaldos y volcados SQL con datos reales ===
+*.dump
+*.sql.gz
+supabase/full_cloud_migration.sql
+
+# === Binarios y artefactos generados localmente ===
+*.sb3
+MANUAL_INSTALACION_Y_TROUBLESHOOTING_SSC.*

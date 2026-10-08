@@ -516,3 +516,113 @@ a      { text-decoration: none; }
 [data-theme='dark'] .hrm-report-comments__text {
   color: #cbd5e1 !important;
 }
+
+/* ============================================================
+   RESPONSIVE: TABLA DESKTOP VS CARDS MÓVILES (< 768px)
+   ============================================================ */
+.hrm-mobile-cards-list {
+  display: none;
+}
+
+.hrm-desktop-table {
+  display: block;
+}
+
+@media (max-width: 767.98px) {
+  .hrm-desktop-table {
+    display: none !important;
+  }
+
+  .hrm-mobile-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .hrm-mobile-student-card {
+    background: var(--c-white, #ffffff);
+    border: 1px solid rgba(190, 201, 192, 0.35);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .hrm-mobile-student-card:active {
+    transform: scale(0.98);
+  }
+
+  .hrm-mob-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hrm-mob-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hrm-mob-card-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--c-on-surface, #0f172a);
+    margin: 0 0 2px;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .hrm-mob-card-mat {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748b;
+    font-family: monospace;
+  }
+
+  .hrm-mob-card-details {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .hrm-mob-card-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #334155;
+  }
+
+  .hrm-mob-card-badge--subtle {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+  }
+}
+
+[data-theme='dark'] .hrm-mobile-student-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .hrm-mob-card-name {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .hrm-mob-card-badge {
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .hrm-mob-card-badge--subtle {
+  border-color: #475569;
+  color: #94a3b8;
+}

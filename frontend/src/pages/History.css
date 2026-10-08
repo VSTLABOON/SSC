@@ -1284,3 +1284,246 @@ body.no-scroll {
 [data-theme='dark'] .report-meta-text {
   color: #94a3b8 !important;
 }
+
+/* ============================================================
+   LÍNEA DE TIEMPO VERTICAL MÓVIL (MOBILE TIMELINE)
+   ============================================================ */
+
+/* En escritorio, ocultar el timeline móvil */
+.history-mobile-timeline {
+  display: none;
+}
+
+.history-desktop-table {
+  display: block;
+}
+
+@media (max-width: 767.98px) {
+  .history-desktop-table {
+    display: none !important;
+  }
+
+  .history-mobile-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .timeline-date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .timeline-date-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary, #204785);
+    background: rgba(32, 71, 133, 0.08);
+    padding: 6px 14px;
+    border-radius: 20px;
+    align-self: flex-start;
+  }
+
+  .timeline-stream {
+    position: relative;
+    padding-left: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Línea conectora vertical */
+  .timeline-stream::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: #cbd5e1;
+    border-radius: 2px;
+  }
+
+  .timeline-entry {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Nodo circular sobre la línea */
+  .timeline-entry-node {
+    position: absolute;
+    left: -28px;
+    top: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .timeline-entry-node .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  .timeline-entry-node.node--positive {
+    background: #10b981;
+    border-color: #059669;
+    color: #ffffff;
+  }
+
+  .timeline-entry-node.node--warning {
+    background: #f59e0b;
+    border-color: #d97706;
+    color: #ffffff;
+  }
+
+  .timeline-entry-node.node--negative {
+    background: #ef4444;
+    border-color: #dc2626;
+    color: #ffffff;
+  }
+
+  /* Tarjeta de incidencia */
+  .timeline-entry-card {
+    background: var(--color-bg-card, #ffffff);
+    border: 1px solid var(--color-border-subtle, #e2e8f0);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .timeline-entry-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .timeline-points {
+    font-size: 13.5px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .timeline-points.points--positive {
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  .timeline-points.points--negative {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .timeline-entry-desc {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--color-text-main, #1e293b);
+    line-height: 1.45;
+  }
+
+  .timeline-entry-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--color-text-sub, #64748b);
+  }
+
+  .timeline-entry-action {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+  }
+
+  .acuse-btn-touch {
+    width: 100%;
+    min-height: 44px; /* Altura táctil estándar para pulgar */
+    background: #204785;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(32, 71, 133, 0.25);
+    transition: transform 0.15s ease;
+  }
+
+  .acuse-btn-touch:active {
+    transform: scale(0.97);
+  }
+
+  .acuse-confirmed-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #dcfce7;
+    color: #166534;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+/* ── Dark Mode para Timeline Móvil ── */
+[data-theme='dark'] .timeline-stream::before {
+  background: #334155;
+}
+
+[data-theme='dark'] .timeline-entry-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .timeline-date-header {
+  background: rgba(32, 71, 133, 0.3);
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .timeline-entry-desc {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .timeline-entry-action {
+  border-top-color: #334155;
+}
+
+[data-theme='dark'] .timeline-points.points--positive {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+[data-theme='dark'] .timeline-points.points--negative {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+[data-theme='dark'] .acuse-confirmed-pill {
+  background: rgba(22, 101, 52, 0.3);
+  color: #86efac;
+}

@@ -7,6 +7,8 @@ import SCTechlogo from '../assets/imagenes/SCTechlogo.png';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NotificationCenter } from '../components/NotificationCenter';
+import QuickSearchTrigger from '../components/common/QuickSearchTrigger';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 interface NavItem {
   id: string;
@@ -138,6 +140,7 @@ export default function CounselorLayout() {
             </h1>
           </div>
           <div className="grm-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <QuickSearchTrigger />
             <ThemeToggle />
             <NotificationCenter />
             <button
@@ -171,7 +174,9 @@ export default function CounselorLayout() {
         </header>
 
         <div className="ida-canvas">
-          <Outlet />
+          <ErrorBoundary fallbackTitle="Error al cargar la sección de orientación" fallbackMessage="Ocurrió un problema en esta sección. Puedes usar el menú para navegar a otros casos o reportes.">
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
 

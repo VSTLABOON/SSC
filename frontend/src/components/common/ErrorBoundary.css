@@ -1,0 +1,149 @@
+.ssc-error-boundary-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 2rem 1rem;
+  background-color: var(--color-bg-app, #f1f5f9);
+  color: var(--color-text-main, #0f172a);
+}
+
+.ssc-error-boundary-card {
+  max-width: 520px;
+  width: 100%;
+  background-color: var(--color-bg-card, #ffffff);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 2.25rem 2rem;
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+  text-align: center;
+  animation: sscFadeIn 0.3s ease-out;
+}
+
+@keyframes sscFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ssc-error-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: rgba(239, 68, 68, 0.12);
+  color: var(--color-danger, #ef4444);
+  margin-bottom: 1.25rem;
+}
+
+.ssc-error-icon-wrapper svg {
+  width: 32px;
+  height: 32px;
+}
+
+.ssc-error-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main, #0f172a);
+  margin-bottom: 0.5rem;
+}
+
+.ssc-error-desc {
+  font-size: 0.925rem;
+  color: var(--color-text-sub, #64748b);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.ssc-error-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.ssc-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-brand-primary, #00492f);
+  color: #ffffff;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.ssc-btn-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.ssc-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  color: var(--color-text-main, #0f172a);
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ssc-btn-secondary:hover {
+  background-color: var(--color-border-subtle, #e2e8f0);
+}
+
+.ssc-error-details {
+  margin-top: 1.25rem;
+  text-align: left;
+  border-top: 1px solid var(--color-border-subtle, #e2e8f0);
+  padding-top: 1rem;
+}
+
+.ssc-error-summary {
+  font-size: 0.8rem;
+  color: var(--color-text-sub, #64748b);
+  cursor: pointer;
+  font-weight: 500;
+  user-select: none;
+}
+
+.ssc-error-summary:hover {
+  color: var(--color-text-main, #0f172a);
+}
+
+.ssc-error-pre {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: rgba(15, 23, 42, 0.05);
+  border-radius: var(--radius-sm, 4px);
+  font-family: var(--mono, monospace);
+  font-size: 0.75rem;
+  color: var(--color-danger, #ef4444);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+[data-theme='dark'] .ssc-error-pre {
+  background-color: rgba(0, 0, 0, 0.4);
+}

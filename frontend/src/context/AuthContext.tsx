@@ -44,14 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPlantelId(data.plantel_id);
       setActivo(data.activo);
       setBloqueadoHasta(data.bloqueado_hasta);
-    } else if (user.user_metadata?.rol || user.email === 'admin@conalep.edu.mx') {
-      // Respaldo resiliente desde Auth metadata
-      const metaRol = user.user_metadata?.rol || (user.email === 'admin@conalep.edu.mx' ? 'administrador' : null);
-      const metaNombre = user.user_metadata?.nombre || (user.email === 'admin@conalep.edu.mx' ? 'Ing. Carlos Mendoza' : null);
-      const metaPlantel = user.user_metadata?.plantel_id || 'b5cde2a6-38d5-450f-90db-3367c3bb1b51';
-      setRol(metaRol);
-      setNombre(metaNombre);
-      setPlantelId(metaPlantel);
+    } else if (user.user_metadata?.rol) {
+      // Respaldo resiliente desde Auth metadata (sin credenciales hardcodeadas)
+      setRol(user.user_metadata.rol);
+      setNombre(user.user_metadata.nombre || null);
+      setPlantelId(user.user_metadata.plantel_id || null);
       setActivo(true);
       setBloqueadoHasta(null);
     } else {
@@ -64,9 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // LOW-06: Se recomienda usar únicamente onAuthStateChange para evitar llamadas paralelas
-    // y race conditions con getSession durante el montaje inicial
+    // FIX LOW-06: Usar bandera para ignorar callbacks obsoletos y evitar race conditions
+    let isMounted = true;
+
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
       setSession(session);
       if (session?.user) {
         await hidratarPerfil(session.user);
@@ -77,10 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setActivo(null);
         setBloqueadoHasta(null);
       }
-      setLoading(false);
+      if (isMounted) setLoading(false);
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   // ── Temporizador Estricto de Inactividad (15 Minutos) ──────────────────────
@@ -95,7 +97,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
     };
 
+    let lastReset = 0;
+    const THROTTLE_MS = 2000; // Throttle de 2s para evitar overhead excesivo
     const resetTimer = () => {
+      const now = Date.now();
+      if (now - lastReset < THROTTLE_MS) return;
+      lastReset = now;
       clearTimeout(timer);
       timer = setTimeout(handleInactivity, INACTIVITY_TIMEOUT_MS);
     };

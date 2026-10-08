@@ -12,6 +12,7 @@ import AdminLayout from './layouts/AdminLayout';
 
 import Login from './pages/Login';
 import PendienteActivacion from './pages/PendienteActivacion';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Dynamic lazy imports para code-splitting por rol (Escalabilidad Modular)
 // Rol: alumno
@@ -88,7 +89,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<LoadingSpinner />}>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/pendiente-activacion" element={<PendienteActivacion />} />
@@ -154,6 +156,7 @@ export default function App() {
           <Route path="*" element={<DefaultRouteRedirect />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
-  );
+    </ErrorBoundary>
+  </BrowserRouter>
+);
 }

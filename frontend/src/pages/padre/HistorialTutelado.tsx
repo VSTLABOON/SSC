@@ -252,7 +252,9 @@ export default function HistorialTutelado() {
             {Object.entries(groupedReports).map(([dateLabel, items]) => (
               <div key={dateLabel} className="history-group">
                 <h3 className="history-group-date">{dateLabel}</h3>
-                <div className="history-table-card">
+
+                {/* Vista Tabla Desktop (>= 768px) */}
+                <div className="history-table-card history-desktop-table">
                   <table className="history-table">
                     <thead>
                       <tr>
@@ -319,6 +321,59 @@ export default function HistorialTutelado() {
                       })}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Vista Línea de Tiempo Móvil Touch-First (< 768px) */}
+                <div className="history-mobile-timeline">
+                  <div className="timeline-stream">
+                    {items.map((r) => {
+                      const enterado = enteradosMap[r.id];
+                      const isPositive = r.impact > 0;
+                      const nodeColor = isPositive ? 'node--positive' : r.filterGroup === 'warning' ? 'node--warning' : 'node--negative';
+                      const nodeIcon = isPositive ? 'verified' : r.filterGroup === 'warning' ? 'warning' : 'report';
+
+                      return (
+                        <div key={r.id} className="timeline-entry">
+                          <div className={`timeline-entry-node ${nodeColor}`}>
+                            <Icon name={nodeIcon} style={{ fontSize: '16px' }} />
+                          </div>
+                          <div className="timeline-entry-card">
+                            <div className="timeline-entry-top">
+                              <span className={`badge ${isPositive ? 'badge--secondary' : r.filterGroup === 'warning' ? 'badge--amber' : 'badge--error'}`}>
+                                {r.categoryLabel}
+                              </span>
+                              <span className={`timeline-points ${isPositive ? 'points--positive' : 'points--negative'}`}>
+                                {isPositive ? `+${r.impact}` : r.impact} pts
+                              </span>
+                            </div>
+                            <p className="timeline-entry-desc">{r.description}</p>
+                            <div className="timeline-entry-meta">
+                              <Icon name="schedule" style={{ fontSize: '14px' }} />
+                              <span>{formatDateShort(r.date)}</span>
+                            </div>
+                            <div className="timeline-entry-action">
+                              {enterado ? (
+                                <div className="acuse-confirmed-pill">
+                                  <Icon name="check_circle" style={{ fontSize: '16px' }} />
+                                  <span>Enterado ({enterado.fecha})</span>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleConfirmarEnterado(r.id)}
+                                  className="acuse-btn-touch"
+                                  title="Confirmar de enterado"
+                                >
+                                  <Icon name="draw" style={{ fontSize: '18px' }} />
+                                  <span>Confirmar de Enterado Oficial</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ))}

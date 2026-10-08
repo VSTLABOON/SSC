@@ -23,6 +23,8 @@ const navItems: NavItem[] = [
 import { BottomNav } from '../components/navigation/BottomNav';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NotificationCenter } from '../components/NotificationCenter';
+import QuickSearchTrigger from '../components/common/QuickSearchTrigger';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 export default function TeacherLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -161,6 +163,7 @@ export default function TeacherLayout() {
             </h1>
           </div>
           <div className="tl-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <QuickSearchTrigger />
             <ThemeToggle />
             <NotificationCenter />
             <button
@@ -199,7 +202,9 @@ export default function TeacherLayout() {
         </header>
 
         <div className="tl-content-canvas">
-          <Outlet />
+          <ErrorBoundary fallbackTitle="Error al cargar la sección" fallbackMessage="Ocurrió un problema en esta sección docente. Puedes usar el menú para navegar a tus otros grupos o reportes.">
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
 
