@@ -63,7 +63,7 @@ serve(async (req: Request) => {
 
     // ── 2. Validar body de la petición ──────────────────────────────────────
     const body = await req.json();
-    const { email, nombre, apellido, rol } = body;
+    const { email, nombre, apellido, rol, password } = body;
     let { plantelId } = body;
 
     if (!email || !nombre || !apellido || !rol) {
@@ -85,20 +85,51 @@ serve(async (req: Request) => {
       return json({ error: `Rol inválido. Valores permitidos: ${ROLES_VALIDOS.join(', ')}.` }, 400);
     }
 
-    // Validación de plantelId: si viene, debe ser el del director.
-    if (plantelId && plantelId !== perfil.plantel_id) {
+    // Validación de plantelId: si viene, debe ser el del director/administrador.
+    if (plantelId && plantelId !== perfil.plantel_id && perfil.rol !== 'administrador') {
       return json({ error: 'No tienes permiso para invitar a un plantel diferente al tuyo.' }, 403);
     }
     if (!plantelId) {
       plantelId = perfil.plantel_id;
     }
 
-    // ── 3. Invitar usuario vía Admin API (requiere service_role key) ─────────
+    // ── 3. Alta de usuario vía Admin API (requiere service_role key) ─────────
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // Si se especificó contraseña, crear usuario directamente (ideal para despliegues locales sin SMTP)
+    if (password && typeof password === 'string' && password.trim().length >= 6) {
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+        email_confirm: true,
+        user_metadata: {
+          plantel_id: plantelId,
+          nombre: nombre.trim(),
+          apellido: apellido.trim(),
+          rol: rol,
+          activo: true,
+        },
+      });
+
+      if (createError) {
+        console.error('Error al crear usuario directamente:', createError.message);
+        return json({ error: createError.message }, 500);
+      }
+
+      await supabaseAdmin
+        .from('usuarios')
+        .update({ rol, activo: true })
+        .eq('id', newUser.user.id);
+
+      return json({
+        message: `Usuario ${email.trim()} creado exitosamente y activado con contraseña inicial.`,
+      }, 200);
+    }
+
+    // Flujo estándar de invitación por correo (requiere relay SMTP configurado)
     const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
       email.trim().toLowerCase(),
       {

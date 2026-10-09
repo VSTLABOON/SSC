@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") || "";
+const OLLAMA_BASE_URL = Deno.env.get("OLLAMA_BASE_URL") || Deno.env.get("LOCAL_AI_URL") || "";
+const OLLAMA_MODEL = Deno.env.get("OLLAMA_MODEL") || "llama3.2:3b";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -121,9 +123,9 @@ ${userQuery
 Responde la pregunta con un tono ágil, claro y directo basándote en los datos reales de la BD.`
   : `Genera una síntesis ejecutiva clara y conversacional sobre la vista "${kpiOrChartTitle}", destacando el estado actual y la recomendación prioritaria.`}`;
 
-    if (!GROQ_API_KEY) {
+    if (!GROQ_API_KEY && !OLLAMA_BASE_URL) {
       return new Response(
-        JSON.stringify({ error: "GROQ_API_KEY no configurada en Supabase Edge Function Secrets." }),
+        JSON.stringify({ error: "No se ha configurado GROQ_API_KEY ni OLLAMA_BASE_URL en el servidor." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
@@ -148,39 +150,70 @@ Responde la pregunta con un tono ágil, claro y directo basándote en los datos 
 
     messagesPayload.push({ role: "user", content: userPrompt });
 
-    // Invocación a Groq API con modelo Llama 3.3 70B (y fallback a Llama 3.1 8B si 70B se satura)
-    let response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      signal: AbortSignal.timeout(15000),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: messagesPayload,
-        temperature: 0.15,
-        max_tokens: 1200,
-      }),
-    });
+    let response: Response;
 
-    // Reintento con modelo instantáneo si el modelo 70B se satura o retorna error
-    if (!response.ok) {
-      console.warn(`[Groq API Warning]: Modelo 70B retornó status ${response.status}. Reintentando con llama-3.1-8b-instant...`);
+    // MODO 1: IA LOCAL ON-PREMISE (Ollama) - 100% Offline / Privacidad Absoluta LGPDPPSO
+    if (OLLAMA_BASE_URL) {
+      const ollamaEndpoint = OLLAMA_BASE_URL.replace(/\/+$/, '') + "/v1/chat/completions";
+      try {
+        response = await fetch(ollamaEndpoint, {
+          method: "POST",
+          signal: AbortSignal.timeout(60000), // En servidor local CPU/GPU puede tomar más tiempo
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: OLLAMA_MODEL,
+            messages: messagesPayload,
+            temperature: 0.15,
+            max_tokens: 1200,
+          }),
+        });
+      } catch (ollamaErr: any) {
+        console.error("[Ollama Connection Error]:", ollamaErr.message);
+        return new Response(
+          JSON.stringify({ 
+            error: `No se pudo conectar con el motor local de IA (Ollama en ${OLLAMA_BASE_URL}). Verifique que el servicio esté corriendo en el servidor.`,
+            details: ollamaErr.message 
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 503 }
+        );
+      }
+    } else {
+      // MODO 2: Groq Cloud API con Llama 3.3 70B (y fallback a Llama 3.1 8B si se satura)
       response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(15000),
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.3-70b-versatile",
           messages: messagesPayload,
           temperature: 0.15,
           max_tokens: 1200,
         }),
       });
+
+      // Reintento con modelo instantáneo si el modelo 70B se satura o retorna error
+      if (!response.ok) {
+        console.warn(`[Groq API Warning]: Modelo 70B retornó status ${response.status}. Reintentando con llama-3.1-8b-instant...`);
+        response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          signal: AbortSignal.timeout(10000),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: messagesPayload,
+            temperature: 0.15,
+            max_tokens: 1200,
+          }),
+        });
+      }
     }
 
     if (!response.ok) {

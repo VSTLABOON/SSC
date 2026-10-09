@@ -48,7 +48,7 @@ const FILTROS: { label: string; value: FiltroRol; icon: string }[] = [
 // ── Componente ───────────────────────────────────────────────────────────────
 
 export default function GestionUsuarios() {
-  const { plantelId } = useAuth();
+  const { rol: currentUserRol, plantelId } = useAuth();
 
   const [heroVisible, setHeroVisible] = useState(false);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -60,6 +60,7 @@ export default function GestionUsuarios() {
   const [invEmail, setInvEmail] = useState('');
   const [invNombre, setInvNombre] = useState('');
   const [invApellido, setInvApellido] = useState('');
+  const [invPassword, setInvPassword] = useState('');
   const [invRol, setInvRol] = useState<typeof ROLES_ASIGNABLES[number]>('docente');
   const [invLoading, setInvLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -81,11 +82,18 @@ export default function GestionUsuarios() {
   // ── Carga de usuarios ──────────────────────────────────────────────────────
   const fetchUsuarios = useCallback(async () => {
     if (!plantelId) return [];
-    const { data, error } = await supabase
+    let query = supabase
       .from('usuarios')
       .select('id, nombre, apellido, email, rol, activo, plantel_id, bloqueado_hasta, intentos_fallidos')
-      .eq('plantel_id', plantelId)
-      .neq('rol', 'directivo')
+      .eq('plantel_id', plantelId);
+
+    // Solo otros roles tienen restringido ver directivos.
+    // El administrador de TI puede ver y gestionar a todos los usuarios del plantel.
+    if (currentUserRol !== 'administrador') {
+      query = query.neq('rol', 'directivo');
+    }
+
+    const { data, error } = await query
       .order('rol')
       .order('apellido');
 
@@ -94,7 +102,7 @@ export default function GestionUsuarios() {
       return [];
     }
     return data || [];
-  }, [plantelId]);
+  }, [plantelId, currentUserRol]);
 
   const cargarUsuarios = useCallback(async () => {
     setLoading(true);
@@ -232,13 +240,14 @@ export default function GestionUsuarios() {
           nombre: cleanNombre,
           apellido: cleanApellido,
           rol: invRol,
+          password: invPassword.trim() || undefined,
         }),
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? 'Error al enviar invitación.');
+      if (!res.ok) throw new Error(json.error ?? 'Error al procesar alta de usuario.');
 
-      setInvEmail(''); setInvNombre(''); setInvApellido(''); setInvRol('docente');
+      setInvEmail(''); setInvNombre(''); setInvApellido(''); setInvPassword(''); setInvRol('docente');
       setModalOpen(false);
       await cargarUsuarios();
     } catch (err: unknown) {
@@ -612,6 +621,17 @@ export default function GestionUsuarios() {
                     <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="gu-field" style={{ marginTop: '12px' }}>
+                <label>Contraseña Inicial (Opcional - Intranet / Servidor Local)</label>
+                <input
+                  type="text"
+                  className="gu-input"
+                  placeholder="Ej. Conalep.2026! (Si se omite, se intentará invitar por correo)"
+                  value={invPassword}
+                  onChange={e => setInvPassword(e.target.value)}
+                />
               </div>
 
               <div className="gu-modal-actions">
